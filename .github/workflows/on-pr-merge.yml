@@ -15,7 +15,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for git log changelog extraction
+          fetch-depth: 0 # Fetch all history for changelog and tags
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -39,7 +39,6 @@ jobs:
           PREV_SHA="${{ github.event.before }}"
           CURR_SHA="${{ github.event.after }}"
           
-          # Handle initial push/empty event case
           if [ "$PREV_SHA" = "0000000000000000000000000000000000000000" ] || [ -z "$PREV_SHA" ]; then
             LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
             if [ -n "$LAST_TAG" ]; then
@@ -55,14 +54,16 @@ jobs:
           
           # Extract commit list
           CHANGES=$(git log --oneline --pretty=format:"- %s (%h) by %an" $COMMIT_RANGE)
-          
           if [ -z "$CHANGES" ]; then
             CHANGES="- Routine maintenance and updates"
           fi
           
+          # Save single release changes to temp file for github release body
+          echo "$CHANGES" > release_changelog.txt
+          
           DATE=$(date +"%Y-%m-%d")
           
-          # Prep changelog file
+          # Prep main changelog file
           if [ ! -f CHANGELOG.md ]; then
             echo "# Changelog" > CHANGELOG.md
             echo "" >> CHANGELOG.md
@@ -80,16 +81,73 @@ jobs:
           cat temp_changelog.md >> CHANGELOG.md
           rm temp_changelog.md
 
-      - name: Commit and Push Changes
+      - name: Commit and Push Changelog & Screenshots
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           
-          # Add changelog and screenshots
           git add CHANGELOG.md
           if [ -d "docs/screenshots" ]; then
             git add docs/screenshots/
           fi
           
-          # Commit only if there are changes
           git diff-index --quiet HEAD || (git commit -m "docs: auto-update changelog and screenshots [skip ci]" && git push)
+
+      - name: Determine New Tag Version
+        id: versioning
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+          echo "Latest tag: $LATEST_TAG"
+          
+          # Remove v prefix and split version
+          VERSION_NUM=${LATEST_TAG#v}
+          IFS='.' read -ra ADDR <<< "$VERSION_NUM"
+          
+          MAJOR=${ADDR[0]}
+          MINOR=${ADDR[1]}
+          PATCH=${ADDR[2]}
+          
+          # Increment patch version
+          NEW_PATCH=$((PATCH + 1))
+          NEW_TAG="v$MAJOR.$MINOR.$NEW_PATCH"
+          
+          echo "New tag: $NEW_TAG"
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+
+      - name: Create and Push New Git Tag
+        run: |
+          git tag ${{ env.NEW_TAG }}
+          git push origin ${{ env.NEW_TAG }}
+
+      - name: Decode Release Keystore
+        run: |
+          if [ -n "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > app/release.keystore
+            echo "KEYSTORE_FILE=release.keystore" >> $GITHUB_ENV
+            echo "KEYSTORE_PASSWORD=${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+            echo "KEY_ALIAS=${{ secrets.RELEASE_KEY_ALIAS }}" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=${{ secrets.RELEASE_KEY_PASSWORD }}" >> $GITHUB_ENV
+          else
+            echo "No release keystore configured, compiling with debug key fallback."
+          fi
+
+      - name: Compile and Sign Android Release Binary (APK & AAB)
+        run: ./gradlew bundleRelease assembleRelease
+        env:
+          KEYSTORE_FILE: ${{ env.KEYSTORE_FILE }}
+          KEYSTORE_PASSWORD: ${{ env.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ env.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ env.KEY_PASSWORD }}
+
+      - name: Create GitHub Release and Upload Artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.NEW_TAG }}
+          name: Release ${{ env.NEW_TAG }}
+          body_path: release_changelog.txt
+          files: |
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/bundle/release/app-release.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
