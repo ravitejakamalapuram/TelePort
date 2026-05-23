@@ -1,6 +1,5 @@
 package com.teleport.app.tv.browser
 
-import android.net.Uri
 import android.util.Log
 
 object AdBlocker {
@@ -36,13 +35,16 @@ object AdBlocker {
 
     fun isAd(url: String): Boolean {
         try {
-            val uri = Uri.parse(url)
-            val host = uri.host?.lowercase() ?: return false
+            val host = java.net.URL(url).host?.lowercase() ?: return false
 
             // Check if host matches or ends with any ad domain
             for (adDomain in AD_DOMAINS) {
                 if (host == adDomain || host.endsWith(".$adDomain")) {
-                    Log.d(TAG, "Blocked Ad Request: $url")
+                    try {
+                        Log.d(TAG, "Blocked Ad Request: $url")
+                    } catch (e: Throwable) {
+                        println("Blocked Ad Request: $url")
+                    }
                     return true
                 }
             }

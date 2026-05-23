@@ -3,6 +3,7 @@ package com.teleport.app.mobile.nsd
 import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
+import android.os.Build
 import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,14 +26,42 @@ class NsdHelper(context: Context) {
 
     private var discoveryListener: NsdManager.DiscoveryListener? = null
 
+    private fun isEmulator(): Boolean {
+        val fingerprint = Build.FINGERPRINT ?: ""
+        val model = Build.MODEL ?: ""
+        val manufacturer = Build.MANUFACTURER ?: ""
+        val product = Build.PRODUCT ?: ""
+        val hardware = Build.HARDWARE ?: ""
+        return fingerprint.startsWith("generic")
+                || fingerprint.startsWith("unknown")
+                || model.contains("google_sdk")
+                || model.contains("Emulator")
+                || model.contains("Android SDK built for x86")
+                || manufacturer.contains("Genymotion")
+                || product.contains("sdk_google")
+                || product.contains("google_sdk")
+                || product.contains("sdk")
+                || product.contains("sdk_x86")
+                || product.contains("vbox86p")
+                || product.contains("emulator")
+                || product.contains("simulator")
+                || hardware.contains("goldfish")
+                || hardware.contains("ranchu")
+    }
+
     fun startDiscovery() {
         if (discoveryListener != null) {
             stopDiscovery()
         }
 
-        _discoveredTvs.value = emptyList()
+        _discoveredTvs.value = if (isEmulator()) {
+            listOf(DiscoveredTv("Local TV Emulator (127.0.0.1)", "127.0.0.1", 8080))
+        } else {
+            emptyList()
+        }
 
         discoveryListener = object : NsdManager.DiscoveryListener {
+
             override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
                 Log.e(TAG, "Discovery start failed: Error code $errorCode")
                 stopDiscovery()
