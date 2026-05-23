@@ -2,6 +2,11 @@
 
 ## [2026-05-23] - Automated Release
 
+- Implement Wave 2 features: Zero-Install Web Remote, Multi-Controller Co-Browsing, Smart Dark Mode, and Clipboard Sync (0c29a66) by Raviteja Kamalapuram
+
+
+## [2026-05-23] - Automated Release
+
 - ci: configure automated release tag, sign, compile, and publish release workflow (0e66e8c) by Raviteja Kamalapuram
 
 
