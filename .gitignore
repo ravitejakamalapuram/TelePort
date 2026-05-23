@@ -1,0 +1,59 @@
+# Gradle files
+.gradle/
+build/
+/*/build/
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/copilot
+modules.xml
+.navigation/
+
+# Built artifacts
+*.apk
+*.aar
+*.ap_
+*.dex
+*.class
+
+# Signing files
+*.jks
+*.keystore
+*.pepk
+*.pk8
+*.x509.pem
+
+# Local configuration
+local.properties
+
+# Log files
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Android Captures and CXX
+/captures/
+.cxx/
+externalNativeBuild/
+
+# Crashlytics
+*.crashlytics.json
+
+# Backup/Temporary files
+*~
+*.bak
+*.swp
+*.tmp
