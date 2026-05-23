@@ -78,7 +78,8 @@ class NativePlayerActivity : ComponentActivity() {
 
         // Connect remote controller events to player control
         LaunchedEffect(player) {
-            TvEventBus.commands.collectLatest { command ->
+            TvEventBus.commands.collectLatest { clientCommand ->
+                val command = clientCommand.command
                 Log.d(TAG, "Native Player executing remote command: $command")
                 when (command) {
                     is Command.PlayPause -> {

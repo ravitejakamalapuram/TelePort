@@ -50,24 +50,27 @@ import kotlinx.coroutines.flow.collectLatest
 fun TvActivityContent(tabManager: TabManager, localIp: String) {
     val TAG = "TvActivityContent"
     val clientConnected by TvEventBus.clientConnected.collectAsState()
-    val connectionUrl = "ws://$localIp:8080/control"
+    val connectionUrl = "http://$localIp:8080/remote"
 
     // Listen for incoming commands in the event bus and route them to tabManager
     LaunchedEffect(Unit) {
-        TvEventBus.commands.collectLatest { command ->
-            Log.d(TAG, "Executing command: $command")
+        TvEventBus.commands.collectLatest { clientCommand ->
+            val clientId = clientCommand.clientId
+            val command = clientCommand.command
+            Log.d(TAG, "Executing command from $clientId: $command")
             when (command) {
                 is Command.OpenUrl -> tabManager.openTab(command.url)
                 is Command.CloseTab -> tabManager.closeTab(command.index)
                 is Command.SelectTab -> tabManager.selectTab(command.index)
                 is Command.Scroll -> tabManager.scrollActive(command.dx, command.dy)
-                is Command.MoveCursor -> tabManager.moveCursor(command.dx, command.dy)
-                is Command.Click -> tabManager.clickActive()
+                is Command.MoveCursor -> tabManager.moveCursor(clientId, command.dx, command.dy)
+                is Command.Click -> tabManager.clickActive(clientId)
                 is Command.SendText -> tabManager.sendTextActive(command.text)
                 is Command.PlayPause -> tabManager.playPauseActive()
                 is Command.GoBack -> tabManager.goBackActive()
                 is Command.PlayStreamNatively -> tabManager.playNatively(command.streamUrl)
                 is Command.SetAirRemoteMode -> { /* Handled on sensor stream side */ }
+                is Command.ToggleDarkMode -> tabManager.toggleDarkMode(command.enabled)
             }
         }
     }
@@ -165,8 +168,7 @@ fun PairingScreen(connectionUrl: String, localIp: String) {
 fun BrowserScreen(tabManager: TabManager) {
     val tabs by tabManager.tabs.collectAsState()
     val activeIndex by tabManager.activeTabIndex.collectAsState()
-    val cursorX by tabManager.cursorX.collectAsState()
-    val cursorY by tabManager.cursorY.collectAsState()
+    val cursors by tabManager.cursors.collectAsState()
 
     Box(
         modifier = Modifier
@@ -211,14 +213,23 @@ fun BrowserScreen(tabManager: TabManager) {
             }
         }
 
-        // Draw Virtual Cursor
-        Box(
-            modifier = Modifier
-                .offset { IntOffset(cursorX.toInt(), cursorY.toInt()) }
-                .size(16.dp)
-                .background(Color.Red.copy(alpha = 0.8f), CircleShape)
-                .align(Alignment.TopStart)
-        )
+        // Draw multiple color-coded cursors
+        cursors.values.forEach { cursor ->
+            val color = remember(cursor.colorHex) {
+                try {
+                    Color(AndroidColor.parseColor(cursor.colorHex))
+                } catch (e: Exception) {
+                    Color.Red
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .offset { IntOffset(cursor.x.toInt(), cursor.y.toInt()) }
+                    .size(16.dp)
+                    .background(color.copy(alpha = 0.8f), CircleShape)
+                    .align(Alignment.TopStart)
+            )
+        }
     }
 }
 

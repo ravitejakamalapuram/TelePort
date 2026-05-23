@@ -9,9 +9,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+data class ClientCommand(val clientId: String, val command: Command)
+
 object TvEventBus {
-    private val _commands = MutableSharedFlow<Command>(extraBufferCapacity = 64)
-    val commands: SharedFlow<Command> = _commands.asSharedFlow()
+    private val _commands = MutableSharedFlow<ClientCommand>(extraBufferCapacity = 64)
+    val commands: SharedFlow<ClientCommand> = _commands.asSharedFlow()
 
     private val _tvState = MutableStateFlow<TvState?>(null)
     val tvState: StateFlow<TvState?> = _tvState.asStateFlow()
@@ -19,8 +21,11 @@ object TvEventBus {
     private val _clientConnected = MutableStateFlow(false)
     val clientConnected: StateFlow<Boolean> = _clientConnected.asStateFlow()
 
-    fun postCommand(command: Command) {
-        _commands.tryEmit(command)
+    private val _activeClientIds = MutableStateFlow<Set<String>>(emptySet())
+    val activeClientIds: StateFlow<Set<String>> = _activeClientIds.asStateFlow()
+
+    fun postCommand(clientId: String, command: Command) {
+        _commands.tryEmit(ClientCommand(clientId, command))
     }
 
     fun updateTvState(state: TvState) {
@@ -29,5 +34,21 @@ object TvEventBus {
 
     fun setClientConnected(connected: Boolean) {
         _clientConnected.value = connected
+    }
+
+    fun registerClient(clientId: String) {
+        val current = _activeClientIds.value.toMutableSet()
+        if (current.add(clientId)) {
+            _activeClientIds.value = current
+            _clientConnected.value = true
+        }
+    }
+
+    fun unregisterClient(clientId: String) {
+        val current = _activeClientIds.value.toMutableSet()
+        if (current.remove(clientId)) {
+            _activeClientIds.value = current
+            _clientConnected.value = current.isNotEmpty()
+        }
     }
 }

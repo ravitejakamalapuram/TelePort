@@ -1,6 +1,9 @@
 package com.teleport.app.mobile
 
 import android.widget.Toast
+import android.content.ClipboardManager
+import android.content.Context
+import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -245,16 +248,38 @@ fun ControllerScreen(connectionManager: TvConnectionManager, gyroTracker: GyroSe
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(0xFF1E1E1E))
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "TelePort Remote",
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+            Column {
+                Text(
+                    text = "TelePort Remote",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    var isDarkModeEnabled by remember { mutableStateOf(false) }
+                    Text("Dark Mode", color = Color.Gray, fontSize = 12.sp)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Switch(
+                        checked = isDarkModeEnabled,
+                        onCheckedChange = {
+                            isDarkModeEnabled = it
+                            connectionManager.sendCommand(Command.ToggleDarkMode(it))
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color(0xFF03DAC6),
+                            checkedTrackColor = Color(0xFF03DAC6).copy(alpha = 0.5f)
+                        ),
+                        modifier = Modifier.scale(0.7f)
+                    )
+                }
+            }
             Button(
                 onClick = { connectionManager.disconnect() },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f))
@@ -700,6 +725,9 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
 fun QuickInputBar(connectionManager: TvConnectionManager) {
     var textInput by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val clipboardManager = remember {
+        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    }
 
     Row(
         modifier = Modifier
@@ -723,7 +751,32 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
                 unfocusedTextColor = Color.White
             )
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        Button(
+            onClick = {
+                try {
+                    val clipData = clipboardManager.primaryClip
+                    if (clipData != null && clipData.itemCount > 0) {
+                        val pastedText = clipData.getItemAt(0).text?.toString() ?: ""
+                        if (pastedText.isNotBlank()) {
+                            connectionManager.sendCommand(Command.SendText(pastedText))
+                            Toast.makeText(context, "Pasted to TV!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        Toast.makeText(context, "Clipboard is empty", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Failed to read clipboard", Toast.LENGTH_SHORT).show()
+                }
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE)),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)
+        ) {
+            Text("Paste", color = Color.White, fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.width(8.dp))
         Button(
             onClick = {
                 if (textInput.isNotBlank()) {
@@ -731,7 +784,8 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
                     textInput = ""
                 }
             },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF03DAC6))
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF03DAC6)),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)
         ) {
             Text("Send", color = Color.Black, fontWeight = FontWeight.Bold)
         }

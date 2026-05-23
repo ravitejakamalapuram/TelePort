@@ -36,6 +36,9 @@ sealed class Command {
 
     @Serializable
     data class PlayStreamNatively(val streamUrl: String) : Command()
+
+    @Serializable
+    data class ToggleDarkMode(val enabled: Boolean) : Command()
 }
 
 @Serializable

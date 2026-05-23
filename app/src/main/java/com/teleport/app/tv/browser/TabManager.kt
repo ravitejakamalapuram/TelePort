@@ -34,13 +34,35 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
     // Currently detected media stream on active web page
     private val detectedStreamUrl = MutableStateFlow<String?>(null)
 
-    // Virtual Cursor Coordinates (in pixels)
+    // Virtual Cursors map (clientId -> CursorInfo)
+    data class CursorInfo(
+        val id: String,
+        val x: Float,
+        val y: Float,
+        val colorHex: String
+    )
+
+    private val CURSOR_COLORS = listOf(
+        "#00E5FF", // Neon Cyan
+        "#FF007F", // Neon Magenta
+        "#00E676", // Emerald Green
+        "#FFEB3B", // Vivid Yellow
+        "#FF6D00", // Vibrant Orange
+        "#9C27B0"  // Purple
+    )
+
+    private val _cursors = MutableStateFlow<Map<String, CursorInfo>>(emptyMap())
+    val cursors: StateFlow<Map<String, CursorInfo>> = _cursors.asStateFlow()
+
+    // Virtual Cursor Coordinates (in pixels) for legacy compatibility
     val cursorX = MutableStateFlow(500f)
     val cursorY = MutableStateFlow(300f)
 
     // WebView Dimensions (cached to bounds check cursor)
     private var webViewWidth = 1920
     private var webViewHeight = 1080
+
+    val isDarkModeEnabled = MutableStateFlow(false)
 
     init {
         // Collect state updates and push them to the TvEventBus
@@ -52,6 +74,29 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
         }
         coroutineScope.launch {
             detectedStreamUrl.collect { syncState() }
+        }
+        // Sync cursors with registered active clients
+        coroutineScope.launch {
+            TvEventBus.activeClientIds.collect { activeIds ->
+                val current = _cursors.value.toMutableMap()
+                // Remove disconnected clients
+                val toRemove = current.keys.filter { it !in activeIds }
+                toRemove.forEach { current.remove(it) }
+
+                // Add new connected clients
+                activeIds.forEach { id ->
+                    if (id !in current) {
+                        val colorIdx = current.size % CURSOR_COLORS.size
+                        current[id] = CursorInfo(
+                            id = id,
+                            x = webViewWidth / 2f,
+                            y = webViewHeight / 2f,
+                            colorHex = CURSOR_COLORS[colorIdx]
+                        )
+                    }
+                }
+                _cursors.value = current
+            }
         }
     }
 
@@ -113,16 +158,30 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
         }
     }
 
-    fun moveCursor(dx: Float, dy: Float) {
-        cursorX.value = (cursorX.value + dx).coerceIn(0f, webViewWidth.toFloat())
-        cursorY.value = (cursorY.value + dy).coerceIn(0f, webViewHeight.toFloat())
+    fun moveCursor(clientId: String, dx: Float, dy: Float) {
+        val current = _cursors.value.toMutableMap()
+        val cursor = current[clientId]
+        if (cursor != null) {
+            val newX = (cursor.x + dx).coerceIn(0f, webViewWidth.toFloat())
+            val newY = (cursor.y + dy).coerceIn(0f, webViewHeight.toFloat())
+            val updated = cursor.copy(x = newX, y = newY)
+            current[clientId] = updated
+            _cursors.value = current
+
+            // Legacy support for single-pointer references
+            if (clientId == _cursors.value.keys.firstOrNull()) {
+                cursorX.value = newX
+                cursorY.value = newY
+            }
+        }
     }
 
-    fun clickActive() {
+    fun clickActive(clientId: String) {
         coroutineScope.launch(Dispatchers.Main) {
             val webView = getActiveWebView() ?: return@launch
-            val x = cursorX.value
-            val y = cursorY.value
+            val cursor = _cursors.value[clientId] ?: return@launch
+            val x = cursor.x
+            val y = cursor.y
 
             val downTime = SystemClock.uptimeMillis()
             val eventTime = SystemClock.uptimeMillis()
@@ -135,6 +194,28 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
 
             downEvent.recycle()
             upEvent.recycle()
+        }
+    }
+
+    fun toggleDarkMode(enabled: Boolean) {
+        isDarkModeEnabled.value = enabled
+        applyDarkModeToActive()
+    }
+
+    fun applyDarkModeToActive() {
+        coroutineScope.launch(Dispatchers.Main) {
+            val enabled = isDarkModeEnabled.value
+            val cssFilter = if (enabled) {
+                "document.documentElement.style.filter = 'invert(1) hue-rotate(180deg)';" +
+                "var media = document.querySelectorAll('img, video, iframe, canvas, [style*=\"background-image\"]');" +
+                "media.forEach(el => el.style.filter = 'invert(1) hue-rotate(180deg)');"
+            } else {
+                "document.documentElement.style.filter = '';" +
+                "var media = document.querySelectorAll('img, video, iframe, canvas, [style*=\"background-image\"]');" +
+                "media.forEach(el => el.style.filter = '');"
+            }
+            val js = "(function() { $cssFilter })();"
+            getActiveWebView()?.evaluateJavascript(js, null)
         }
     }
 
@@ -237,6 +318,9 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
+                    if (isDarkModeEnabled.value) {
+                        applyDarkModeToActive()
+                    }
                     syncState()
                 }
 
