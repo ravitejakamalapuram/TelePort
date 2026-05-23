@@ -2,6 +2,11 @@
 
 ## [2026-05-23] - Automated Release
 
+- ci: configure automated release tag, sign, compile, and publish release workflow (0e66e8c) by Raviteja Kamalapuram
+
+
+## [2026-05-23] - Automated Release
+
 - docs: add initial CHANGELOG.md (92a20ee) by Raviteja Kamalapuram
 
 
