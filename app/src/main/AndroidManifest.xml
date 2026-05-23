@@ -43,6 +43,16 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="text/plain" />
             </intent-filter>
+
+            <!-- Deep Link Intent Filter to handle Web Remote pairing links -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:port="8080" />
+                <data android:path="/remote" />
+            </intent-filter>
         </activity>
 
         <!-- Fullscreen ExoPlayer Native Player Activity for TV -->

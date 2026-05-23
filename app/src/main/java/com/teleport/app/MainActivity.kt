@@ -74,6 +74,7 @@ class MainActivity : ComponentActivity() {
                 connectionManager.sendCommand(Command.MoveCursor(dx, dy))
             }
             handleShareIntent(intent)
+            handleDeepLinkIntent(intent)
         }
 
         setContent {
@@ -132,6 +133,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         if (!checkIsTvDevice()) {
             handleShareIntent(intent)
+            handleDeepLinkIntent(intent)
         }
     }
 
@@ -155,6 +157,21 @@ class MainActivity : ComponentActivity() {
                         connectionManager.sendCommand(Command.OpenUrl(url))
                         pendingSharedUrl.value = null
                     }
+                }
+            }
+        }
+    }
+
+    private fun handleDeepLinkIntent(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_VIEW) {
+            val data = intent.data ?: return
+            Log.d(TAG, "Deep link intent received: $data")
+            if (data.path == "/remote" && data.port == 8080) {
+                val ip = data.host
+                if (!ip.isNullOrBlank()) {
+                    Log.d(TAG, "Deep link connecting to TV at $ip:8080")
+                    Toast.makeText(this, "Connecting to TV at $ip...", Toast.LENGTH_SHORT).show()
+                    connectionManager.connect(ip, 8080)
                 }
             }
         }
