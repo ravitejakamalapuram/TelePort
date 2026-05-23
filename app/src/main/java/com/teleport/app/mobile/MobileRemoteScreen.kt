@@ -392,14 +392,53 @@ fun TrackpadTab(connectionManager: TvConnectionManager, gyroTracker: GyroSensorT
                 }
                 .pointerInput(isAirMouseOn) {
                     if (!isAirMouseOn) {
-                        detectDragGestures(
-                            onDrag = { change, dragAmount ->
-                                change.consume()
-                                connectionManager.sendCommand(
-                                    Command.MoveCursor(dragAmount.x, dragAmount.y)
-                                )
+                        awaitPointerEventScope {
+                            var isScrolling = false
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val activePointers = event.changes.filter { it.pressed }
+
+                                if (activePointers.isEmpty()) {
+                                    isScrolling = false
+                                } else if (activePointers.size >= 2) {
+                                    isScrolling = true
+                                }
+
+                                if (isScrolling) {
+                                    if (activePointers.size >= 2) {
+                                        val change1 = activePointers[0]
+                                        val change2 = activePointers[1]
+
+                                        val dy1 = change1.position.y - change1.previousPosition.y
+                                        val dy2 = change2.position.y - change2.previousPosition.y
+                                        val averageDy = (dy1 + dy2) / 2f
+
+                                        val dx1 = change1.position.x - change1.previousPosition.x
+                                        val dx2 = change2.position.x - change2.previousPosition.x
+                                        val averageDx = (dx1 + dx2) / 2f
+
+                                        if (averageDy != 0f || averageDx != 0f) {
+                                            // Send scroll command (invert dy/dx for natural scrolling)
+                                            connectionManager.sendCommand(
+                                                Command.Scroll(-averageDx * 2f, -averageDy * 2f)
+                                            )
+                                            event.changes.forEach { it.consume() }
+                                        }
+                                    }
+                                } else {
+                                    if (activePointers.size == 1) {
+                                        val change = activePointers.first()
+                                        val dragAmount = change.position - change.previousPosition
+                                        if (dragAmount.x != 0f || dragAmount.y != 0f) {
+                                            connectionManager.sendCommand(
+                                                Command.MoveCursor(dragAmount.x, dragAmount.y)
+                                            )
+                                            change.consume()
+                                        }
+                                    }
+                                }
                             }
-                        )
+                        }
                     }
                 },
             contentAlignment = Alignment.Center
