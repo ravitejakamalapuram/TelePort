@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026-05-23] - Automated Release
+
+- docs: add initial CHANGELOG.md (92a20ee) by Raviteja Kamalapuram
+
+
 All notable changes to this project will be documented in this file.
 
 ## [2026-05-23] - Automated Release
