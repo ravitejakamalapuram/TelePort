@@ -151,3 +151,13 @@ jobs:
             app/build/outputs/bundle/release/app-release.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload to Google Play
+        if: ${{ env.KEYSTORE_FILE != null && secrets.PLAY_SERVICE_ACCOUNT_KEY != null }}
+        uses: r0adkll/upload-google-play@v2
+        with:
+          serviceAccountJsonRaw: ${{ secrets.PLAY_SERVICE_ACCOUNT_KEY }}
+          packageName: com.teleport.app
+          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          track: internal
+
