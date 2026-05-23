@@ -28,6 +28,8 @@ import com.teleport.app.mobile.sensors.GyroSensorTracker
 import com.teleport.app.protocol.Command
 import com.teleport.app.tv.TvActivityContent
 import com.teleport.app.tv.browser.TabManager
+import androidx.lifecycle.lifecycleScope
+import android.os.Build
 import com.teleport.app.tv.server.LocalServerService
 import java.net.Inet4Address
 import java.net.NetworkInterface
@@ -67,6 +69,10 @@ class MainActivity : ComponentActivity() {
         } else {
             // Android Mobile flow
             nsdHelper = NsdHelper(this)
+            connectionManager = TvConnectionManager(lifecycleScope)
+            gyroTracker = GyroSensorTracker(this) { dx, dy ->
+                connectionManager.sendCommand(Command.MoveCursor(dx, dy))
+            }
             handleShareIntent(intent)
         }
 
@@ -80,15 +86,16 @@ class MainActivity : ComponentActivity() {
                         val localIp = remember { getLocalIpAddress() }
                         TvActivityContent(tabManager, localIp)
                     } else {
-                        connectionManager = remember { TvConnectionManager(coroutineScope) }
-                        gyroTracker = remember {
-                            GyroSensorTracker(this@MainActivity) { dx, dy ->
-                                connectionManager.sendCommand(Command.MoveCursor(dx, dy))
-                            }
-                        }
-
                         val connState by connectionManager.connectionState.collectAsState()
                         val sharedUrl by pendingSharedUrl
+
+                        // Automatically connect to 127.0.0.1:8080 if running on an emulator and disconnected
+                        LaunchedEffect(Unit) {
+                            if (isEmulator() && connectionManager.connectionState.value == ConnectionState.Disconnected) {
+                                Log.i(TAG, "Emulator detected, auto-connecting to TV at 127.0.0.1:8080")
+                                connectionManager.connect("127.0.0.1", 8080)
+                            }
+                        }
 
                         // Automatically open shared URL if connected
                         LaunchedEffect(connState, sharedUrl) {
@@ -215,5 +222,20 @@ class MainActivity : ComponentActivity() {
             }
             gyroTracker?.stop()
         }
+    }
+
+    private fun isEmulator(): Boolean {
+        val brand = Build.BRAND
+        val device = Build.DEVICE
+        return (brand.startsWith("generic") && device.startsWith("generic")) ||
+                Build.FINGERPRINT.startsWith("generic") ||
+                Build.FINGERPRINT.startsWith("unknown") ||
+                Build.HARDWARE.contains("goldfish") ||
+                Build.HARDWARE.contains("ranchu") ||
+                Build.MODEL.contains("google_sdk") ||
+                Build.MODEL.contains("Emulator") ||
+                Build.MODEL.contains("Android SDK built for x86") ||
+                Build.MANUFACTURER.contains("Genymotion") ||
+                (brand.startsWith("google") && device.startsWith("google") && Build.PRODUCT.startsWith("sdk_gphone"))
     }
 }
