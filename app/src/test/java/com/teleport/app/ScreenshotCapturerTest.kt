@@ -49,6 +49,12 @@ class ScreenshotCapturerTest {
         val canvas = Canvas(bitmap)
         contentView.draw(canvas)
         
+        // Scale down to prevent git repository bloat
+        val scale = if (width > height) 0.5f else 0.333f // scale TV (1920x1080 -> 960x540), mobile (1080x2400 -> 360x800)
+        val targetWidth = (width * scale).toInt()
+        val targetHeight = (height * scale).toInt()
+        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, targetWidth, targetHeight, true)
+        
         // Save to docs/screenshots in project root
         // Since test CWD is under 'app' folder, project root is parent
         val screenshotsDir = File("../docs/screenshots")
@@ -56,15 +62,15 @@ class ScreenshotCapturerTest {
         
         val file = File(screenshotsDir, filename)
         FileOutputStream(file).use { out ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            scaledBitmap.compress(Bitmap.CompressFormat.PNG, 90, out)
         }
-        println("Generated asset screenshot: ${file.absolutePath}")
+        println("Generated scaled asset screenshot: ${file.absolutePath}")
     }
 
     @Test
     @Config(qualifiers = "w1920dp-h1080dp-xhdpi")
     fun captureTvPairingScreen() {
-        val activity = Robolectric.buildActivity(ComponentActivity::class.java).create().start().resume().get()
+        val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
         activity.setContent {
             MaterialTheme {
                 Surface(color = Color(0xFF121212)) {
@@ -86,7 +92,7 @@ class ScreenshotCapturerTest {
         val connectionManager = TvConnectionManager(coroutineScope)
         val nsdHelper = NsdHelper(context)
         
-        val activity = Robolectric.buildActivity(ComponentActivity::class.java).create().start().resume().get()
+        val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
         activity.setContent {
             MaterialTheme {
                 Surface(color = Color(0xFF121212)) {
@@ -109,7 +115,7 @@ class ScreenshotCapturerTest {
         val connectionManager = TvConnectionManager(coroutineScope)
         val gyroTracker = GyroSensorTracker(context) { _, _ -> }
         
-        val activity = Robolectric.buildActivity(ComponentActivity::class.java).create().start().resume().get()
+        val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
         activity.setContent {
             MaterialTheme {
                 Surface(color = Color(0xFF121212)) {

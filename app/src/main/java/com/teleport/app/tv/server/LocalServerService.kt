@@ -86,6 +86,16 @@ class LocalServerService : Service() {
                             Log.d(TAG, "Client connected via WebSocket")
                             TvEventBus.setClientConnected(true)
 
+                            // Bring MainActivity to the foreground automatically on client connection
+                            try {
+                                val launchIntent = Intent(this@LocalServerService, com.teleport.app.MainActivity::class.java).apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                startActivity(launchIntent)
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Failed to start MainActivity on connection", e)
+                            }
+
                             // Launch a separate coroutine to push state updates to this connection
                             val stateJob = launch {
                                 TvEventBus.tvState.collectLatest { state ->
