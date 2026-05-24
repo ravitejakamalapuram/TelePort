@@ -35,6 +35,8 @@ import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.net.URI
+import android.media.projection.MediaProjectionManager
+import android.content.Context
 
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
@@ -54,6 +56,33 @@ class MainActivity : ComponentActivity() {
             parseAndConnect(result.contents)
         } else {
             Toast.makeText(this, "Scan cancelled", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Launcher for Screen Mirroring MediaProjection permission
+    private val projectionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            val tvIp = connectionManager.activeIp ?: ""
+            if (tvIp.isNotBlank()) {
+                val intent = Intent(this, com.teleport.app.mobile.mirror.ScreenCastService::class.java).apply {
+                    putExtra("RESULT_CODE", result.resultCode)
+                    putExtra("RESULT_DATA", result.data)
+                    putExtra("TV_IP", tvIp)
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
+                // Notify TV to switch to Mirror player screen
+                connectionManager.sendCommand(Command.StartMirroring)
+            } else {
+                Toast.makeText(this, "Not connected to any TV", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            Toast.makeText(this, "Screen capture permission denied", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -121,6 +150,17 @@ class MainActivity : ComponentActivity() {
                                     setBarcodeImageEnabled(false)
                                 }
                                 qrCodeLauncher.launch(options)
+                            },
+                            startMirroring = {
+                                val mpManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+                                projectionLauncher.launch(mpManager.createScreenCaptureIntent())
+                            },
+                            stopMirroring = {
+                                val intent = Intent(this@MainActivity, com.teleport.app.mobile.mirror.ScreenCastService::class.java).apply {
+                                    action = "STOP"
+                                }
+                                startService(intent)
+                                connectionManager.sendCommand(Command.StopMirroring)
                             }
                         )
                     }

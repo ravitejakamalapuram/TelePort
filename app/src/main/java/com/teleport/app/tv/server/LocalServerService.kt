@@ -25,6 +25,7 @@ import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
+import io.ktor.websocket.readBytes
 import io.ktor.websocket.send
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -137,6 +138,22 @@ class LocalServerService : Service() {
                                 stateJob.cancel()
                                 TvEventBus.unregisterClient(clientId)
                                 Log.d(TAG, "Client disconnected: $clientId")
+                            }
+                        }
+                        
+                        webSocket("/mirror") {
+                            Log.d(TAG, "Mirror socket connected")
+                            try {
+                                for (frame in incoming) {
+                                    if (frame is Frame.Binary) {
+                                        val data = frame.readBytes()
+                                        TvEventBus.postMirrorFrame(data)
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error in mirror WebSocket session", e)
+                            } finally {
+                                Log.d(TAG, "Mirror socket disconnected")
                             }
                         }
                     }

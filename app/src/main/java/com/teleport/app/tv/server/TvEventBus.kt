@@ -51,4 +51,11 @@ object TvEventBus {
             _clientConnected.value = current.isNotEmpty()
         }
     }
+
+    private val _mirrorFrames = MutableSharedFlow<ByteArray>(extraBufferCapacity = 256)
+    val mirrorFrames: SharedFlow<ByteArray> = _mirrorFrames.asSharedFlow()
+
+    fun postMirrorFrame(data: ByteArray) {
+        _mirrorFrames.tryEmit(data)
+    }
 }

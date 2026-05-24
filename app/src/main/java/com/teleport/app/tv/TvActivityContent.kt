@@ -45,11 +45,22 @@ import com.teleport.app.protocol.Command
 import com.teleport.app.tv.browser.TabManager
 import com.teleport.app.tv.server.TvEventBus
 import kotlinx.coroutines.flow.collectLatest
+import android.media.MediaCodec
+import android.media.MediaFormat
+import android.view.SurfaceHolder
+import android.view.SurfaceView
+import android.os.Build
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun TvActivityContent(tabManager: TabManager, localIp: String) {
     val TAG = "TvActivityContent"
     val clientConnected by TvEventBus.clientConnected.collectAsState()
+    val isMirroring by tabManager.isMirroring.collectAsState()
     val connectionUrl = "http://$localIp:8080/remote"
 
     // Listen for incoming commands in the event bus and route them to tabManager
@@ -71,6 +82,8 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
                 is Command.PlayStreamNatively -> tabManager.playNatively(command.streamUrl)
                 is Command.SetAirRemoteMode -> { /* Handled on sensor stream side */ }
                 is Command.ToggleDarkMode -> tabManager.toggleDarkMode(command.enabled)
+                is Command.StartMirroring -> tabManager.startMirroring()
+                is Command.StopMirroring -> tabManager.stopMirroring()
             }
         }
     }
@@ -79,7 +92,9 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
         modifier = Modifier.fillMaxSize(),
         color = Color(0xFF121212)
     ) {
-        if (clientConnected) {
+        if (isMirroring) {
+            MirrorPlayerScreen(tabManager)
+        } else if (clientConnected) {
             BrowserScreen(tabManager)
         } else {
             PairingScreen(connectionUrl, localIp)
@@ -250,4 +265,100 @@ private fun generateQrCodeBitmap(content: String): Bitmap? {
         Log.e("TvActivityContent", "Error generating QR code", e)
     }
     return null
+}
+
+@Composable
+fun MirrorPlayerScreen(tabManager: TabManager) {
+    val context = LocalContext.current
+    val surfaceState = remember { mutableStateOf<android.view.Surface?>(null) }
+
+    val surface = surfaceState.value
+    LaunchedEffect(surface) {
+        if (surface == null) return@LaunchedEffect
+        withContext(Dispatchers.IO) {
+            var decoder: MediaCodec? = null
+            try {
+                Log.d("MirrorPlayerScreen", "Starting MediaCodec H.264 decoder")
+                val codec = MediaCodec.createDecoderByType("video/avc")
+                val format = MediaFormat.createVideoFormat("video/avc", 960, 540)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    format.setInteger(MediaFormat.KEY_LOW_LATENCY, 1)
+                }
+                codec.configure(format, surface, null, 0)
+                codec.start()
+                decoder = codec
+
+                val bufferInfo = MediaCodec.BufferInfo()
+                TvEventBus.mirrorFrames.collect { frameData ->
+                    // Feed input buffer
+                    val inputBufferIndex = codec.dequeueInputBuffer(10000L) // 10ms timeout
+                    if (inputBufferIndex >= 0) {
+                        val inputBuffer = codec.getInputBuffer(inputBufferIndex)
+                        if (inputBuffer != null) {
+                            inputBuffer.clear()
+                            inputBuffer.put(frameData)
+                            codec.queueInputBuffer(
+                                inputBufferIndex,
+                                0,
+                                frameData.size,
+                                System.nanoTime() / 1000L,
+                                0
+                            )
+                        }
+                    }
+
+                    // Render output buffer
+                    var outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 10000L)
+                    while (outputBufferIndex >= 0) {
+                        codec.releaseOutputBuffer(outputBufferIndex, true)
+                        outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 0L)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("MirrorPlayerScreen", "Decoder exception: ${e.message}", e)
+            } finally {
+                try {
+                    decoder?.stop()
+                } catch (e: Exception) {}
+                try {
+                    decoder?.release()
+                } catch (e: Exception) {}
+                Log.d("MirrorPlayerScreen", "Decoder released")
+            }
+        }
+    }
+
+    Box(
+        modifier = Modifier.fillMaxSize().background(Color.Black),
+        contentAlignment = Alignment.Center
+    ) {
+        AndroidView(
+            factory = { ctx ->
+                SurfaceView(ctx).apply {
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                }
+            },
+            modifier = Modifier.fillMaxSize(),
+            update = { surfaceView ->
+                val holder = surfaceView.holder
+                val callback = object : SurfaceHolder.Callback {
+                    override fun surfaceCreated(holder: SurfaceHolder) {
+                        surfaceState.value = holder.surface
+                    }
+
+                    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
+
+                    override fun surfaceDestroyed(holder: SurfaceHolder) {
+                        surfaceState.value = null
+                    }
+                }
+                holder.addCallback(callback)
+                // Retain reference to callback to prevent garbage collection
+                surfaceView.setTag(callback)
+            }
+        )
+    }
 }

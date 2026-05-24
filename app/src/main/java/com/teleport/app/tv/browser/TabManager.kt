@@ -63,6 +63,15 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
     private var webViewHeight = 1080
 
     val isDarkModeEnabled = MutableStateFlow(false)
+    val isMirroring = MutableStateFlow(false)
+
+    fun startMirroring() {
+        isMirroring.value = true
+    }
+
+    fun stopMirroring() {
+        isMirroring.value = false
+    }
 
     init {
         // Collect state updates and push them to the TvEventBus

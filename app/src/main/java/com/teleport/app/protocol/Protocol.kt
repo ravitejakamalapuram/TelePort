@@ -39,6 +39,12 @@ sealed class Command {
 
     @Serializable
     data class ToggleDarkMode(val enabled: Boolean) : Command()
+
+    @Serializable
+    object StartMirroring : Command()
+
+    @Serializable
+    object StopMirroring : Command()
 }
 
 @Serializable

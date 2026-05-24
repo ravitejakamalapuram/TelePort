@@ -159,7 +159,7 @@ jobs:
         if: ${{ env.KEYSTORE_FILE != null && env.PLAY_SERVICE_ACCOUNT_KEY != null && env.PLAY_SERVICE_ACCOUNT_KEY != '' }}
         uses: r0adkll/upload-google-play@v1
         with:
-          serviceAccountJsonRaw: ${{ env.PLAY_SERVICE_ACCOUNT_KEY }}
+          serviceAccountJsonPlainText: ${{ env.PLAY_SERVICE_ACCOUNT_KEY }}
           packageName: com.teleport.app
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
           track: internal

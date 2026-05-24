@@ -80,7 +80,9 @@ fun MobileRemoteScreen(
     connectionManager: TvConnectionManager,
     nsdHelper: NsdHelper,
     gyroTracker: GyroSensorTracker,
-    scanQr: () -> Unit
+    scanQr: () -> Unit,
+    startMirroring: () -> Unit,
+    stopMirroring: () -> Unit
 ) {
     val connState by connectionManager.connectionState.collectAsState()
 
@@ -89,7 +91,7 @@ fun MobileRemoteScreen(
         color = Color(0xFF121212)
     ) {
         if (connState == ConnectionState.Connected) {
-            ControllerScreen(connectionManager, gyroTracker)
+            ControllerScreen(connectionManager, gyroTracker, startMirroring, stopMirroring)
         } else {
             PairingScreen(connectionManager, nsdHelper, scanQr)
         }
@@ -237,7 +239,12 @@ fun PairingScreen(
 }
 
 @Composable
-fun ControllerScreen(connectionManager: TvConnectionManager, gyroTracker: GyroSensorTracker) {
+fun ControllerScreen(
+    connectionManager: TvConnectionManager,
+    gyroTracker: GyroSensorTracker,
+    startMirroring: () -> Unit,
+    stopMirroring: () -> Unit
+) {
     val tvState by connectionManager.tvState.collectAsState()
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabTitles = remember { listOf("Trackpad", "D-Pad", "Tabs") }
@@ -345,7 +352,7 @@ fun ControllerScreen(connectionManager: TvConnectionManager, gyroTracker: GyroSe
                 .background(Color(0xFF121212))
         ) {
             when (selectedTabIndex) {
-                0 -> TrackpadTab(connectionManager, gyroTracker)
+                0 -> TrackpadTab(connectionManager, gyroTracker, startMirroring, stopMirroring)
                 1 -> DpadTab(connectionManager)
                 2 -> TabsManagerTab(connectionManager, tvState)
             }
@@ -357,8 +364,14 @@ fun ControllerScreen(connectionManager: TvConnectionManager, gyroTracker: GyroSe
 }
 
 @Composable
-fun TrackpadTab(connectionManager: TvConnectionManager, gyroTracker: GyroSensorTracker) {
+fun TrackpadTab(
+    connectionManager: TvConnectionManager,
+    gyroTracker: GyroSensorTracker,
+    startMirroring: () -> Unit,
+    stopMirroring: () -> Unit
+) {
     var isAirMouseOn by remember { mutableStateOf(false) }
+    val isCasting by com.teleport.app.mobile.mirror.ScreenCastService.isCasting.collectAsState()
 
     DisposableEffect(isAirMouseOn) {
         if (isAirMouseOn) {
@@ -379,6 +392,37 @@ fun TrackpadTab(connectionManager: TvConnectionManager, gyroTracker: GyroSensorT
             .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
+        // Mirror Screen Switch Header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF1E1E1E), RoundedCornerShape(12.dp))
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text("Mirror Phone Screen", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("Cast phone display to TV", color = Color.Gray, fontSize = 12.sp)
+            }
+            Switch(
+                checked = isCasting,
+                onCheckedChange = { checked ->
+                    if (checked) {
+                        startMirroring()
+                    } else {
+                        stopMirroring()
+                    }
+                },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color(0xFF03DAC6),
+                    checkedTrackColor = Color(0xFF03DAC6).copy(alpha = 0.5f)
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         // Air Mouse Switch Header
         Row(
             modifier = Modifier

@@ -38,6 +38,9 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
     private val _connectionState = MutableStateFlow<ConnectionState>(ConnectionState.Disconnected)
     val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
 
+    var activeIp: String? = null
+        private set
+
     private val _tvState = MutableStateFlow<TvState?>(null)
     val tvState: StateFlow<TvState?> = _tvState.asStateFlow()
 
@@ -52,6 +55,7 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
     fun connect(ip: String, port: Int) {
         disconnect()
 
+        activeIp = ip
         _connectionState.value = ConnectionState.Connecting
         connectionJob = coroutineScope.launch(Dispatchers.IO) {
             try {
@@ -93,6 +97,7 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
         connectionJob = null
         session = null
         _tvState.value = null
+        activeIp = null
         _connectionState.value = ConnectionState.Disconnected
     }
 
