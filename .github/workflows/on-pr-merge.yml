@@ -157,7 +157,7 @@ jobs:
 
       - name: Upload to Google Play
         if: ${{ env.KEYSTORE_FILE != null && env.PLAY_SERVICE_ACCOUNT_KEY != null && env.PLAY_SERVICE_ACCOUNT_KEY != '' }}
-        uses: r0adkll/upload-google-play@v2
+        uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonRaw: ${{ env.PLAY_SERVICE_ACCOUNT_KEY }}
           packageName: com.teleport.app
