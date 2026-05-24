@@ -84,18 +84,6 @@ jobs:
           cat temp_changelog.md >> CHANGELOG.md
           rm temp_changelog.md
 
-      - name: Commit and Push Changelog & Screenshots
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          
-          git add CHANGELOG.md
-          if [ -d "docs/screenshots" ]; then
-            git add docs/screenshots/
-          fi
-          
-          git diff-index --quiet HEAD || (git commit -m "docs: auto-update changelog and screenshots [skip ci]" && git push)
-
       - name: Determine New Tag Version
         id: versioning
         run: |
@@ -117,6 +105,69 @@ jobs:
           
           echo "New tag: $NEW_TAG"
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+
+      - name: Auto-Update app-update.json for GitHub Pages
+        run: |
+          # Parse version code from build.gradle.kts
+          VERSION_CODE=$(grep "versionCode =" app/build.gradle.kts | tr -d -c '0-9')
+          echo "Parsed Version Code: $VERSION_CODE"
+          
+          # Export variables for python script
+          export VERSION_CODE
+          export VERSION_NAME="${NEW_TAG#v}"
+          export TAG_NAME="$NEW_TAG"
+          export RELEASE_NOTES=$(cat release_changelog.txt)
+          
+          python3 -c "
+          import json
+          import os
+          
+          version_code = int(os.environ['VERSION_CODE'])
+          version_name = os.environ['VERSION_NAME']
+          release_notes = os.environ['RELEASE_NOTES']
+          tag_name = os.environ['TAG_NAME']
+          update_url = f'https://github.com/ravitejakamalapuram/TelePort/releases/tag/{tag_name}'
+          
+          json_path = 'docs/app-update.json'
+          try:
+              with open(json_path, 'r') as f:
+                  data = json.load(f)
+          except Exception:
+              data = {'production': {}, 'beta': {}}
+              
+          data['production'] = {
+              'latestVersionCode': version_code,
+              'latestVersionName': version_name,
+              'updateUrl': update_url,
+              'releaseNotes': release_notes,
+              'isForceUpdate': False
+          }
+          data['beta'] = {
+              'latestVersionCode': version_code,
+              'latestVersionName': f'{version_name}-beta',
+              'updateUrl': update_url,
+              'releaseNotes': release_notes,
+              'isForceUpdate': False
+          }
+          
+          with open(json_path, 'w') as f:
+              json.dump(data, f, indent=2)
+          "
+          echo "Updated docs/app-update.json successfully:"
+          cat docs/app-update.json
+
+      - name: Commit and Push Changelog, app-update.json & Screenshots
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          git add CHANGELOG.md
+          git add docs/app-update.json
+          if [ -d "docs/screenshots" ]; then
+            git add docs/screenshots/
+          fi
+          
+          git diff-index --quiet HEAD || (git commit -m "docs: auto-update changelog, app-update.json, and screenshots [skip ci]" && git push)
 
       - name: Create and Push New Git Tag
         run: |
@@ -150,8 +201,10 @@ jobs:
           name: Release ${{ env.NEW_TAG }}
           body_path: release_changelog.txt
           files: |
-            app/build/outputs/apk/release/app-release.apk
-            app/build/outputs/bundle/release/app-release.aab
+            app/build/outputs/apk/production/release/app-production-release.apk
+            app/build/outputs/apk/beta/release/app-beta-release.apk
+            app/build/outputs/bundle/productionRelease/app-production-release.aab
+            app/build/outputs/bundle/betaRelease/app-beta-release.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -162,6 +215,6 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ env.PLAY_SERVICE_ACCOUNT_KEY }}
           packageName: com.carfry369.teleport
-          releaseFiles: app/build/outputs/bundle/release/app-release.aab
+          releaseFiles: app/build/outputs/bundle/productionRelease/app-production-release.aab
           tracks: internal
 

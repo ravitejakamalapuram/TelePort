@@ -1,0 +1,16 @@
+{
+  "production": {
+    "latestVersionCode": 2,
+    "latestVersionName": "1.1",
+    "updateUrl": "https://github.com/ravitejakamalapuram/TelePort/releases",
+    "releaseNotes": "• Added screen mirroring stability fixes\n• General UI polish and improvements",
+    "isForceUpdate": false
+  },
+  "beta": {
+    "latestVersionCode": 2,
+    "latestVersionName": "1.1-beta",
+    "updateUrl": "https://github.com/ravitejakamalapuram/TelePort/releases",
+    "releaseNotes": "• Experimental Air Remote gesture improvements\n• Beta stability fixes",
+    "isForceUpdate": false
+  }
+}

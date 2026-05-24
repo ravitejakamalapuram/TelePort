@@ -37,6 +37,9 @@ import java.net.SocketException
 import java.net.URI
 import android.media.projection.MediaProjectionManager
 import android.content.Context
+import com.teleport.app.update.UpdateDialog
+import com.teleport.app.update.UpdateInfo
+import com.teleport.app.update.UpdateManager
 
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
@@ -108,6 +111,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val coroutineScope = rememberCoroutineScope()
+            var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
+
+            LaunchedEffect(Unit) {
+                val manager = UpdateManager(this@MainActivity)
+                updateInfo = manager.checkForUpdates()
+            }
 
             MaterialTheme {
                 Surface(color = Color(0xFF121212)) {
@@ -161,6 +170,18 @@ class MainActivity : ComponentActivity() {
                                 }
                                 startService(intent)
                                 connectionManager.sendCommand(Command.StopMirroring)
+                            }
+                        )
+                    }
+
+                    updateInfo?.let { info ->
+                        UpdateDialog(
+                            updateInfo = info,
+                            isTv = isTvDevice,
+                            onDismiss = {
+                                if (!info.isForceUpdate) {
+                                    updateInfo = null
+                                }
                             }
                         )
                     }
