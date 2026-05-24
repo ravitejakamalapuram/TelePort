@@ -2,6 +2,11 @@
 
 ## [2026-05-24] - Automated Release
 
+- ci: add continue-on-error and change track to tracks for Google Play upload (b747d72) by Raviteja Kamalapuram
+
+
+## [2026-05-24] - Automated Release
+
 - Complete local screen mirroring implementation and fix tests (3f63fa9) by Raviteja Kamalapuram
 
 
