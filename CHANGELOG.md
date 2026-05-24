@@ -2,6 +2,11 @@
 
 ## [2026-05-24] - Automated Release
 
+- ci: upgrade compileSdk and targetSdk to API 35 and suppress warnings (9513069) by Raviteja Kamalapuram
+
+
+## [2026-05-24] - Automated Release
+
 - ci: support passing keystore parameters via Gradle project properties (8641abb) by Raviteja Kamalapuram
 
 
