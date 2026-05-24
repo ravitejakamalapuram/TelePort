@@ -230,11 +230,11 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
 
     fun sendTextActive(text: String) {
         coroutineScope.launch(Dispatchers.Main) {
-            val escapedText = text.replace("'", "\\'")
+            val jsonText = org.json.JSONObject.quote(text)
             val js = "(function() { " +
                     "  var el = document.activeElement; " +
                     "  if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) { " +
-                    "    el.value = '$escapedText'; " +
+                    "    el.value = $jsonText; " +
                     "    el.dispatchEvent(new Event('input', { bubbles: true })); " +
                     "    el.dispatchEvent(new Event('change', { bubbles: true })); " +
                     "  } " +
