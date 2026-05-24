@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026-05-24] - Automated Release
+
+- ci: fix r0adkll/upload-google-play action version tag (025978c) by Raviteja Kamalapuram
+
+
 ## [2026-05-23] - Automated Release
 
 - Implement Wave 2 features: Zero-Install Web Remote, Multi-Controller Co-Browsing, Smart Dark Mode, and Clipboard Sync (0c29a66) by Raviteja Kamalapuram
