@@ -5,13 +5,13 @@ plugins {
 }
 
 android {
-    namespace = "com.teleport.app"
-    compileSdk = 34
+    namespace = "com.carfry369.teleport"
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.carfry369.teleport"
         minSdk = 26 // Required for Ktor Netty and Media3
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
     }
