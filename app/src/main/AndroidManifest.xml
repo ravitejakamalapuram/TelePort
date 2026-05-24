@@ -12,6 +12,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
     <!-- Form-Factor Compatibility -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
@@ -26,7 +27,7 @@
 
         <!-- Unified Entry MainActivity -->
         <activity
-            android:name=".MainActivity"
+            android:name="com.teleport.app.MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
             android:banner="@drawable/ic_banner"
@@ -50,36 +51,34 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" />
-                <data android:port="8080" />
-                <data android:path="/remote" />
+                <data android:scheme="http" android:host="*" android:port="8080" android:path="/remote" />
             </intent-filter>
         </activity>
 
         <!-- Fullscreen ExoPlayer Native Player Activity for TV -->
         <activity
-            android:name=".tv.player.NativePlayerActivity"
+            android:name="com.teleport.app.tv.player.NativePlayerActivity"
             android:exported="false"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
         <!-- Ktor Background Server Foreground Service -->
         <service
-            android:name=".tv.server.LocalServerService"
+            android:name="com.teleport.app.tv.server.LocalServerService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
 
         <!-- Mobile Screen Cast Foreground Service -->
         <service
-            android:name=".mobile.mirror.ScreenCastService"
+            android:name="com.teleport.app.mobile.mirror.ScreenCastService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
 
         <!-- TV Boot Completed Receiver -->
         <receiver
-            android:name=".tv.server.BootReceiver"
+            android:name="com.teleport.app.tv.server.BootReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
