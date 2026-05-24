@@ -37,12 +37,33 @@ import java.net.SocketException
 import java.net.URI
 import android.media.projection.MediaProjectionManager
 import android.content.Context
-import com.teleport.app.update.UpdateDialog
-import com.teleport.app.update.UpdateInfo
-import com.teleport.app.update.UpdateManager
+import kotlinx.coroutines.launch
+import com.google.android.play.core.appupdate.AppUpdateManager
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
+import com.google.android.play.core.install.model.UpdateAvailability
+import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : ComponentActivity() {
     private val TAG = "MainActivity"
+
+    // Google Play In-App Updates
+    private lateinit var appUpdateManager: AppUpdateManager
+    private val installListener = InstallStateUpdatedListener { state ->
+        if (state.installStatus() == InstallStatus.DOWNLOADED) {
+            popupInstallUpdate()
+        }
+    }
+    private val updateLauncher = registerForActivityResult(
+        ActivityResultContracts.StartIntentSenderForResult()
+    ) { result ->
+        if (result.resultCode != RESULT_OK) {
+            Log.e(TAG, "Update flow failed! Result code: ${result.resultCode}")
+        }
+    }
 
     // Mobile specific properties
     private lateinit var nsdHelper: NsdHelper
@@ -92,6 +113,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Initialize Google Play Update Manager
+        appUpdateManager = AppUpdateManagerFactory.create(this)
+        appUpdateManager.registerListener(installListener)
+        checkPlayStoreUpdates()
+
         val isTvDevice = checkIsTvDevice()
         Log.d(TAG, "Device check: isTvDevice = $isTvDevice")
 
@@ -111,12 +137,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val coroutineScope = rememberCoroutineScope()
-            var updateInfo by remember { mutableStateOf<UpdateInfo?>(null) }
-
-            LaunchedEffect(Unit) {
-                val manager = UpdateManager(this@MainActivity)
-                updateInfo = manager.checkForUpdates()
-            }
 
             MaterialTheme {
                 Surface(color = Color(0xFF121212)) {
@@ -170,18 +190,6 @@ class MainActivity : ComponentActivity() {
                                 }
                                 startService(intent)
                                 connectionManager.sendCommand(Command.StopMirroring)
-                            }
-                        )
-                    }
-
-                    updateInfo?.let { info ->
-                        UpdateDialog(
-                            updateInfo = info,
-                            isTv = isTvDevice,
-                            onDismiss = {
-                                if (!info.isForceUpdate) {
-                                    updateInfo = null
-                                }
                             }
                         )
                     }
@@ -292,6 +300,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        if (::appUpdateManager.isInitialized) {
+            appUpdateManager.unregisterListener(installListener)
+        }
         if (checkIsTvDevice()) {
             stopService(Intent(this, LocalServerService::class.java))
         } else {
@@ -299,6 +310,59 @@ class MainActivity : ComponentActivity() {
                 connectionManager.disconnect()
             }
             gyroTracker?.stop()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::appUpdateManager.isInitialized) {
+            appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateInfo ->
+                if (appUpdateInfo.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+                    try {
+                        appUpdateManager.startUpdateFlowForResult(
+                            appUpdateInfo,
+                            updateLauncher,
+                            AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build()
+                        )
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error resuming update flow", e)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun checkPlayStoreUpdates() {
+        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+        appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+                // If update priority is >= 4, trigger IMMEDIATE update, otherwise FLEXIBLE
+                val updateType = if (appUpdateInfo.updatePriority() >= 4) {
+                    AppUpdateType.IMMEDIATE
+                } else {
+                    AppUpdateType.FLEXIBLE
+                }
+                
+                if (appUpdateInfo.isUpdateTypeAllowed(updateType)) {
+                    try {
+                        appUpdateManager.startUpdateFlowForResult(
+                            appUpdateInfo,
+                            updateLauncher,
+                            AppUpdateOptions.newBuilder(updateType).build()
+                        )
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error starting update flow", e)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun popupInstallUpdate() {
+        Toast.makeText(this, "An update has just been downloaded. Restarting app to complete installation...", Toast.LENGTH_LONG).show()
+        lifecycleScope.launch {
+            kotlinx.coroutines.delay(3000)
+            appUpdateManager.completeUpdate()
         }
     }
 

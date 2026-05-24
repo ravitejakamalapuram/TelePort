@@ -48,17 +48,6 @@ android {
             )
         }
     }
-    flavorDimensions += "channel"
-    productFlavors {
-        create("beta") {
-            dimension = "channel"
-            applicationIdSuffix = ".beta"
-            versionNameSuffix = "-beta"
-        }
-        create("production") {
-            dimension = "channel"
-        }
-    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -68,7 +57,6 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.8"
@@ -101,6 +89,10 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.activity:activity-compose:1.8.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+    // Google Play In-App Updates SDK
+    implementation("com.google.android.play:app-update:2.1.0")
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
 
     // Ktor Server (for TV server)
     val ktorVersion = "2.3.8"
