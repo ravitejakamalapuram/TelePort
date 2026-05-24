@@ -2,6 +2,11 @@
 
 ## [2026-05-24] - Automated Release
 
+- ci: support passing keystore parameters via Gradle project properties (8641abb) by Raviteja Kamalapuram
+
+
+## [2026-05-24] - Automated Release
+
 - ci: add continue-on-error and change track to tracks for Google Play upload (b747d72) by Raviteja Kamalapuram
 
 
