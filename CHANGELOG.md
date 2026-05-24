@@ -2,6 +2,11 @@
 
 ## [2026-05-24] - Automated Release
 
+- fix: generate all 5 screenshots (pairing & controller sub-tabs) and delete old controller screen (79c13b1) by Raviteja Kamalapuram
+
+
+## [2026-05-24] - Automated Release
+
 - fix: enable native graphics for Robolectric to generate non-blank screenshots (bf04425) by Raviteja Kamalapuram
 
 
