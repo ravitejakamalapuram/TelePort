@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - TelePort</title>
+    <style>
+        :root {
+            --bg-color: #0d0e12;
+            --text-color: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --accent-color: #6366f1;
+            --accent-gradient: linear-gradient(135deg, #6366f1, #3b82f6);
+            --card-bg: rgba(30, 41, 59, 0.4);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 90%;
+            margin: 40px auto;
+            padding: 40px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0 0 10px 0;
+            letter-spacing: -0.05em;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin: 0;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 5px;
+        }
+
+        h2 {
+            font-size: 1.3rem;
+            color: #ffffff;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-color);
+            padding-left: 12px;
+        }
+
+        p, ul {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            margin-top: 50px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 25px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .contact-box {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 25px;
+        }
+
+        .contact-box p {
+            margin: 0 0 10px 0;
+            color: var(--text-color);
+        }
+
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: #818cf8;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 20px auto;
+            }
+            .logo {
+                font-size: 2rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">TelePort</div>
+            <h1>Privacy Policy</h1>
+            <div class="subtitle">Effective Date: May 24, 2026</div>
+        </div>
+
+        <p>This Privacy Policy describes how <strong>TelePort</strong> ("the App", "we", "us", or "our") handles information collected from users of our application. TelePort is designed as a local connectivity tool for Android TV and mobile devices.</p>
+
+        <h2>1. No Collection of Personal Information</h2>
+        <p>We believe in absolute user privacy. TelePort <strong>does not collect, transmit, store, or share</strong> any personal information. This includes but is not limited to:</p>
+        <ul>
+            <li>Names, email addresses, phone numbers, or account details.</li>
+            <li>Location data or GPS coordinates.</li>
+            <li>Device identifiers (such as IMEI or MAC addresses).</li>
+            <li>Photos, files, contacts, or calendar data.</li>
+        </ul>
+
+        <h2>2. Screen Casting and Media Projection</h2>
+        <p>To enable screen casting from your mobile device to your Android TV, the App utilizes Android's <code>MediaProjection</code> API. This process is executed entirely locally on your device and Wi-Fi network. <strong>No video or audio content captured during screen projection is ever stored by us, nor is it sent to external servers or third parties.</strong></p>
+
+        <h2>3. Local Network Data Transmission</h2>
+        <p>TelePort facilitates connection between devices via your local area network (LAN) over Wi-Fi using Network Service Discovery (NSD) and WebSocket connections. All communication and data transfer (such as controller inputs, discovery signals, and media streams) occur directly between the paired mobile device and the TV. <strong>No network data goes through our or any external servers.</strong></p>
+
+        <h2>4. Camera Permission (QR Code Pairing)</h2>
+        <p>The App may request access to your device's camera. This permission is used solely to scan the pairing QR code displayed on your TV screen to establish a connection. <strong>No images or video recordings are saved, stored, or transmitted.</strong></p>
+
+        <h2>5. No Third-Party Integration</h2>
+        <p>We do not integrate any third-party SDKs, ad networks, tracking tools, or analytics platforms. There is no tracking of your activity across websites or other apps.</p>
+
+        <h2>6. Changes to This Privacy Policy</h2>
+        <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page with the updated effective date.</p>
+
+        <div class="contact-box">
+            <p><strong>Contact Us</strong></p>
+            If you have any questions or suggestions regarding this Privacy Policy, feel free to contact us at: <a href="mailto:raviteja.kamalapuram@gmail.com">raviteja.kamalapuram@gmail.com</a>.
+        </div>
+
+        <div class="footer">
+            &copy; 2026 TelePort. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>
