@@ -121,7 +121,9 @@ class ScreenshotCapturerTest {
                 Surface(color = Color(0xFF121212)) {
                     ControllerScreen(
                         connectionManager = connectionManager,
-                        gyroTracker = gyroTracker
+                        gyroTracker = gyroTracker,
+                        startMirroring = {},
+                        stopMirroring = {}
                     )
                 }
             }
