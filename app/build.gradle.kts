@@ -9,7 +9,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.teleport.app"
+        applicationId = "com.carfry369.teleport"
         minSdk = 26 // Required for Ktor Netty and Media3
         targetSdk = 34
         versionCode = 1
