@@ -2,6 +2,11 @@
 
 ## [2026-05-24] - Automated Release
 
+- docs: update compliance video with real emulator recordings (side-by-side TV & Mobile Remote) (bfcc017) by Raviteja Kamalapuram
+
+
+## [2026-05-24] - Automated Release
+
 - docs: add automatically generated compliance demo video for Play Store review (460a255) by Raviteja Kamalapuram
 
 
