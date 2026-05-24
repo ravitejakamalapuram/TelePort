@@ -37,20 +37,32 @@ object AdBlocker {
         try {
             val host = java.net.URL(url).host?.lowercase() ?: return false
 
-            // Check if host matches or ends with any ad domain
-            for (adDomain in AD_DOMAINS) {
-                if (host == adDomain || host.endsWith(".$adDomain")) {
-                    try {
-                        Log.d(TAG, "Blocked Ad Request: $url")
-                    } catch (e: Throwable) {
-                        println("Blocked Ad Request: $url")
-                    }
+            // Check exact match
+            if (AD_DOMAINS.contains(host)) {
+                logBlock(url)
+                return true
+            }
+
+            // Check parent domains
+            var dotIndex = host.indexOf('.')
+            while (dotIndex != -1) {
+                if (AD_DOMAINS.contains(host.substring(dotIndex + 1))) {
+                    logBlock(url)
                     return true
                 }
+                dotIndex = host.indexOf('.', dotIndex + 1)
             }
         } catch (e: Exception) {
             // Ignore malformed URLs
         }
         return false
+    }
+
+    private fun logBlock(url: String) {
+        try {
+            Log.d(TAG, "Blocked Ad Request: $url")
+        } catch (e: Throwable) {
+            println("Blocked Ad Request: $url")
+        }
     }
 }
