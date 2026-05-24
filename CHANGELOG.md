@@ -2,6 +2,11 @@
 
 ## [2026-05-24] - Automated Release
 
+- docs: add premium Privacy Policy page for Google Play Store compliance (7672777) by Raviteja Kamalapuram
+
+
+## [2026-05-24] - Automated Release
+
 - feat: migrate in-app update notification to official Google Play In-App Updates SDK (1cc056f) by Raviteja Kamalapuram
 
 
