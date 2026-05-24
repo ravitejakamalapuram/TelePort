@@ -2,6 +2,11 @@
 
 ## [2026-05-24] - Automated Release
 
+- ci: upgrade versionCode to 5, set up flavor dimensions, and add local in-app updates (e3546ed) by Raviteja Kamalapuram
+
+
+## [2026-05-24] - Automated Release
+
 - ci: upgrade compileSdk and targetSdk to API 35 and suppress warnings (9513069) by Raviteja Kamalapuram
 
 
