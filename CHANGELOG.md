@@ -2,6 +2,11 @@
 
 ## [2026-05-24] - Automated Release
 
+- feat: migrate in-app update notification to official Google Play In-App Updates SDK (1cc056f) by Raviteja Kamalapuram
+
+
+## [2026-05-24] - Automated Release
+
 - ci: upgrade versionCode to 5, set up flavor dimensions, and add local in-app updates (e3546ed) by Raviteja Kamalapuram
 
 
