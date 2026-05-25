@@ -133,6 +133,7 @@ class MainActivity : ComponentActivity() {
             }
             handleShareIntent(intent)
             handleDeepLinkIntent(intent)
+            checkAndRequestNotificationPermission()
         }
 
         setContent {
@@ -363,6 +364,15 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             kotlinx.coroutines.delay(3000)
             appUpdateManager.completeUpdate()
+        }
+    }
+
+    private fun checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val permission = android.Manifest.permission.POST_NOTIFICATIONS
+            if (checkSelfPermission(permission) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(permission), 101)
+            }
         }
     }
 
