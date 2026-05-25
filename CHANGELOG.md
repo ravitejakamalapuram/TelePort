@@ -2,6 +2,11 @@
 
 ## [2026-05-25] - Automated Release
 
+- Request runtime POST_NOTIFICATIONS permission on startup for Android 13+ devices (8d70481) by Raviteja Kamalapuram
+
+
+## [2026-05-25] - Automated Release
+
 - Update pairing and controller screen assets after namespace refactoring and test improvements (557e1ca) by Raviteja Kamalapuram
 
 
