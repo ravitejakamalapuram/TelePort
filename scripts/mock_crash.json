@@ -1,0 +1,14 @@
+[
+  {
+    "title": "java.lang.NullPointerException",
+    "subtitle": "Attempt to invoke virtual method 'void android.widget.TextView.setText(java.lang.CharSequence)' on a null object reference",
+    "stack_trace": "java.lang.NullPointerException: Attempt to invoke virtual method 'void android.widget.TextView.setText(java.lang.CharSequence)' on a null object reference\n\tat com.teleport.app.MainActivity.onCreate(MainActivity.kt:50)\n\tat android.app.Activity.performCreate(Activity.java:8051)",
+    "event_count": 10,
+    "affected_users": 5,
+    "device_info": {
+      "model": "Pixel 7",
+      "os_version": "14"
+    },
+    "issue_id": "mock-issue-123"
+  }
+]

@@ -14,6 +14,10 @@ on:
         description: 'Dry run — report only, do not create fix PRs'
         required: false
         default: 'false'
+      mock_crash:
+        description: 'Inject a mock crash for pipeline testing'
+        required: false
+        default: 'false'
 
 jobs:
   monitor-crashes:
@@ -60,11 +64,16 @@ jobs:
         run: |
           HOURS="${{ github.event.inputs.hours_lookback || '24' }}"
 
-          python scripts/fetch_crashes.py \
-            --project-id "${{ secrets.FIREBASE_PROJECT_ID }}" \
-            --hours "$HOURS" \
-            --min-events 1 \
-            > /tmp/crashes.json 2>/tmp/crash_fetch.log || true
+          if [[ "${{ github.event.inputs.mock_crash }}" == "true" ]]; then
+            echo "Injecting mock crash..."
+            cp scripts/mock_crash.json /tmp/crashes.json
+          else
+            python scripts/fetch_crashes.py \
+              --project-id "${{ secrets.FIREBASE_PROJECT_ID }}" \
+              --hours "$HOURS" \
+              --min-events 1 \
+              > /tmp/crashes.json 2>/tmp/crash_fetch.log || true
+          fi
 
           # If the script failed and produced no valid JSON, default to [].
           if ! python3 -c "import json; json.load(open('/tmp/crashes.json'))" 2>/dev/null; then
