@@ -2,6 +2,11 @@
 
 ## [2026-05-25] - Automated Release
 
+- feat: implement Wave 4 Chrome Extension, design guidelines, and dev runner CLI (45d47f8) by Raviteja Kamalapuram
+
+
+## [2026-05-25] - Automated Release
+
 - Request runtime POST_NOTIFICATIONS permission on startup for Android 13+ devices (8d70481) by Raviteja Kamalapuram
 
 
