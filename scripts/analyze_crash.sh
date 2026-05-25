@@ -374,7 +374,7 @@ EOF
         --body "$pr_body" \
         --base main \
         --head "$branch_name" \
-        --label "bug,crash,automated" 2>/dev/null && {
+        --label "bug,crash,automated" && {
           TOTAL_PRS=$((TOTAL_PRS + 1))
           log "✅ PR created for issue $issue_id."
         } || {
