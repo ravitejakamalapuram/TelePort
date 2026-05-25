@@ -1,17 +1,6 @@
 :root {
-  --bg-color: #0d0d11;
-  --card-bg: rgba(26, 26, 36, 0.55);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --text-primary: #ffffff;
-  --text-secondary: #9ea2b0;
-  
-  --primary-color: #7928ca;
-  --primary-glow: rgba(121, 40, 202, 0.3);
-  --accent-color: #00dfd8;
-  --accent-glow: rgba(0, 223, 216, 0.25);
-  
-  --success-color: #02c39a;
-  --error-color: #ff3b30;
+  --primary-glow: color-mix(in srgb, var(--primary-color) 30%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent-color) 25%, transparent);
   
   --font-family: 'Outfit', sans-serif;
   --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);

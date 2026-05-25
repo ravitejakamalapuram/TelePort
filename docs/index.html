@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TelePort - Local-First Android TV Browser & Mobile Remote</title>
+    <title><!-- APP_NAME -->TelePort<!-- /APP_NAME --> - Local-First Android TV Browser & Mobile Remote</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,20 +11,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <style>
+        @import url("theme-tokens.css");
+
         :root {
-            --bg-color: #121212;
-            --text-color: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --accent-color: #6200ee;
-            --accent-glow: rgba(98, 0, 238, 0.4);
-            --accent-gradient: linear-gradient(135deg, #6200ee, #03dac6);
-            --green-accent: #00e676;
-            --green-glow: rgba(0, 230, 118, 0.3);
-            --teal-accent: #03dac6;
-            --card-bg: rgba(30, 30, 30, 0.6);
-            --card-bg-hover: rgba(30, 30, 30, 0.8);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --border-color-focus: rgba(98, 0, 238, 0.5);
+            /* Inherited from theme-tokens.css:
+               --bg-color, --card-bg, --border-color, --primary-color, --accent-color, --text-primary, --text-secondary
+            */
+            --text-color: var(--text-primary);
+            --accent-glow: color-mix(in srgb, var(--accent-color) 40%, transparent);
+            --accent-gradient: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            --green-accent: var(--success-color);
+            --green-glow: color-mix(in srgb, var(--success-color) 30%, transparent);
+            --teal-accent: var(--accent-color);
+            --card-bg-hover: color-mix(in srgb, var(--card-bg) 80%, white 5%);
+            --border-color-focus: color-mix(in srgb, var(--accent-color) 50%, transparent);
             --font-outfit: 'Outfit', sans-serif;
             --font-inter: 'Inter', sans-serif;
             --transition-speed: 0.3s;
@@ -1742,7 +1742,7 @@
         <div class="container nav-container">
             <a href="#" class="logo-group">
                 <img src="../assets/logo.png" alt="TelePort Logo" class="logo-image" style="height: 32px; width: 32px; object-fit: contain; animation: float 3s ease-in-out infinite;">
-                <span class="logo-text">TelePort</span>
+                <span class="logo-text"><!-- APP_NAME -->TelePort<!-- /APP_NAME --></span>
             </a>
             <ul class="nav-links">
                 <li><a href="#demo">Live Demo</a></li>
@@ -2281,7 +2281,7 @@
         <div class="container">
             <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:16px;">
                 <img src="../assets/logo.png" alt="TelePort Logo" style="height: 32px; width: 32px; object-fit: contain;">
-                <span class="footer-logo" style="margin-bottom: 0;">TelePort</span>
+                <span class="footer-logo" style="margin-bottom: 0;"><!-- APP_NAME -->TelePort<!-- /APP_NAME --></span>
             </div>
             <ul class="footer-links">
                 <li><a href="#">Home</a></li>

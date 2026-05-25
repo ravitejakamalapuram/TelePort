@@ -81,6 +81,8 @@ cmd_setup() {
 }
 
 cmd_assets() {
+  log_info "Compiling branding colors and metadata..."
+  python3 scripts/compile_branding.py
   log_info "Compiling all project assets from single-source logo and banners..."
   if [[ -f "scripts/generate_assets.py" ]]; then
     python3 scripts/generate_assets.py
@@ -92,6 +94,8 @@ cmd_assets() {
 }
 
 cmd_test() {
+  log_info "Compiling branding colors and metadata..."
+  python3 scripts/compile_branding.py
   log_info "1. Validating Chrome Extension files..."
   local manifest="chrome-extension/manifest.json"
   if [[ ! -f "$manifest" ]]; then
@@ -150,6 +154,8 @@ if err:
 }
 
 cmd_build() {
+  log_info "Compiling branding colors and metadata..."
+  python3 scripts/compile_branding.py
   log_info "1. Packaging Chrome Extension..."
   rm -f teleport-chrome-extension.zip
   cd chrome-extension

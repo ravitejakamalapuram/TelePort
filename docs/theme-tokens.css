@@ -1,0 +1,13 @@
+/* Generated automatically from teleport-config.json. Do not edit directly. */
+:root {
+  --bg-color: #0d0d11;
+  --card-bg: rgba(26, 26, 36, 0.55);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --primary-color: #7928ca;
+  --accent-color: #00dfd8;
+  --success-color: #02c39a;
+  --error-color: #ff3b30;
+  --text-primary: #ffffff;
+  --text-secondary: #9ea2b0;
+  --support-email: "raviteja369.k@gmail.com";
+}

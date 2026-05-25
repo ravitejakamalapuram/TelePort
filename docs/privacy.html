@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy - TelePort</title>
+    <title>Privacy Policy - <!-- APP_NAME -->TelePort<!-- /APP_NAME --></title>
+    <link rel="stylesheet" href="theme-tokens.css">
     <style>
         :root {
-            --bg-color: #0d0e12;
-            --text-color: #e2e8f0;
-            --text-secondary: #94a3b8;
-            --accent-color: #6366f1;
-            --accent-gradient: linear-gradient(135deg, #6366f1, #3b82f6);
-            --card-bg: rgba(30, 41, 59, 0.4);
-            --border-color: rgba(255, 255, 255, 0.08);
+            /* Inherits --bg-color, --card-bg, --border-color, --primary-color, --accent-color, --text-primary, --text-secondary from theme-tokens.css */
+            --text-color: var(--text-primary);
+            --accent-gradient: linear-gradient(135deg, var(--primary-color), var(--accent-color));
             --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
 
@@ -147,7 +144,7 @@
         <div class="nav-container" style="display: flex; justify-content: space-between; align-items: center; height: 70px; max-width: 800px; margin: 0 auto; padding: 0 20px;">
             <a href="index.html" class="logo-group" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
                 <span class="logo-icon" style="font-size: 1.8rem;">📺</span>
-                <span class="logo-text" style="font-family: var(--font-family); font-size: 1.5rem; font-weight: 800; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.05em;">TelePort</span>
+                <span class="logo-text" style="font-family: var(--font-family); font-size: 1.5rem; font-weight: 800; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.05em;"><!-- APP_NAME -->TelePort<!-- /APP_NAME --></span>
             </a>
             <a href="index.html" style="background: var(--accent-gradient); color: white; text-decoration: none; padding: 10px 20px; border-radius: 30px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(99,102,241,0.4);">← Back to Site</a>
         </div>
@@ -155,15 +152,15 @@
 
     <div class="container">
         <div class="header">
-            <div class="logo">TelePort</div>
+            <div class="logo"><!-- APP_NAME -->TelePort<!-- /APP_NAME --></div>
             <h1>Privacy Policy</h1>
             <div class="subtitle">Effective Date: May 24, 2026</div>
         </div>
 
-        <p>This Privacy Policy describes how <strong>TelePort</strong> ("the App", "we", "us", or "our") handles information collected from users of our application. TelePort is designed as a local connectivity tool for Android TV and mobile devices.</p>
+        <p>This Privacy Policy describes how <strong><!-- APP_NAME -->TelePort<!-- /APP_NAME --></strong> ("the App", "we", "us", or "our") handles information collected from users of our application. <!-- APP_NAME -->TelePort<!-- /APP_NAME --> is designed as a local connectivity tool for Android TV and mobile devices.</p>
 
         <h2>1. No Collection of Personal Information</h2>
-        <p>We believe in absolute user privacy. TelePort <strong>does not collect, transmit, store, or share</strong> any personal information. This includes but is not limited to:</p>
+        <p>We believe in absolute user privacy. <!-- APP_NAME -->TelePort<!-- /APP_NAME --> <strong>does not collect, transmit, store, or share</strong> any personal information. This includes but is not limited to:</p>
         <ul>
             <li>Names, email addresses, phone numbers, or account details.</li>
             <li>Location data or GPS coordinates.</li>
@@ -175,7 +172,7 @@
         <p>To enable screen casting from your mobile device to your Android TV, the App utilizes Android's <code>MediaProjection</code> API. This process is executed entirely locally on your device and Wi-Fi network. <strong>No video or audio content captured during screen projection is ever stored by us, nor is it sent to external servers or third parties.</strong></p>
 
         <h2>3. Local Network Data Transmission</h2>
-        <p>TelePort facilitates connection between devices via your local area network (LAN) over Wi-Fi using Network Service Discovery (NSD) and WebSocket connections. All communication and data transfer (such as controller inputs, discovery signals, and media streams) occur directly between the paired mobile device and the TV. <strong>No network data goes through our or any external servers.</strong></p>
+        <p><!-- APP_NAME -->TelePort<!-- /APP_NAME --> facilitates connection between devices via your local area network (LAN) over Wi-Fi using Network Service Discovery (NSD) and WebSocket connections. All communication and data transfer (such as controller inputs, discovery signals, and media streams) occur directly between the paired mobile device and the TV. <strong>No network data goes through our or any external servers.</strong></p>
 
         <h2>4. Camera Permission (QR Code Pairing)</h2>
         <p>The App may request access to your device's camera. This permission is used solely to scan the pairing QR code displayed on your TV screen to establish a connection. <strong>No images or video recordings are saved, stored, or transmitted.</strong></p>
@@ -188,11 +185,11 @@
 
         <div class="contact-box">
             <p><strong>Contact Us</strong></p>
-            If you have any questions or suggestions regarding this Privacy Policy, feel free to contact us at: <a href="mailto:raviteja.kamalapuram@gmail.com">raviteja.kamalapuram@gmail.com</a>.
+            If you have any questions or suggestions regarding this Privacy Policy, feel free to contact us at: <a href="mailto:raviteja369.k@gmail.com">raviteja369.k@gmail.com</a>.
         </div>
 
         <div class="footer">
-            &copy; 2026 TelePort. All rights reserved.
+            &copy; 2026 <!-- APP_NAME -->TelePort<!-- /APP_NAME -->. All rights reserved.
         </div>
     </div>
 </body>

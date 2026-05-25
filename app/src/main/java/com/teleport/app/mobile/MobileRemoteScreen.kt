@@ -75,6 +75,7 @@ import com.teleport.app.mobile.connection.TvConnectionManager
 import com.teleport.app.mobile.nsd.NsdHelper
 import com.teleport.app.mobile.sensors.GyroSensorTracker
 import com.teleport.app.protocol.Command
+import com.teleport.app.ui.theme.ThemeTokens
 
 @Composable
 fun MobileRemoteScreen(
@@ -89,7 +90,7 @@ fun MobileRemoteScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color(0xFF121212)
+        color = ThemeTokens.Background
     ) {
         if (connState == ConnectionState.Connected) {
             ControllerScreen(connectionManager, gyroTracker, startMirroring, stopMirroring)
@@ -126,16 +127,16 @@ fun PairingScreen(
     ) {
         Spacer(modifier = Modifier.height(32.dp))
         Text(
-            text = "TelePort Remote",
+            text = "${ThemeTokens.APP_NAME} Remote",
             fontSize = 32.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = ThemeTokens.TextMain
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Connect to your TV client to start controlling",
             fontSize = 14.sp,
-            color = Color.Gray
+            color = ThemeTokens.TextSub
         )
 
         Spacer(modifier = Modifier.height(48.dp))
@@ -147,13 +148,13 @@ fun PairingScreen(
                 .fillMaxWidth()
                 .height(56.dp),
             shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary)
         ) {
             Text("Scan TV QR Code", fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-        Text("OR CONNECT VIA DISCOVERY", fontSize = 12.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
+        Text("OR CONNECT VIA DISCOVERY", fontSize = 12.sp, color = ThemeTokens.TextSub, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
 
         // Discovered TVs List
@@ -161,7 +162,7 @@ fun PairingScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E1E))
+            colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg)
         ) {
             if (discoveredTvs.isEmpty()) {
                 Box(
@@ -170,11 +171,11 @@ fun PairingScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(
-                            color = Color(0xFF03DAC6),
+                            color = ThemeTokens.Accent,
                             modifier = Modifier.size(36.dp)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Searching for TVs on Wi-Fi...", color = Color.Gray, fontSize = 14.sp)
+                        Text("Searching for TVs on Wi-Fi...", color = ThemeTokens.TextSub, fontSize = 14.sp)
                     }
                 }
             } else {
@@ -189,10 +190,10 @@ fun PairingScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
-                                Text(tv.name, color = Color.White, fontWeight = FontWeight.Bold)
-                                Text("${tv.ipAddress}:${tv.port}", color = Color.Gray, fontSize = 12.sp)
+                                Text(tv.name, color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+                                Text("${tv.ipAddress}:${tv.port}", color = ThemeTokens.TextSub, fontSize = 12.sp)
                             }
-                            Text("Connect", color = Color(0xFF03DAC6), fontWeight = FontWeight.Bold)
+                            Text("Connect", color = ThemeTokens.Accent, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -214,25 +215,25 @@ fun PairingScreen(
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF03DAC6),
-                    focusedLabelColor = Color(0xFF03DAC6),
-                    unfocusedBorderColor = Color.DarkGray,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
+                    focusedBorderColor = ThemeTokens.Accent,
+                    focusedLabelColor = ThemeTokens.Accent,
+                    unfocusedBorderColor = ThemeTokens.Border,
+                    focusedTextColor = ThemeTokens.TextMain,
+                    unfocusedTextColor = ThemeTokens.TextMain
                 )
             )
             Spacer(modifier = Modifier.width(12.dp))
             Button(
                 onClick = {
                     if (manualIp.isNotBlank()) {
-                        connectionManager.connect(manualIp.trim(), 8080)
+                        connectionManager.connect(manualIp.trim(), ThemeTokens.PORT)
                     }
                 },
                 modifier = Modifier.height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF03DAC6))
+                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent)
             ) {
-                Text("Go", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text("Go", color = ThemeTokens.Background, fontWeight = FontWeight.Bold)
             }
         }
 
@@ -243,16 +244,16 @@ fun PairingScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 CircularProgressIndicator(
-                    color = Color(0xFF03DAC6),
+                    color = ThemeTokens.Accent,
                     modifier = Modifier.size(20.dp),
                     strokeWidth = 2.dp
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Connecting to TV...", color = Color(0xFF03DAC6))
+                Text("Connecting to TV...", color = ThemeTokens.Accent)
             }
         } else if (connState is ConnectionState.Error) {
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Error: ${(connState as ConnectionState.Error).message}", color = Color.Red, fontSize = 12.sp)
+            Text("Error: ${(connState as ConnectionState.Error).message}", color = ThemeTokens.Error, fontSize = 12.sp)
         }
     }
 }
@@ -273,15 +274,15 @@ fun ControllerScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF1E1E1E))
+                .background(ThemeTokens.CardBg)
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
                 Text(
-                    text = "TelePort Remote",
-                    color = Color.White,
+                    text = "${ThemeTokens.APP_NAME} Remote",
+                    color = ThemeTokens.TextMain,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
@@ -290,7 +291,7 @@ fun ControllerScreen(
                     modifier = Modifier.padding(top = 4.dp)
                 ) {
                     var isDarkModeEnabled by remember { mutableStateOf(false) }
-                    Text("Dark Mode", color = Color.Gray, fontSize = 12.sp)
+                    Text("Dark Mode", color = ThemeTokens.TextSub, fontSize = 12.sp)
                     Spacer(modifier = Modifier.width(4.dp))
                     Switch(
                         checked = isDarkModeEnabled,
@@ -299,8 +300,8 @@ fun ControllerScreen(
                             connectionManager.sendCommand(Command.ToggleDarkMode(it))
                         },
                         colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color(0xFF03DAC6),
-                            checkedTrackColor = Color(0xFF03DAC6).copy(alpha = 0.5f)
+                            checkedThumbColor = ThemeTokens.Accent,
+                            checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
                         ),
                         modifier = Modifier.scale(0.7f)
                     )
@@ -308,9 +309,9 @@ fun ControllerScreen(
             }
             Button(
                 onClick = { connectionManager.disconnect() },
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f))
+                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error.copy(alpha = 0.8f))
             ) {
-                Text("Disconnect", color = Color.White, fontSize = 12.sp)
+                Text("Disconnect", color = ThemeTokens.TextMain, fontSize = 12.sp)
             }
         }
 
@@ -323,7 +324,7 @@ fun ControllerScreen(
                     .clickable {
                         connectionManager.sendCommand(Command.PlayStreamNatively(streamUrl))
                     },
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF6200EE)),
+                colors = CardDefaults.cardColors(containerColor = ThemeTokens.Primary),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Row(
@@ -334,10 +335,10 @@ fun ControllerScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("📺 Media stream detected!", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Text("Tap to play cleanly in Native Player", color = Color.LightGray, fontSize = 11.sp)
+                        Text("📺 Media stream detected!", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text("Tap to play cleanly in Native Player", color = ThemeTokens.TextSub, fontSize = 11.sp)
                     }
-                    Text("PLAY", color = Color(0xFF03DAC6), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("PLAY", color = ThemeTokens.Accent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
             }
         }
@@ -345,12 +346,12 @@ fun ControllerScreen(
         // Tab Selection
         TabRow(
             selectedTabIndex = selectedTabIndex,
-            containerColor = Color(0xFF1E1E1E),
-            contentColor = Color.White,
+            containerColor = ThemeTokens.CardBg,
+            contentColor = ThemeTokens.TextMain,
             indicator = { tabPositions ->
                 TabRowDefaults.Indicator(
                     Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                    color = Color(0xFF03DAC6)
+                    color = ThemeTokens.Accent
                 )
             }
         ) {
@@ -368,7 +369,7 @@ fun ControllerScreen(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .background(Color(0xFF121212))
+                .background(ThemeTokens.Background)
         ) {
             when (selectedTabIndex) {
                 0 -> TrackpadTab(connectionManager, gyroTracker, startMirroring, stopMirroring)
@@ -415,14 +416,14 @@ fun TrackpadTab(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF1E1E1E), RoundedCornerShape(12.dp))
+                .background(ThemeTokens.CardBg, RoundedCornerShape(12.dp))
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text("Mirror Phone Screen", color = Color.White, fontWeight = FontWeight.Bold)
-                Text("Cast phone display to TV", color = Color.Gray, fontSize = 12.sp)
+                Text("Mirror Phone Screen", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+                Text("Cast phone display to TV", color = ThemeTokens.TextSub, fontSize = 12.sp)
             }
             Switch(
                 checked = isCasting,
@@ -434,8 +435,8 @@ fun TrackpadTab(
                     }
                 },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFF03DAC6),
-                    checkedTrackColor = Color(0xFF03DAC6).copy(alpha = 0.5f)
+                    checkedThumbColor = ThemeTokens.Accent,
+                    checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
                 )
             )
         }
@@ -446,21 +447,21 @@ fun TrackpadTab(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF1E1E1E), RoundedCornerShape(12.dp))
+                .background(ThemeTokens.CardBg, RoundedCornerShape(12.dp))
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text("Air Mouse Mode", color = Color.White, fontWeight = FontWeight.Bold)
-                Text("Point phone to move TV cursor", color = Color.Gray, fontSize = 12.sp)
+                Text("Air Mouse Mode", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+                Text("Point phone to move TV cursor", color = ThemeTokens.TextSub, fontSize = 12.sp)
             }
             Switch(
                 checked = isAirMouseOn,
                 onCheckedChange = { isAirMouseOn = it },
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFF03DAC6),
-                    checkedTrackColor = Color(0xFF03DAC6).copy(alpha = 0.5f)
+                    checkedThumbColor = ThemeTokens.Accent,
+                    checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
                 )
             )
         }
@@ -471,7 +472,7 @@ fun TrackpadTab(
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(vertical = 16.dp)
-                .background(Color(0xFF1E1E1E), RoundedCornerShape(24.dp))
+                .background(ThemeTokens.CardBg, RoundedCornerShape(24.dp))
                 .clip(RoundedCornerShape(24.dp))
                 .pointerInput(isAirMouseOn) {
                     detectTapGestures(
@@ -534,7 +535,7 @@ fun TrackpadTab(
             if (isAirMouseOn) {
                 Text(
                     "TAP ANYWHERE TO CLICK\n(Wave phone to move cursor)",
-                    color = Color(0xFF03DAC6),
+                    color = ThemeTokens.Accent,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -542,7 +543,7 @@ fun TrackpadTab(
             } else {
                 Text(
                     "TRACKPAD\nDrag to move. Tap to click.",
-                    color = Color.DarkGray,
+                    color = ThemeTokens.TextSub,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -557,18 +558,18 @@ fun TrackpadTab(
         ) {
             Button(
                 onClick = { connectionManager.sendCommand(Command.Scroll(0f, -300f)) },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E2E2E)),
+                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Border),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Scroll Up", color = Color.White)
+                Text("Scroll Up", color = ThemeTokens.TextMain)
             }
             Spacer(modifier = Modifier.width(16.dp))
             Button(
                 onClick = { connectionManager.sendCommand(Command.Scroll(0f, 300f)) },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E2E2E)),
+                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Border),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Scroll Down", color = Color.White)
+                Text("Scroll Down", color = ThemeTokens.TextMain)
             }
         }
     }
@@ -589,16 +590,16 @@ fun DpadTab(connectionManager: TvConnectionManager) {
         ) {
             Button(
                 onClick = { connectionManager.sendCommand(Command.GoBack) },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E2E2E))
+                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Border)
             ) {
-                Text("Back", color = Color.White)
+                Text("Back", color = ThemeTokens.TextMain)
             }
 
             Button(
                 onClick = { connectionManager.sendCommand(Command.PlayPause) },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF03DAC6))
+                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent)
             ) {
-                Text("Play / Pause", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text("Play / Pause", color = ThemeTokens.Background, fontWeight = FontWeight.Bold)
             }
         }
 
@@ -613,9 +614,9 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                 onClick = { connectionManager.sendCommand(Command.Scroll(0f, -150f)) },
                 modifier = Modifier
                     .size(80.dp)
-                    .background(Color(0xFF1E1E1E), CircleShape)
+                    .background(ThemeTokens.CardBg, CircleShape)
             ) {
-                Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Scroll Up", tint = Color.White, modifier = Modifier.size(40.dp))
+                Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Scroll Up", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
             }
 
             Row(
@@ -627,9 +628,9 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                     onClick = { connectionManager.sendCommand(Command.Scroll(-150f, 0f)) },
                     modifier = Modifier
                         .size(80.dp)
-                        .background(Color(0xFF1E1E1E), CircleShape)
+                        .background(ThemeTokens.CardBg, CircleShape)
                 ) {
-                    Icon(Icons.Filled.KeyboardArrowLeft, contentDescription = "Scroll Left", tint = Color.White, modifier = Modifier.size(40.dp))
+                    Icon(Icons.Filled.KeyboardArrowLeft, contentDescription = "Scroll Left", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
                 }
 
                 // OK / CLICK
@@ -637,11 +638,11 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                     modifier = Modifier
                         .padding(20.dp)
                         .size(90.dp)
-                        .background(Color(0xFF6200EE), CircleShape)
+                        .background(ThemeTokens.Primary, CircleShape)
                         .clickable { connectionManager.sendCommand(Command.Click) },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("OK", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text("OK", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
 
                 // RIGHT
@@ -649,9 +650,9 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                     onClick = { connectionManager.sendCommand(Command.Scroll(150f, 0f)) },
                     modifier = Modifier
                         .size(80.dp)
-                        .background(Color(0xFF1E1E1E), CircleShape)
+                        .background(ThemeTokens.CardBg, CircleShape)
                 ) {
-                    Icon(Icons.Filled.KeyboardArrowRight, contentDescription = "Scroll Right", tint = Color.White, modifier = Modifier.size(40.dp))
+                    Icon(Icons.Filled.KeyboardArrowRight, contentDescription = "Scroll Right", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
                 }
             }
 
@@ -660,9 +661,9 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                 onClick = { connectionManager.sendCommand(Command.Scroll(0f, 150f)) },
                 modifier = Modifier
                     .size(80.dp)
-                    .background(Color(0xFF1E1E1E), CircleShape)
+                    .background(ThemeTokens.CardBg, CircleShape)
             ) {
-                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Scroll Down", tint = Color.White, modifier = Modifier.size(40.dp))
+                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Scroll Down", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
             }
         }
     }
@@ -689,11 +690,11 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF03DAC6),
-                    focusedLabelColor = Color(0xFF03DAC6),
-                    unfocusedBorderColor = Color.DarkGray,
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
+                    focusedBorderColor = ThemeTokens.Accent,
+                    focusedLabelColor = ThemeTokens.Accent,
+                    unfocusedBorderColor = ThemeTokens.Border,
+                    focusedTextColor = ThemeTokens.TextMain,
+                    unfocusedTextColor = ThemeTokens.TextMain
                 )
             )
             Spacer(modifier = Modifier.width(12.dp))
@@ -710,14 +711,14 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                 },
                 modifier = Modifier
                     .size(56.dp)
-                    .background(Color(0xFF03DAC6), RoundedCornerShape(12.dp))
+                    .background(ThemeTokens.Accent, RoundedCornerShape(12.dp))
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "Open Tab", tint = Color.Black)
+                Icon(Icons.Filled.Add, contentDescription = "Open Tab", tint = ThemeTokens.Background)
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-        Text("OPEN TABS", fontSize = 12.sp, color = Color.DarkGray, fontWeight = FontWeight.Bold)
+        Text("OPEN TABS", fontSize = 12.sp, color = ThemeTokens.TextSub, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(12.dp))
 
         if (tvState == null || tvState.tabs.isEmpty()) {
@@ -727,7 +728,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No tabs open. Open a URL above!", color = Color.Gray)
+                Text("No tabs open. Open a URL above!", color = ThemeTokens.TextSub)
             }
         } else {
             LazyColumn(
@@ -743,9 +744,9 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                             .padding(vertical = 6.dp)
                             .clickable { connectionManager.sendCommand(Command.SelectTab(index)) },
                         colors = CardDefaults.cardColors(
-                            containerColor = if (isActive) Color(0xFF2E2E2E) else Color(0xFF1E1E1E)
+                            containerColor = if (isActive) ThemeTokens.Border else ThemeTokens.CardBg
                         ),
-                        border = if (isActive) androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF03DAC6)) else null
+                        border = if (isActive) androidx.compose.foundation.BorderStroke(1.5.dp, ThemeTokens.Accent) else null
                     ) {
                         Row(
                             modifier = Modifier
@@ -757,14 +758,14 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = tab.title.ifBlank { "Loading page..." },
-                                    color = Color.White,
+                                    color = ThemeTokens.TextMain,
                                     fontWeight = FontWeight.Bold,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
-                                )
+                               )
                                 Text(
                                     text = tab.url,
-                                    color = Color.Gray,
+                                    color = ThemeTokens.TextSub,
                                     fontSize = 11.sp,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -774,7 +775,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                             IconButton(
                                 onClick = { connectionManager.sendCommand(Command.CloseTab(index)) }
                             ) {
-                                Icon(Icons.Filled.Close, contentDescription = "Close Tab", tint = Color.LightGray)
+                                Icon(Icons.Filled.Close, contentDescription = "Close Tab", tint = ThemeTokens.TextSub)
                             }
                         }
                     }
@@ -795,23 +796,23 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFF1E1E1E))
+            .background(ThemeTokens.CardBg)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         TextField(
             value = textInput,
             onValueChange = { textInput = it },
-            placeholder = { Text("Type text on TV...", color = Color.Gray, fontSize = 14.sp) },
+            placeholder = { Text("Type text on TV...", color = ThemeTokens.TextSub, fontSize = 14.sp) },
             modifier = Modifier.weight(1f),
             singleLine = true,
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFF121212),
-                unfocusedContainerColor = Color(0xFF121212),
+                focusedContainerColor = ThemeTokens.Background,
+                unfocusedContainerColor = ThemeTokens.Background,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White
+                focusedTextColor = ThemeTokens.TextMain,
+                unfocusedTextColor = ThemeTokens.TextMain
             )
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -834,10 +835,10 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
                     Toast.makeText(context, "Failed to read clipboard", Toast.LENGTH_SHORT).show()
                 }
             },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE)),
+            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)
         ) {
-            Text("Paste", color = Color.White, fontWeight = FontWeight.Bold)
+            Text("Paste", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.width(8.dp))
         Button(
@@ -847,10 +848,10 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
                     textInput = ""
                 }
             },
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF03DAC6)),
+            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)
         ) {
-            Text("Send", color = Color.Black, fontWeight = FontWeight.Bold)
+            Text("Send", color = ThemeTokens.Background, fontWeight = FontWeight.Bold)
         }
     }
 }

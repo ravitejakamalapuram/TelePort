@@ -1,0 +1,18 @@
+{
+  "appName": "TelePort",
+  "supportEmail": "raviteja369.k@gmail.com",
+  "port": 8080,
+  "colors": {
+    "background": "#0d0d11",
+    "cardBg": "rgba(26, 26, 36, 0.55)",
+    "cardBgHex": "#1a1a24",
+    "border": "rgba(255, 255, 255, 0.08)",
+    "borderHex": "#1f1f2a",
+    "primary": "#7928ca",
+    "accent": "#00dfd8",
+    "success": "#02c39a",
+    "error": "#ff3b30",
+    "textMain": "#ffffff",
+    "textSub": "#9ea2b0"
+  }
+}

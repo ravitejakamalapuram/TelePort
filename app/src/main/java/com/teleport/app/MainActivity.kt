@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import com.teleport.app.mobile.MobileRemoteScreen
+import com.teleport.app.ui.theme.ThemeTokens
 import com.teleport.app.mobile.connection.ConnectionState
 import com.teleport.app.mobile.connection.TvConnectionManager
 import com.teleport.app.mobile.nsd.NsdHelper
@@ -140,7 +141,7 @@ class MainActivity : ComponentActivity() {
             val coroutineScope = rememberCoroutineScope()
 
             MaterialTheme {
-                Surface(color = Color(0xFF121212)) {
+                Surface(color = ThemeTokens.Background) {
                     if (isTvDevice) {
                         tabManager = remember { TabManager(this@MainActivity, coroutineScope) }
                         val localIp = remember { getLocalIpAddress() }
@@ -152,8 +153,8 @@ class MainActivity : ComponentActivity() {
                         // Automatically connect to 127.0.0.1:8080 if running on an emulator and disconnected
                         LaunchedEffect(Unit) {
                             if (isEmulator() && connectionManager.connectionState.value == ConnectionState.Disconnected) {
-                                Log.i(TAG, "Emulator detected, auto-connecting to TV at 127.0.0.1:8080")
-                                connectionManager.connect("127.0.0.1", 8080)
+                                Log.i(TAG, "Emulator detected, auto-connecting to TV at 127.0.0.1:${ThemeTokens.PORT}")
+                                connectionManager.connect("127.0.0.1", ThemeTokens.PORT)
                             }
                         }
 
@@ -236,12 +237,12 @@ class MainActivity : ComponentActivity() {
         if (intent?.action == Intent.ACTION_VIEW) {
             val data = intent.data ?: return
             Log.d(TAG, "Deep link intent received: $data")
-            if (data.path == "/remote" && data.port == 8080) {
+            if (data.path == "/remote" && data.port == ThemeTokens.PORT) {
                 val ip = data.host
                 if (!ip.isNullOrBlank()) {
-                    Log.d(TAG, "Deep link connecting to TV at $ip:8080")
+                    Log.d(TAG, "Deep link connecting to TV at $ip:${ThemeTokens.PORT}")
                     Toast.makeText(this, "Connecting to TV at $ip...", Toast.LENGTH_SHORT).show()
-                    connectionManager.connect(ip, 8080)
+                    connectionManager.connect(ip, ThemeTokens.PORT)
                 }
             }
         }
@@ -269,7 +270,7 @@ class MainActivity : ComponentActivity() {
         try {
             val uri = URI(qrContent)
             val ip = uri.host ?: throw Exception("Invalid host")
-            val port = if (uri.port != -1) uri.port else 8080
+            val port = if (uri.port != -1) uri.port else ThemeTokens.PORT
             connectionManager.connect(ip, port)
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing QR Code: $qrContent", e)

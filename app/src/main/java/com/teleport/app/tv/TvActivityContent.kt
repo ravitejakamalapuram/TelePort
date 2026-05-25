@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import com.teleport.app.ui.theme.ThemeTokens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -61,7 +62,7 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
     val TAG = "TvActivityContent"
     val clientConnected by TvEventBus.clientConnected.collectAsState()
     val isMirroring by tabManager.isMirroring.collectAsState()
-    val connectionUrl = "http://$localIp:8080/remote"
+    val connectionUrl = "http://$localIp:${ThemeTokens.PORT}/remote"
 
     // Listen for incoming commands in the event bus and route them to tabManager
     LaunchedEffect(Unit) {
@@ -90,7 +91,7 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color(0xFF121212)
+        color = ThemeTokens.Background
     ) {
         if (isMirroring) {
             MirrorPlayerScreen(tabManager)
@@ -112,16 +113,16 @@ fun PairingScreen(connectionUrl: String, localIp: String) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "TelePort TV",
+            text = "${ThemeTokens.APP_NAME} TV",
             fontSize = 42.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = ThemeTokens.TextMain
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Connect your mobile remote to start browsing",
             fontSize = 18.sp,
-            color = Color.Gray
+            color = ThemeTokens.TextSub
         )
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -136,7 +137,7 @@ fun PairingScreen(connectionUrl: String, localIp: String) {
                     modifier = Modifier
                         .size(200.dp)
                         .clip(MaterialTheme.shapes.medium)
-                        .background(Color.White)
+                        .background(ThemeTokens.TextMain)
                         .padding(8.dp)
                 )
             } else {
@@ -144,7 +145,7 @@ fun PairingScreen(connectionUrl: String, localIp: String) {
                     modifier = Modifier.size(200.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = Color.White)
+                    CircularProgressIndicator(color = ThemeTokens.Accent)
                 }
             }
 
@@ -154,25 +155,25 @@ fun PairingScreen(connectionUrl: String, localIp: String) {
                 Text(
                     text = "1. Connect your phone to the same Wi-Fi network",
                     fontSize = 16.sp,
-                    color = Color.LightGray
+                    color = ThemeTokens.TextSub
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "2. Open the TelePort Mobile App",
+                    text = "2. Open the ${ThemeTokens.APP_NAME} Mobile App",
                     fontSize = 16.sp,
-                    color = Color.LightGray
+                    color = ThemeTokens.TextSub
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "3. Scan the QR code or connect to IP:",
                     fontSize = 16.sp,
-                    color = Color.LightGray
+                    color = ThemeTokens.TextSub
                 )
                 Text(
                     text = localIp,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF00E676)
+                    color = ThemeTokens.Success
                 )
             }
         }

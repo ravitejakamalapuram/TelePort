@@ -35,11 +35,12 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import com.teleport.app.ui.theme.ThemeTokens
 import java.util.UUID
 
 class LocalServerService : Service() {
     private val TAG = "LocalServerService"
-    private val PORT = 8080
+    private val PORT = ThemeTokens.PORT
 
     private val serviceJob = SupervisorJob()
     private val serviceScope = CoroutineScope(Dispatchers.IO + serviceJob)
@@ -191,10 +192,19 @@ private val REMOTE_HTML = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TelePort Web Remote</title>
     <style>
+        /* CSS_THEME_TOKENS_START */
+        :root {
+            --bg-color: #0d0d11;
+            --primary-color: #7928ca;
+            --accent-color: #00dfd8;
+            --card-bg: #1a1a24;
+            --border-color: #1f1f2a;
+        }
+        /* CSS_THEME_TOKENS_END */
         body {
             margin: 0;
             padding: 0;
-            background-color: #121212;
+            background-color: var(--bg-color);
             color: #ffffff;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             overflow: hidden;
@@ -208,18 +218,18 @@ private val REMOTE_HTML = """
             justify-content: space-between;
         }
         .header {
-            background-color: #1e1e1e;
+            background-color: var(--card-bg);
             padding: 16px;
             text-align: center;
             font-weight: bold;
             font-size: 18px;
-            border-bottom: 1px solid #2d2d2d;
+            border-bottom: 1px solid var(--border-color);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
         .tab-bar {
             display: flex;
-            background-color: #1e1e1e;
-            border-bottom: 1px solid #2d2d2d;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
         }
         .tab {
             flex: 1;
@@ -233,8 +243,8 @@ private val REMOTE_HTML = """
             transition: all 0.2s ease;
         }
         .tab.active {
-            color: #03dac6;
-            border-bottom: 2px solid #03dac6;
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
         }
         .tab-content {
             flex: 1;
@@ -319,7 +329,7 @@ private val REMOTE_HTML = """
         .btn-center {
             width: 90px;
             height: 90px;
-            background-color: #6200ee;
+            background-color: var(--primary-color);
             color: white;
             font-weight: bold;
             font-size: 18px;
@@ -329,23 +339,23 @@ private val REMOTE_HTML = """
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(98, 0, 238, 0.4);
+            box-shadow: 0 4px 12px rgba(121, 40, 202, 0.4);
         }
         .btn-center:active {
-            background-color: #7722ff;
+            background-color: #903dfa;
         }
         /* Input bar styling */
         .input-bar {
-            background-color: #1e1e1e;
+            background-color: var(--card-bg);
             padding: 12px 16px;
             display: flex;
             align-items: center;
-            border-top: 1px solid #2d2d2d;
+            border-top: 1px solid var(--border-color);
         }
         .input-field {
             flex: 1;
-            background-color: #121212;
-            border: 1px solid #3d3d3d;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             color: white;
             padding: 12px;
@@ -353,7 +363,7 @@ private val REMOTE_HTML = """
             outline: none;
         }
         .btn-send {
-            background-color: #03dac6;
+            background-color: var(--accent-color);
             color: #000000;
             border: none;
             border-radius: 8px;
@@ -369,8 +379,8 @@ private val REMOTE_HTML = """
         }
         .url-input {
             flex: 1;
-            background-color: #1e1e1e;
-            border: 1px solid #3d3d3d;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             color: white;
             padding: 14px;
@@ -378,7 +388,7 @@ private val REMOTE_HTML = """
             outline: none;
         }
         .btn-add {
-            background-color: #03dac6;
+            background-color: var(--accent-color);
             color: black;
             border: none;
             border-radius: 12px;
@@ -396,7 +406,7 @@ private val REMOTE_HTML = """
             overflow-y: auto;
         }
         .tab-item {
-            background-color: #1e1e1e;
+            background-color: var(--card-bg);
             border-radius: 12px;
             padding: 12px 16px;
             margin-bottom: 8px;
@@ -406,7 +416,7 @@ private val REMOTE_HTML = """
             border: 1.5px solid transparent;
         }
         .tab-item.active {
-            border: 1.5px solid #03dac6;
+            border: 1.5px solid var(--accent-color);
             background-color: #2e2e2e;
         }
         .tab-info {
