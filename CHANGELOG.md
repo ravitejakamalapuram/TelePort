@@ -2,6 +2,11 @@
 
 ## [2026-05-25] - Automated Release
 
+- Update pairing and controller screen assets after namespace refactoring and test improvements (557e1ca) by Raviteja Kamalapuram
+
+
+## [2026-05-25] - Automated Release
+
 - ci: remove transitive AD_ID permission to resolve Play Store upload policies (d439440) by Raviteja Kamalapuram
 
 
