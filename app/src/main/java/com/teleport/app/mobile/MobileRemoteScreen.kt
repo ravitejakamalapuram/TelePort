@@ -70,6 +70,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import com.teleport.app.mobile.connection.ConnectionState
 import com.teleport.app.mobile.connection.TvConnectionManager
 import com.teleport.app.mobile.nsd.NsdHelper
@@ -214,6 +218,17 @@ fun PairingScreen(
                 placeholder = { Text("192.168.1.X") },
                 modifier = Modifier.weight(1f),
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Go
+                ),
+                keyboardActions = KeyboardActions(
+                    onGo = {
+                        if (manualIp.isNotBlank()) {
+                            connectionManager.connect(manualIp.trim(), ThemeTokens.PORT)
+                        }
+                    }
+                ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = ThemeTokens.Accent,
                     focusedLabelColor = ThemeTokens.Accent,
@@ -689,6 +704,22 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                 placeholder = { Text("https://...") },
                 modifier = Modifier.weight(1f),
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Go
+                ),
+                keyboardActions = KeyboardActions(
+                    onGo = {
+                        if (newUrl.isNotBlank()) {
+                            var formattedUrl = newUrl.trim()
+                            if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+                                formattedUrl = "https://$formattedUrl"
+                            }
+                            connectionManager.sendCommand(Command.OpenUrl(formattedUrl))
+                            newUrl = ""
+                        }
+                    }
+                ),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = ThemeTokens.Accent,
                     focusedLabelColor = ThemeTokens.Accent,
@@ -806,6 +837,17 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
             placeholder = { Text("Type text on TV...", color = ThemeTokens.TextSub, fontSize = 14.sp) },
             modifier = Modifier.weight(1f),
             singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Send
+            ),
+            keyboardActions = KeyboardActions(
+                onSend = {
+                    if (textInput.isNotBlank()) {
+                        connectionManager.sendCommand(Command.SendText(textInput))
+                        textInput = ""
+                    }
+                }
+            ),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = ThemeTokens.Background,
                 unfocusedContainerColor = ThemeTokens.Background,
