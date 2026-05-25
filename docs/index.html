@@ -2344,20 +2344,43 @@
             log("System: Logs cleared.", "info");
         }
 
+        // HTML Entity Encoder to prevent XSS (Security rule compliance)
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
+        }
+
         // Connection Handlers
         function connectPhone() {
-            isConnected = true;
+            // Show loading spinner overlays for immediate async feedback
             phonePairingScreen.classList.remove("active");
-            phoneControllerScreen.classList.add("active");
+            document.getElementById("phoneLoadingOverlay").style.display = "flex";
             
             tvPairingScreen.classList.remove("active");
-            tvBrowserScreen.classList.add("active");
-            tvCursor.style.display = "block";
+            document.getElementById("tvLoadingOverlay").style.display = "flex";
 
-            log("WS: Client connected from 192.168.1.189", "info");
-            log(`TV sent: {"status":"Connected","tvState":{"tabs":${JSON.stringify(tvTabs)},"activeTabIndex":0}}`, "received");
-            
-            renderTabs();
+            log("WS: Initializing local WebSocket connection handshake...", "info");
+
+            setTimeout(() => {
+                // Completed connection handshake after 1200ms
+                document.getElementById("phoneLoadingOverlay").style.display = "none";
+                phoneControllerScreen.classList.add("active");
+                
+                document.getElementById("tvLoadingOverlay").style.display = "none";
+                tvBrowserScreen.classList.add("active");
+                tvCursor.style.display = "block";
+                
+                isConnected = true;
+
+                log("WS: Client connected from 192.168.1.189", "info");
+                log(`TV sent: {"status":"Connected","tvState":{"tabs":${JSON.stringify(tvTabs)},"activeTabIndex":${activeTvTab}}}`, "received");
+                
+                renderTabs();
+            }, 1200);
         }
 
         function disconnectPhone() {
@@ -2371,25 +2394,27 @@
             streamCastBanner.style.display = "none";
 
             phoneControllerScreen.classList.remove("active");
+            document.getElementById("phoneLoadingOverlay").style.display = "none";
             phonePairingScreen.classList.add("active");
 
             tvBrowserScreen.classList.remove("active");
             tvExoPlayerScreen.classList.remove("active");
             tvMirrorScreen.classList.remove("active");
+            document.getElementById("tvLoadingOverlay").style.display = "none";
             tvPairingScreen.classList.add("active");
             tvCursor.style.display = "none";
 
             log("WS: Client disconnected.", "info");
         }
 
-        // Tab Rendering for TV and Mobile
+        // Tab Rendering for TV and Mobile (with escapeHtml sanitization)
         function renderTabs() {
             // Render TV Tabs
             tvTabContainer.innerHTML = "";
             tvTabs.forEach((tab, index) => {
                 const tabEl = document.createElement("div");
                 tabEl.className = `tv-browser-tab ${index === activeTvTab ? "active" : ""}`;
-                tabEl.innerHTML = `${tab.title} <span style="font-size:0.5rem; opacity:0.6;" onclick="closeTab(${index}); event.stopPropagation();">✕</span>`;
+                tabEl.innerHTML = `${escapeHtml(tab.title)} <span style="font-size:0.5rem; opacity:0.6;" onclick="closeTab(${index}); event.stopPropagation();">✕</span>`;
                 tabEl.onclick = () => selectTab(index);
                 tvTabContainer.appendChild(tabEl);
             });
@@ -2407,8 +2432,8 @@
                 item.onclick = () => selectTab(index);
                 item.innerHTML = `
                     <div class="phone-tab-item-info">
-                        <h6>${tab.title}</h6>
-                        <p>${tab.url}</p>
+                        <h6>${escapeHtml(tab.title)}</h6>
+                        <p>${escapeHtml(tab.url)}</p>
                     </div>
                     <button class="phone-tab-item-close" onclick="closeTab(${index}); event.stopPropagation();">✕</button>
                 `;
