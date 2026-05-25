@@ -34,6 +34,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -167,7 +168,14 @@ fun PairingScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("Searching for TVs on Wi-Fi...", color = Color.Gray, fontSize = 14.sp)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(
+                            color = Color(0xFF03DAC6),
+                            modifier = Modifier.size(36.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Searching for TVs on Wi-Fi...", color = Color.Gray, fontSize = 14.sp)
+                    }
                 }
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -230,7 +238,18 @@ fun PairingScreen(
 
         if (connState is ConnectionState.Connecting) {
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Connecting to TV...", color = Color(0xFF03DAC6))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(
+                    color = Color(0xFF03DAC6),
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Connecting to TV...", color = Color(0xFF03DAC6))
+            }
         } else if (connState is ConnectionState.Error) {
             Spacer(modifier = Modifier.height(16.dp))
             Text("Error: ${(connState as ConnectionState.Error).message}", color = Color.Red, fontSize = 12.sp)
