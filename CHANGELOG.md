@@ -2,6 +2,11 @@
 
 ## [2026-05-25] - Automated Release
 
+- ci: remove transitive AD_ID permission to resolve Play Store upload policies (d439440) by Raviteja Kamalapuram
+
+
+## [2026-05-25] - Automated Release
+
 - ci: fail the On Merge to Main workflow if Google Play upload fails (ebd6c7c) by Raviteja Kamalapuram
 
 
