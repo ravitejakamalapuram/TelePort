@@ -652,6 +652,16 @@ private val REMOTE_HTML = """
             });
         }
 
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return String(unsafe)
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
         function renderTabs() {
             const list = document.getElementById('tabsList');
             list.innerHTML = '';
@@ -663,8 +673,8 @@ private val REMOTE_HTML = """
                     
                     item.innerHTML = `
                         <div class="tab-info" onclick="sendCommand({type:'com.teleport.app.protocol.Command.SelectTab', index:${'$'}{index}})">
-                            <div class="tab-title">${'$'}{tab.title || 'Loading...'}</div>
-                            <div class="tab-url">${'$'}{tab.url}</div>
+                            <div class="tab-title">${'$'}{escapeHtml(tab.title || 'Loading...')}</div>
+                            <div class="tab-url">${'$'}{escapeHtml(tab.url)}</div>
                         </div>
                         <button class="btn-close" onclick="sendCommand({type:'com.teleport.app.protocol.Command.CloseTab', index:${'$'}{index}})">×</button>
                     `;
