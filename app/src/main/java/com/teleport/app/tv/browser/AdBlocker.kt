@@ -35,6 +35,8 @@ object AdBlocker {
 
     fun isAd(url: String): Boolean {
         try {
+            // android.net.Uri.parse is relatively fast compared to java.net.URL
+            // However, avoiding lowercasing the whole URL string.
             val host = android.net.Uri.parse(url).host?.lowercase() ?: return false
 
             // O(1) domain lookup checking host and its parent domains

@@ -300,11 +300,10 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
     }
 
     private fun isStreamUrl(url: String): Boolean {
-        val lowercase = url.lowercase()
-        return lowercase.contains(".m3u8") ||
-               lowercase.contains(".mp4") ||
-               lowercase.contains(".mkv") ||
-               lowercase.contains("googlevideo.com/videoplayback")
+        return url.contains(".m3u8", ignoreCase = true) ||
+               url.contains(".mp4", ignoreCase = true) ||
+               url.contains(".mkv", ignoreCase = true) ||
+               url.contains("googlevideo.com/videoplayback", ignoreCase = true)
     }
 
     private fun createWebView(url: String): WebView {
