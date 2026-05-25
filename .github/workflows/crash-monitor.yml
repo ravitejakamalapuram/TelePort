@@ -1,0 +1,174 @@
+name: Crash Monitor & Auto-Fix
+
+on:
+  schedule:
+    # Run daily at 06:00 UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      hours_lookback:
+        description: 'Hours to look back for crashes'
+        required: false
+        default: '24'
+      dry_run:
+        description: 'Dry run — report only, do not create fix PRs'
+        required: false
+        default: 'false'
+
+jobs:
+  monitor-crashes:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      # ------------------------------------------------------------------ #
+      # 1. Checkout
+      # ------------------------------------------------------------------ #
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ------------------------------------------------------------------ #
+      # 2. Python setup
+      # ------------------------------------------------------------------ #
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python Dependencies
+        run: pip install google-auth google-auth-httplib2 requests firebase-admin
+
+      # ------------------------------------------------------------------ #
+      # 3. Firebase credentials
+      # ------------------------------------------------------------------ #
+      - name: Decode Firebase Service Account
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}" | base64 --decode > /tmp/firebase-sa.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-sa.json" >> $GITHUB_ENV
+
+      # ------------------------------------------------------------------ #
+      # 4. Fetch crashes
+      # ------------------------------------------------------------------ #
+      - name: Fetch Crash Data
+        id: fetch_crashes
+        run: |
+          HOURS="${{ github.event.inputs.hours_lookback || '24' }}"
+
+          python scripts/fetch_crashes.py \
+            --project-id "${{ secrets.FIREBASE_PROJECT_ID }}" \
+            --hours "$HOURS" \
+            --min-events 1 \
+            > /tmp/crashes.json 2>/tmp/crash_fetch.log || true
+
+          # If the script failed and produced no valid JSON, default to [].
+          if ! python3 -c "import json; json.load(open('/tmp/crashes.json'))" 2>/dev/null; then
+            echo "[]" > /tmp/crashes.json
+          fi
+
+          CRASH_COUNT=$(python3 -c "import json; print(len(json.load(open('/tmp/crashes.json'))))")
+          echo "crash_count=$CRASH_COUNT" >> "$GITHUB_OUTPUT"
+          echo "### 🔎 Crash Fetch Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Lookback window**: ${HOURS} hours" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Crashes found**: ${CRASH_COUNT}" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ -s /tmp/crash_fetch.log ]]; then
+            echo "<details><summary>Fetch log</summary>" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            cat /tmp/crash_fetch.log >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "</details>" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # ------------------------------------------------------------------ #
+      # 5. Create a GitHub issue summarising the crashes
+      # ------------------------------------------------------------------ #
+      - name: Create GitHub Issue for Crashes
+        if: steps.fetch_crashes.outputs.crash_count != '0'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const crashes = JSON.parse(fs.readFileSync('/tmp/crashes.json', 'utf8'));
+
+            if (crashes.length === 0) return;
+
+            let body = '## 🔥 Crash Report\n\n';
+            body += `**Period**: Last ${{ github.event.inputs.hours_lookback || '24' }} hours\n`;
+            body += `**Total Crashes**: ${crashes.length}\n\n`;
+
+            for (const crash of crashes) {
+              body += `### ${crash.title}\n`;
+              body += `- **Issue ID**: \`${crash.issue_id}\`\n`;
+              body += `- **Events**: ${crash.event_count}\n`;
+              body += `- **Affected Users**: ${crash.affected_users}\n`;
+              body += `- **First Seen**: ${crash.first_seen}\n`;
+              body += `- **Last Seen**: ${crash.last_seen}\n`;
+              if (crash.device_info) {
+                body += `- **Device**: ${crash.device_info.model} (Android ${crash.device_info.os_version})\n`;
+              }
+              body += `\n<details><summary>Stack Trace</summary>\n\n\`\`\`\n${crash.stack_trace}\n\`\`\`\n\n</details>\n\n---\n\n`;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🔥 [Crash Report] ${crashes.length} crash(es) detected`,
+              body: body,
+              labels: ['bug', 'crash', 'automated']
+            });
+
+            core.info(`Created GitHub issue for ${crashes.length} crash(es).`);
+
+      # ------------------------------------------------------------------ #
+      # 6. Install Gemini CLI (best effort)
+      # ------------------------------------------------------------------ #
+      - name: Install Gemini CLI
+        if: steps.fetch_crashes.outputs.crash_count != '0' && github.event.inputs.dry_run != 'true'
+        run: |
+          npm install -g @anthropic-ai/gemini-cli 2>/dev/null \
+            || npm install -g gemini-cli 2>/dev/null \
+            || echo "⚠️  Gemini CLI not available — will use REST API fallback."
+
+      # ------------------------------------------------------------------ #
+      # 7. Analyse crashes and create fix PRs
+      # ------------------------------------------------------------------ #
+      - name: Analyze & Auto-Fix Crashes
+        if: steps.fetch_crashes.outputs.crash_count != '0' && github.event.inputs.dry_run != 'true'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          chmod +x scripts/analyze_crash.sh
+          bash scripts/analyze_crash.sh /tmp/crashes.json
+
+      # ------------------------------------------------------------------ #
+      # 8. Summary
+      # ------------------------------------------------------------------ #
+      - name: Pipeline Summary
+        if: always()
+        run: |
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "---" >> "$GITHUB_STEP_SUMMARY"
+          echo "### 📋 Pipeline Result" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Job status**: ${{ job.status }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Dry run**: ${{ github.event.inputs.dry_run || 'false' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Crashes detected**: ${{ steps.fetch_crashes.outputs.crash_count || '0' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Trigger**: ${{ github.event_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Timestamp**: $(date -u '+%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_STEP_SUMMARY"
+
+      # ------------------------------------------------------------------ #
+      # 9. Cleanup sensitive files
+      # ------------------------------------------------------------------ #
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f /tmp/firebase-sa.json /tmp/crashes.json /tmp/crash_fetch.log
+          echo "🧹 Cleaned up temporary files."
