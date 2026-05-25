@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026-05-25] - Automated Release
+
+- Expose gh pr create stderr in analyze_crash.sh to diagnose failure (92e7699) by Raviteja Kamalapuram
+
+
 ## [2026-05-24] - Automated Release
 
 - docs: update compliance video with real emulator recordings (side-by-side TV & Mobile Remote) (bfcc017) by Raviteja Kamalapuram
