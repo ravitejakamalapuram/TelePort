@@ -1721,13 +1721,17 @@
         }
 
         @keyframes pulse-shadow {
-            0%, 100% { box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
-            50% { box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5); }
+            0%, 100% { box-shadow: 0 4px 15px rgba(98, 0, 238, 0.3); }
+            50% { box-shadow: 0 8px 25px rgba(98, 0, 238, 0.5); }
         }
 
         @keyframes pulse-border {
             0%, 100% { border-color: var(--accent-color); }
             50% { border-color: var(--teal-accent); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -1784,6 +1788,12 @@
                         <div class="tv-bezel">
                             <div class="tv-screen" id="tvScreen">
                                 
+                                <!-- TV Loading Overlay -->
+                                <div class="tv-view" id="tvLoadingOverlay" style="flex-direction:column; justify-content:center; align-items:center; background:radial-gradient(circle at center, #1b2640 0%, #0d0e12 100%);">
+                                    <div class="badge-dot" style="width:50px; height:50px; border:5px solid var(--accent-color); border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite; margin-bottom:20px; background:none; box-shadow:none;"></div>
+                                    <h3 style="color:white; font-family:var(--font-outfit); font-size:1.4rem;">Connecting Remote...</h3>
+                                </div>
+
                                 <!-- TV Pairing Screen -->
                                 <div class="tv-view tv-pairing active" id="tvPairingScreen">
                                     <h3 class="tv-pairing-title">TelePort TV</h3>
@@ -1962,6 +1972,13 @@
                             <div class="phone-screen" id="phoneScreen">
                                 <div class="phone-notch"></div>
                                 
+                                <!-- Phone Loading Overlay -->
+                                <div class="phone-view" id="phoneLoadingOverlay" style="flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; padding:20px;">
+                                    <div class="badge-dot" style="width:36px; height:36px; border:4px solid var(--teal-accent); border-top-color:transparent; border-radius:50%; animation:spin 1s linear infinite; margin-bottom:16px; background:none; box-shadow:none;"></div>
+                                    <h5 style="color:white; font-size:0.8rem; font-weight:bold;">Connecting to TV...</h5>
+                                    <p style="font-size:0.55rem; color:var(--text-secondary); margin-top:6px;">Establishing local WebSocket handshake</p>
+                                </div>
+
                                 <!-- Phone Pairing Screen -->
                                 <div class="phone-view phone-pairing active" id="phonePairingScreen">
                                     <div>
@@ -2262,7 +2279,10 @@
     <!-- Footer -->
     <footer>
         <div class="container">
-            <span class="footer-logo">TelePort</span>
+            <div style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:16px;">
+                <img src="../assets/logo.png" alt="TelePort Logo" style="height: 32px; width: 32px; object-fit: contain;">
+                <span class="footer-logo" style="margin-bottom: 0;">TelePort</span>
+            </div>
             <ul class="footer-links">
                 <li><a href="#">Home</a></li>
                 <li><a href="#demo">Interactive Demo</a></li>
