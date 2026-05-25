@@ -2,6 +2,11 @@
 
 ## [2026-05-25] - Automated Release
 
+- feat: implement single source of truth for branding tokens, app name, and port settings (44b0b22) by Raviteja Kamalapuram
+
+
+## [2026-05-25] - Automated Release
+
 - docs: Align landing page branding, security, and connection loader states (929c3b9) by Raviteja Kamalapuram
 
 
