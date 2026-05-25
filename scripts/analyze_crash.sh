@@ -378,7 +378,7 @@ EOF
           TOTAL_PRS=$((TOTAL_PRS + 1))
           log "✅ PR created for issue $issue_id."
         } || {
-          log "WARNING: 'gh pr create' failed for $branch_name."
+          die "'gh pr create' failed for $branch_name."
         }
     else
       log "WARNING: 'gh' CLI not available. Branch pushed but no PR created."
