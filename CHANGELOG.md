@@ -2,6 +2,11 @@
 
 ## [2026-05-25] - Automated Release
 
+- ci: fail the On Merge to Main workflow if Google Play upload fails (ebd6c7c) by Raviteja Kamalapuram
+
+
+## [2026-05-25] - Automated Release
+
 - Expose gh pr create stderr in analyze_crash.sh to diagnose failure (92e7699) by Raviteja Kamalapuram
 
 
