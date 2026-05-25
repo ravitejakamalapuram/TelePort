@@ -57,3 +57,6 @@ externalNativeBuild/
 *.bak
 *.swp
 *.tmp
+
+# Built zip archives
+*.zip

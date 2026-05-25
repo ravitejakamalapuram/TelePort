@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TelePort TV Cast & Remote</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <span class="logo-icon">⚡</span>
+        <h1>TelePort <span class="accent-text">TV</span></h1>
+      </div>
+      <div id="connectionBadge" class="status-badge disconnected">Disconnected</div>
+    </header>
+
+    <!-- TV IP Setup -->
+    <section class="card setup-card">
+      <div class="card-header">
+        <h3>TV Connection</h3>
+      </div>
+      <div class="input-group">
+        <input type="text" id="tvIpInput" placeholder="TV IP (e.g., 192.168.1.15)" />
+        <button id="saveIpBtn" class="btn-primary">Save</button>
+      </div>
+    </section>
+
+    <!-- Controls & Cast Actions -->
+    <section class="card actions-card disabled" id="actionsCard">
+      <div class="action-row">
+        <div class="action-info">
+          <h4>Tab Cast</h4>
+          <p>Mirror active tab to TV</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="castToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="action-row">
+        <div class="action-info">
+          <h4>Beam Link</h4>
+          <p>Open this tab URL on TV</p>
+        </div>
+        <button id="beamLinkBtn" class="btn-action">Beam URL</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="action-row">
+        <div class="action-info">
+          <h4>TV Dark Mode</h4>
+          <p>Invert light page backgrounds</p>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="darkModeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Remote Control Tab Panel -->
+    <div class="tab-container disabled" id="remoteControlsContainer">
+      <div class="tab-header">
+        <button class="tab-btn active" id="tabTrackpadBtn">Trackpad</button>
+        <button class="tab-btn" id="tabDpadBtn">Buttons</button>
+      </div>
+
+      <!-- Trackpad Area -->
+      <div class="tab-content active" id="contentTrackpad">
+        <div id="trackpad" class="trackpad-area">
+          <div class="trackpad-overlay">
+            <span class="trackpad-icon">🖱️</span>
+            <p>Drag to move cursor<br>Two fingers to scroll<br>Tap to click</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- D-Pad / Buttons Area -->
+      <div class="tab-content" id="contentDpad">
+        <div class="dpad-container">
+          <div class="dpad-row">
+            <button class="btn-dpad" id="dpadUpBtn" title="Up">
+              <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+            </button>
+          </div>
+          <div class="dpad-row">
+            <button class="btn-dpad" id="dpadLeftBtn" title="Left">
+              <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+            </button>
+            <button class="btn-ok" id="dpadOkBtn">OK</button>
+            <button class="btn-dpad" id="dpadRightBtn" title="Right">
+              <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+            </button>
+          </div>
+          <div class="dpad-row">
+            <button class="btn-dpad" id="dpadDownBtn" title="Down">
+              <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="media-row">
+          <button class="btn-media" id="backBtn">Back</button>
+          <button class="btn-media btn-accent" id="playPauseBtn">Play/Pause</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Text Input Bar -->
+    <section class="card text-card disabled" id="textCard">
+      <div class="text-input-group">
+        <input type="text" id="keyboardInput" placeholder="Type text or paste URL..." />
+        <button id="sendTextBtn" class="btn-send">Send</button>
+      </div>
+    </section>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

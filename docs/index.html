@@ -1,0 +1,2739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TelePort - Local-First Android TV Browser & Mobile Remote</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --text-color: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent-color: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.4);
+            --accent-gradient: linear-gradient(135deg, #6366f1, #3b82f6);
+            --green-accent: #00e676;
+            --green-glow: rgba(0, 230, 118, 0.3);
+            --teal-accent: #03dac6;
+            --card-bg: rgba(22, 28, 45, 0.4);
+            --card-bg-hover: rgba(22, 28, 45, 0.6);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-color-focus: rgba(99, 102, 241, 0.5);
+            --font-outfit: 'Outfit', sans-serif;
+            --font-inter: 'Inter', sans-serif;
+            --transition-speed: 0.3s;
+        }
+
+        /* Base Resets */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-inter);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4 {
+            font-family: var(--font-outfit);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        /* Utility Layouts */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navbar */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(11, 12, 16, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            transition: background var(--transition-speed);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            font-size: 1.8rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .logo-text {
+            font-family: var(--font-outfit);
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.05em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color var(--transition-speed);
+        }
+
+        .nav-links a:hover {
+            color: var(--text-color);
+        }
+
+        .nav-cta {
+            background: var(--accent-gradient);
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+            box-shadow: 0 4px 15px var(--accent-glow);
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--accent-glow);
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 160px 0 100px 0;
+            position: relative;
+            background: radial-gradient(circle at 50% 10%, rgba(99, 102, 241, 0.15), transparent 60%);
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #818cf8;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            font-family: var(--font-outfit);
+        }
+
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--teal-accent);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        .hero-title {
+            font-size: 4rem;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: linear-gradient(to right, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-title span {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 650px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all var(--transition-speed);
+        }
+
+        .btn-primary {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Interactive Simulator */
+        .simulator-section {
+            padding: 60px 0 100px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-tag {
+            color: var(--accent-color);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .section-desc {
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Dual Simulator Grid */
+        .simulator-wrapper {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 32px;
+            padding: 40px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+            margin-bottom: 40px;
+        }
+
+        .sim-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        @media (max-width: 960px) {
+            .sim-grid {
+                grid-template-columns: 1fr;
+            }
+            .simulator-wrapper {
+                padding: 20px;
+            }
+        }
+
+        /* TV Simulator Frame */
+        .tv-bezel {
+            width: 100%;
+            background: #1e1e24;
+            border-radius: 20px;
+            padding: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        .tv-screen {
+            aspect-ratio: 16 / 9;
+            background: #0d0e12;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            user-select: none;
+        }
+
+        .tv-stand {
+            width: 120px;
+            height: 25px;
+            background: #15151a;
+            margin: 0 auto;
+            clip-path: polygon(15% 0%, 85% 0%, 100% 100%, 0% 100%);
+        }
+
+        .tv-base {
+            width: 240px;
+            height: 10px;
+            background: #101014;
+            border-radius: 10px;
+            margin: 0 auto;
+        }
+
+        /* Phone Simulator Frame */
+        .phone-bezel {
+            width: 290px;
+            height: 590px;
+            background: #15161c;
+            border-radius: 40px;
+            padding: 10px;
+            margin: 0 auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.05);
+            border: 4px solid #2a2c35;
+            position: relative;
+        }
+
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #121212;
+            border-radius: 32px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 110px;
+            height: 24px;
+            background: #15161c;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+            z-index: 100;
+        }
+
+        /* Mock TV Screens */
+        .tv-view {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+        }
+
+        .tv-view.active {
+            display: flex;
+        }
+
+        /* TV Pairing Screen */
+        .tv-pairing {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            background: radial-gradient(circle at center, #1b2640 0%, #0d0e12 100%);
+        }
+
+        .tv-pairing-title {
+            font-size: 2.2rem;
+            color: white;
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        .tv-pairing-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+        }
+
+        .tv-pairing-info {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 16px;
+            max-width: 500px;
+        }
+
+        .tv-qr {
+            width: 130px;
+            height: 130px;
+            background: white;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .tv-qr svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .tv-instructions {
+            text-align: left;
+        }
+
+        .tv-instructions p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .tv-ip {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--green-accent);
+            text-shadow: 0 0 8px var(--green-glow);
+        }
+
+        /* TV Browser Screen */
+        .tv-browser {
+            background: #0d0e12;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .tv-browser-header {
+            height: 38px;
+            background: #181920;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 12px;
+        }
+
+        .tv-browser-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .tv-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .tv-browser-address-bar {
+            flex: 1;
+            height: 24px;
+            background: #0f1015;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .tv-browser-tabs {
+            display: flex;
+            gap: 4px;
+            height: 100%;
+            align-items: flex-end;
+            padding-left: 10px;
+        }
+
+        .tv-browser-tab {
+            height: 28px;
+            background: #12131a;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+            padding: 0 10px;
+            font-size: 0.65rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            max-width: 90px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .tv-browser-tab.active {
+            background: #0d0e12;
+            color: white;
+            border-color: var(--border-color) var(--border-color) transparent var(--border-color);
+        }
+
+        .tv-browser-content {
+            flex: 1;
+            position: relative;
+            background: #0d0e12;
+            overflow: hidden;
+        }
+
+        /* Simulated Web Pages on TV */
+        .mock-page {
+            width: 100%;
+            height: 100%;
+            display: none;
+            padding: 24px;
+            color: #333;
+        }
+
+        .mock-page.active {
+            display: block;
+        }
+
+        /* Mock Search Engine (Google-like) */
+        .mock-google.active {
+            display: flex;
+        }
+        
+        .mock-google {
+            background: white;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding-top: 40px;
+        }
+
+        .mock-google-logo {
+            font-size: 2.2rem;
+            font-family: var(--font-outfit);
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .mock-google-search-container {
+            width: 80%;
+            max-width: 400px;
+            height: 36px;
+            border: 1px solid #dfe1e5;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            box-shadow: 0 1px 6px rgba(32,33,36,.28);
+            margin-bottom: 15px;
+        }
+
+        .mock-google-input {
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 0.85rem;
+            color: #202124;
+        }
+
+        .mock-google-results {
+            width: 90%;
+            max-width: 500px;
+            display: none;
+            text-align: left;
+            margin-top: 10px;
+        }
+
+        .mock-google-result-item {
+            margin-bottom: 12px;
+        }
+
+        .mock-google-result-title {
+            color: #1a0dab;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .mock-google-result-url {
+            color: #006621;
+            font-size: 0.7rem;
+            margin-bottom: 2px;
+        }
+
+        .mock-google-result-desc {
+            color: #545454;
+            font-size: 0.75rem;
+            line-height: 1.3;
+        }
+
+        /* Mock Video Hub (YouTube-like) */
+        .mock-youtube {
+            background: #0f0f0f;
+            color: white;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .mock-yt-header {
+            font-size: 0.95rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 8px;
+            color: #ff0000;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .mock-yt-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .mock-yt-card {
+            border-radius: 8px;
+            overflow: hidden;
+            background: #1f1f1f;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform var(--transition-speed), border-color var(--transition-speed);
+        }
+
+        .mock-yt-card:hover, .mock-yt-card.highlight {
+            transform: scale(1.03);
+            border-color: #ff0000;
+        }
+
+        .mock-yt-thumbnail {
+            aspect-ratio: 16 / 9;
+            background: #333;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mock-yt-play-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mock-yt-info {
+            padding: 8px;
+        }
+
+        .mock-yt-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            line-height: 1.2;
+            margin-bottom: 4px;
+            height: 32px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .mock-yt-meta {
+            font-size: 0.6rem;
+            color: #aaa;
+        }
+
+        /* Mock Streaming App (Netflix-like) */
+        .mock-netflix {
+            background: #141414;
+            color: white;
+            padding: 16px;
+        }
+
+        .mock-nf-header {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #e50914;
+            margin-bottom: 12px;
+        }
+
+        .mock-nf-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .mock-nf-card {
+            aspect-ratio: 2/3;
+            background: #222;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all var(--transition-speed);
+        }
+
+        .mock-nf-card:hover, .mock-nf-card.highlight {
+            transform: scale(1.05);
+            border-color: #e50914;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .mock-nf-poster {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.9) 100%);
+            display: flex;
+            align-items: flex-end;
+            padding: 8px;
+        }
+
+        .mock-nf-title {
+            font-size: 0.65rem;
+            font-weight: bold;
+        }
+
+        /* TV Virtual Cursor Overlay */
+        .tv-cursor {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: var(--green-accent);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--green-glow), 0 0 0 4px rgba(0,230,118,0.2);
+            pointer-events: none;
+            z-index: 999;
+            transform: translate(-50%, -50%);
+            transition: transform 0.05s ease-out;
+            top: 50%;
+            left: 50%;
+            display: none;
+        }
+
+        .tv-cursor.clicking {
+            transform: translate(-50%, -50%) scale(0.7);
+            background: #03dac6;
+        }
+
+        /* TV Native ExoPlayer Screen */
+        .tv-exoplayer {
+            background: black;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+        }
+
+        .tv-exoplayer-header {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .exoplayer-btn-back {
+            background: rgba(255,255,255,0.1);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            color: white;
+        }
+
+        .tv-exoplayer-play {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.2);
+            border: 2px solid var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 0 20px var(--accent-glow);
+            animation: pulse-border 2s infinite;
+        }
+
+        .tv-exoplayer-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(15, 16, 21, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .exoplayer-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .exoplayer-timeline-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.65rem;
+            color: var(--text-secondary);
+        }
+
+        .exoplayer-timeline {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .exoplayer-timeline-progress {
+            height: 100%;
+            background: var(--accent-color);
+            width: 35%;
+            border-radius: 2px;
+        }
+
+        /* TV Mirror Display */
+        .tv-mirror-screen {
+            background: #0f1015;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .tv-mirror-wrapper {
+            width: 170px;
+            height: 340px;
+            border: 4px solid #333;
+            border-radius: 24px;
+            overflow: hidden;
+            transform: scale(0.9);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        /* Phone Screen Views */
+        .phone-view {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            padding: 30px 16px 16px 16px; /* Space for notch */
+        }
+
+        .phone-view.active {
+            display: flex;
+        }
+
+        /* Phone Pairing Screen */
+        .phone-pairing {
+            justify-content: space-between;
+        }
+
+        .phone-title {
+            font-family: var(--font-outfit);
+            font-size: 1.4rem;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .phone-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .phone-scan-btn {
+            background: var(--accent-gradient);
+            border: none;
+            color: white;
+            width: 100%;
+            height: 44px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+            transition: all var(--transition-speed);
+        }
+
+        .phone-scan-btn:hover {
+            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.5);
+        }
+
+        .phone-divider {
+            text-align: center;
+            font-size: 0.6rem;
+            color: #555;
+            font-weight: bold;
+            margin: 15px 0;
+            letter-spacing: 0.05em;
+        }
+
+        .phone-discovery-card {
+            background: #181920;
+            border-radius: 12px;
+            flex: 1;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            overflow-y: auto;
+            max-height: 180px;
+            margin-bottom: 15px;
+        }
+
+        .phone-tv-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid transparent;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all var(--transition-speed);
+        }
+
+        .phone-tv-item:hover {
+            background: rgba(99,102,241,0.08);
+            border-color: rgba(99,102,241,0.2);
+        }
+
+        .phone-tv-info h5 {
+            font-size: 0.75rem;
+            color: white;
+        }
+
+        .phone-tv-info p {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+        }
+
+        .phone-connect-tag {
+            font-size: 0.65rem;
+            color: var(--teal-accent);
+            font-weight: bold;
+        }
+
+        .phone-manual-ip {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .phone-input {
+            flex: 1;
+            height: 38px;
+            background: #181920;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: white;
+            padding: 0 10px;
+            font-size: 0.75rem;
+            outline: none;
+        }
+
+        .phone-input:focus {
+            border-color: var(--teal-accent);
+        }
+
+        .phone-go-btn {
+            background: var(--teal-accent);
+            border: none;
+            color: black;
+            width: 44px;
+            height: 38px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Phone Controller View */
+        .phone-controller {
+            padding: 30px 0 0 0 !important;
+            justify-content: flex-start;
+        }
+
+        .phone-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #181920;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .phone-header-title h4 {
+            font-size: 0.8rem;
+            color: white;
+        }
+
+        .phone-header-title p {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+        }
+
+        .phone-disconnect-btn {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Controller Tabs */
+        .phone-tab-row {
+            display: flex;
+            background: #181920;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .phone-tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 10px 0;
+            cursor: pointer;
+            position: relative;
+            outline: none;
+        }
+
+        .phone-tab-btn.active {
+            color: var(--teal-accent);
+        }
+
+        .phone-tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 15%;
+            right: 15%;
+            height: 2px;
+            background: var(--teal-accent);
+        }
+
+        .phone-control-content {
+            flex: 1;
+            position: relative;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            max-height: 380px;
+        }
+
+        .phone-sub-panel {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .phone-sub-panel.active {
+            display: flex;
+        }
+
+        /* Stream Banner in Phone Controller */
+        .phone-stream-banner {
+            background: var(--accent-gradient);
+            border-radius: 8px;
+            padding: 10px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+            animation: pulse-shadow 2.5s infinite;
+        }
+
+        .phone-stream-banner-text h6 {
+            font-size: 0.75rem;
+            color: white;
+            font-weight: 600;
+        }
+
+        .phone-stream-banner-text p {
+            font-size: 0.55rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .phone-stream-banner-play {
+            font-size: 0.65rem;
+            color: var(--teal-accent);
+            font-weight: bold;
+            border: 1px solid var(--teal-accent);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        /* Switch components */
+        .phone-switch-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #181920;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+        }
+
+        .phone-switch-label h6 {
+            font-size: 0.7rem;
+            color: white;
+        }
+
+        .phone-switch-label p {
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 32px;
+            height: 18px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #444;
+            transition: .4s;
+            border-radius: 18px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 12px;
+            width: 12px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--teal-accent);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(14px);
+        }
+
+        /* Trackpad Component */
+        .phone-trackpad-canvas {
+            flex: 1;
+            background: #181920;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: crosshair;
+            user-select: none;
+            padding: 10px;
+            min-height: 180px;
+            margin-top: 5px;
+            position: relative;
+        }
+
+        .phone-trackpad-label {
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: #555;
+            pointer-events: none;
+            line-height: 1.4;
+        }
+
+        .phone-scroll-helpers {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .phone-scroll-btn {
+            flex: 1;
+            height: 32px;
+            background: #1c1d26;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: white;
+            font-size: 0.65rem;
+            cursor: pointer;
+        }
+
+        /* D-Pad Panel */
+        .phone-dpad-panel {
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+        }
+
+        .phone-dpad-top {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 10px;
+        }
+
+        .phone-dpad-btn {
+            background: #1c1d26;
+            border: 1px solid var(--border-color);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            cursor: pointer;
+        }
+
+        .phone-dpad-compass {
+            display: grid;
+            grid-template-areas: 
+                ". up ."
+                "left ok right"
+                ". down .";
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .compass-btn {
+            width: 60px;
+            height: 60px;
+            background: #1c1d26;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            outline: none;
+            transition: background 0.1s;
+        }
+
+        .compass-btn:active {
+            background: #333;
+        }
+
+        .compass-btn-up { grid-area: up; }
+        .compass-btn-down { grid-area: down; }
+        .compass-btn-left { grid-area: left; }
+        .compass-btn-right { grid-area: right; }
+        
+        .compass-btn-ok {
+            grid-area: ok;
+            background: var(--accent-gradient);
+            border: none;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Phone Tabs Manager */
+        .phone-tabs-input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .phone-add-tab-btn {
+            width: 38px;
+            height: 38px;
+            background: var(--teal-accent);
+            border: none;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .phone-tabs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .phone-tab-item {
+            background: #181920;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .phone-tab-item.active {
+            border-left-color: var(--teal-accent);
+            background: #20222b;
+        }
+
+        .phone-tab-item-info {
+            flex: 1;
+            overflow: hidden;
+            padding-right: 10px;
+        }
+
+        .phone-tab-item-info h6 {
+            font-size: 0.7rem;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .phone-tab-item-info p {
+            font-size: 0.55rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .phone-tab-item-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        /* Phone Sticky Input Bar */
+        .phone-input-bar {
+            background: #181920;
+            border-top: 1px solid var(--border-color);
+            padding: 10px 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .phone-send-btn {
+            background: none;
+            border: none;
+            color: var(--teal-accent);
+            font-weight: bold;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+
+        /* Simulated Packet Logs Inspector */
+        .logs-section {
+            margin-top: 24px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .logs-header h5 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-family: var(--font-outfit);
+        }
+
+        .logs-clear {
+            font-size: 0.65rem;
+            color: #ef4444;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .logs-console {
+            height: 100px;
+            background: #07080b;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-family: monospace;
+            font-size: 0.65rem;
+            overflow-y: auto;
+            color: #38bdf8;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .log-entry {
+            line-height: 1.3;
+        }
+
+        .log-entry.sent { color: #38bdf8; }
+        .log-entry.received { color: #34d399; }
+        .log-entry.info { color: #a78bfa; }
+
+        /* Video Showcase */
+        .video-section {
+            padding: 100px 0;
+            background: radial-gradient(circle at 10% 80%, rgba(99, 102, 241, 0.08), transparent 50%);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .video-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            border-radius: 24px;
+            overflow: hidden;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            aspect-ratio: 16/9;
+            position: relative;
+        }
+
+        .video-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 100px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 48px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 32px;
+            transition: all var(--transition-speed);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--accent-gradient);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform var(--transition-speed) ease-in-out;
+        }
+
+        .feature-card:hover {
+            background: var(--card-bg-hover);
+            transform: translateY(-5px);
+            border-color: rgba(99, 102, 241, 0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 24px;
+            color: #818cf8;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+        }
+
+        .feature-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Tech Architecture section */
+        .tech-section {
+            padding: 100px 0;
+            background: radial-gradient(circle at 90% 20%, rgba(99, 102, 241, 0.08), transparent 50%);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 48px;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .tech-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tech-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+        }
+
+        .tech-content p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .code-container {
+            background: #050608;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+            color: #f8fafc;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+        }
+
+        .code-keyword { color: #f472b6; }
+        .code-type { color: #60a5fa; }
+        .code-var { color: #facc15; }
+        .code-comment { color: #64748b; }
+
+        /* FAQ Accordion Section */
+        .faq-section {
+            padding: 100px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .faq-accordion {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .faq-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color var(--transition-speed);
+        }
+
+        .faq-item:hover {
+            border-color: rgba(99, 102, 241, 0.2);
+        }
+
+        .faq-question {
+            width: 100%;
+            padding: 20px 24px;
+            background: none;
+            border: none;
+            color: white;
+            font-family: var(--font-outfit);
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .faq-arrow {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-secondary);
+            transition: transform var(--transition-speed);
+        }
+
+        .faq-item.active .faq-arrow {
+            transform: rotate(180deg);
+            fill: var(--accent-color);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height var(--transition-speed) ease-out;
+            padding: 0 24px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .faq-item.active .faq-answer {
+            padding-bottom: 20px;
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 0;
+            background: #07080a;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .footer-logo {
+            font-size: 1.8rem;
+            font-family: var(--font-outfit);
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            list-style: none;
+            margin-bottom: 24px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color var(--transition-speed);
+        }
+
+        .footer-links a:hover {
+            color: var(--text-color);
+        }
+
+        .footer-copy {
+            font-size: 0.8rem;
+            color: #555;
+            margin-top: 16px;
+        }
+
+        /* Keyframes */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); box-shadow: 0 0 0 0 var(--green-glow); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px transparent; }
+            100% { transform: scale(0.9); box-shadow: 0 0 0 0 transparent; }
+        }
+
+        @keyframes pulse-shadow {
+            0%, 100% { box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
+            50% { box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5); }
+        }
+
+        @keyframes pulse-border {
+            0%, 100% { border-color: var(--accent-color); }
+            50% { border-color: var(--teal-accent); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <header>
+        <div class="container nav-container">
+            <a href="#" class="logo-group">
+                <span class="logo-icon">📺</span>
+                <span class="logo-text">TelePort</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#demo">Live Demo</a></li>
+                <li><a href="#video">Demo Video</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#faq">FAQ</a></li>
+            </ul>
+            <a href="https://github.com/ravitejakamalapuram/TelePort" class="nav-cta">GitHub Project</a>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container hero-content">
+            <div class="badge">
+                <div class="badge-dot"></div>
+                Local-First & Serverless
+            </div>
+            <h1 class="hero-title">Browse the Web Natively on <span>Android TV</span></h1>
+            <p class="hero-desc">Control everything with a premium, low-latency mobile controller. Bypass casting DRM limitations and enjoy streamless performance powered entirely by your local network.</p>
+            <div class="hero-actions">
+                <a href="#demo" class="btn btn-primary">Try Interactive Demo</a>
+                <a href="https://github.com/ravitejakamalapuram/TelePort" class="btn btn-secondary">Get App Package</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section (Simulator) -->
+    <section id="demo" class="simulator-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-tag">Interactive Preview</div>
+                <h2 class="section-title">Test the Controls Live</h2>
+                <p class="section-desc">Experience the seamless local WebSocket synchronization between the Mobile Remote and the TV client. Connect below to get started!</p>
+            </div>
+
+            <div class="simulator-wrapper">
+                <div class="sim-grid">
+                    
+                    <!-- Left Column: Android TV Simulator -->
+                    <div class="tv-column">
+                        <div class="tv-bezel">
+                            <div class="tv-screen" id="tvScreen">
+                                
+                                <!-- TV Pairing Screen -->
+                                <div class="tv-view tv-pairing active" id="tvPairingScreen">
+                                    <h3 class="tv-pairing-title">TelePort TV</h3>
+                                    <p class="tv-pairing-subtitle">Connect your mobile remote to start browsing</p>
+                                    <div class="tv-pairing-info">
+                                        <div class="tv-qr">
+                                            <!-- Simple inline QR code SVG representing ws://192.168.1.137:8080/remote -->
+                                            <svg viewBox="0 0 100 100">
+                                                <path d="M0 0h30v30H0zm5 5h20v20H5zm5 5h10v10H10zm60-10h30v30H70zm5 5h20v20H75zm5 5h10v10H80zM0 70h30v30H0zm5 5h20v20H5zm5 5h10v10H10zm45-45h10v10H50zm10 10h10v10H60zm-10 10h10v10H50zm30 0h10v10H80zm-10 10h10v10H70zm20 0h10v10H90zm0 10h10v10H90zm-10 0h10v10H80zm-30 0h10v10H50z" fill="#000"/>
+                                            </svg>
+                                        </div>
+                                        <div class="tv-instructions">
+                                            <p>1. Open TelePort Mobile App</p>
+                                            <p>2. Connect automatically on Wi-Fi or enter:</p>
+                                            <div class="tv-ip" id="tvIpDisplay">192.168.1.137</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TV Browser Screen -->
+                                <div class="tv-view tv-browser" id="tvBrowserScreen">
+                                    <div class="tv-browser-header">
+                                        <div class="tv-browser-actions">
+                                            <div class="tv-dot"></div>
+                                            <div class="tv-dot"></div>
+                                            <div class="tv-dot"></div>
+                                        </div>
+                                        <div class="tv-browser-tabs" id="tvTabContainer">
+                                            <!-- Dynamic Tabs Rendered by JS -->
+                                        </div>
+                                        <div class="tv-browser-address-bar" id="tvAddressDisplay">
+                                            https://www.google.com
+                                        </div>
+                                    </div>
+                                    <div class="tv-browser-content" id="tvWebContent">
+                                        
+                                        <!-- Mock Google Page -->
+                                        <div class="mock-page mock-google active" id="page-google">
+                                            <div class="mock-google-logo">
+                                                <span style="color:#4285F4">G</span>
+                                                <span style="color:#EA4335">o</span>
+                                                <span style="color:#FBBC05">o</span>
+                                                <span style="color:#4285F4">g</span>
+                                                <span style="color:#34A853">l</span>
+                                                <span style="color:#EA4335">e</span>
+                                            </div>
+                                            <div class="mock-google-search-container">
+                                                <input type="text" class="mock-google-input" id="googleSearchInput" placeholder="Search the web or type URL" disabled>
+                                            </div>
+                                            <div class="mock-google-results" id="googleResults">
+                                                <div class="mock-google-result-item">
+                                                    <div class="mock-google-result-title">TelePort: Local-First TV Screen Control</div>
+                                                    <div class="mock-google-result-url">https://github.com/ravitejakamalapuram/TelePort</div>
+                                                    <div class="mock-google-result-desc">A serverless ecosystem linking Android TV devices to mobile remotes using high-speed Ktor servers.</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Mock YouTube Page -->
+                                        <div class="mock-page mock-youtube" id="page-youtube">
+                                            <div class="mock-yt-header">
+                                                <span>📺</span> VideoHub Stream Extractor
+                                            </div>
+                                            <div class="mock-yt-grid">
+                                                <div class="mock-yt-card" onclick="triggerStreamDetected('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', 'Big Buck Bunny (H.264 Stream)')" id="yt-card-1">
+                                                    <div class="mock-yt-thumbnail">
+                                                        <div class="mock-yt-play-icon">▶</div>
+                                                    </div>
+                                                    <div class="mock-yt-info">
+                                                        <div class="mock-yt-title">Big Buck Bunny (HD Stream Link)</div>
+                                                        <div class="mock-yt-meta">Open Source Video • 4.2M views</div>
+                                                    </div>
+                                                </div>
+                                                <div class="mock-yt-card" onclick="triggerStreamDetected('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', 'Elephants Dream (Native Stream)')" id="yt-card-2">
+                                                    <div class="mock-yt-thumbnail">
+                                                        <div class="mock-yt-play-icon">▶</div>
+                                                    </div>
+                                                    <div class="mock-yt-info">
+                                                        <div class="mock-yt-title">Elephants Dream CGI Short Film</div>
+                                                        <div class="mock-yt-meta">3D Animation • 1.8M views</div>
+                                                    </div>
+                                                </div>
+                                                <div class="mock-yt-card" onclick="triggerStreamDetected('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', 'Chromecast Test Stream')" id="yt-card-3">
+                                                    <div class="mock-yt-thumbnail">
+                                                        <div class="mock-yt-play-icon">▶</div>
+                                                    </div>
+                                                    <div class="mock-yt-info">
+                                                        <div class="mock-yt-title">Chromecast Testing Stream Sample</div>
+                                                        <div class="mock-yt-meta">Google Stream • 820K views</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Mock Netflix Page -->
+                                        <div class="mock-page mock-netflix" id="page-netflix">
+                                            <div class="mock-nf-header">NetStream Premium</div>
+                                            <div class="mock-nf-grid">
+                                                <div class="mock-nf-card" id="nf-card-1">
+                                                    <div class="mock-nf-poster">
+                                                        <div class="mock-nf-title">Stranger Cast</div>
+                                                    </div>
+                                                </div>
+                                                <div class="mock-nf-card" id="nf-card-2">
+                                                    <div class="mock-nf-poster">
+                                                        <div class="mock-nf-title">The local web</div>
+                                                    </div>
+                                                </div>
+                                                <div class="mock-nf-card" id="nf-card-3">
+                                                    <div class="mock-nf-poster">
+                                                        <div class="mock-nf-title">Ktor Chronicles</div>
+                                                    </div>
+                                                </div>
+                                                <div class="mock-nf-card" id="nf-card-4">
+                                                    <div class="mock-nf-poster">
+                                                        <div class="mock-nf-title">Zero Cloud</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Mock Generic Custom Website -->
+                                        <div class="mock-page" id="page-custom" style="background:#1e293b; color:white; padding:40px; text-align:center;">
+                                            <h3 style="margin-bottom:15px;" id="customPageTitle">My Website</h3>
+                                            <p style="font-size:0.9rem; color:#94a3b8;" id="customPageUrl">https://example.com</p>
+                                            <div style="margin-top:30px; padding:20px; background:rgba(255,255,255,0.05); border-radius:12px;">
+                                                <p style="font-size:0.85rem;">Loaded inside native Android TV WebView browser. Controllable via Mobile Trackpad.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Virtual Mouse Pointer Dot -->
+                                    <div class="tv-cursor" id="tvCursor"></div>
+                                </div>
+
+                                <!-- TV Native ExoPlayer Screen -->
+                                <div class="tv-view tv-exoplayer" id="tvExoPlayerScreen">
+                                    <div class="tv-exoplayer-header">
+                                        <button class="exoplayer-btn-back" onclick="closeExoPlayer()">◀ Back to Web</button>
+                                        <span>ExoPlayer Media3 (Native Cast Mode)</span>
+                                    </div>
+                                    <div class="tv-exoplayer-play" id="exoPlayState">
+                                        <span>⏸</span>
+                                    </div>
+                                    <div class="tv-exoplayer-controls">
+                                        <div class="exoplayer-title" id="exoVideoTitle">Big Buck Bunny (H.264 Stream)</div>
+                                        <div class="exoplayer-timeline-group">
+                                            <span>01:14</span>
+                                            <div class="exoplayer-timeline">
+                                                <div class="exoplayer-timeline-progress"></div>
+                                            </div>
+                                            <span>03:40</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TV Screen Mirror Player -->
+                                <div class="tv-view tv-mirror-screen" id="tvMirrorScreen">
+                                    <div style="font-size: 0.75rem; color: #aaa; margin-bottom: 8px;">TV Screen Mirroring (MediaProjection Active)</div>
+                                    <div class="tv-mirror-wrapper">
+                                        <!-- Mirrors Phone Screen Frame -->
+                                        <div id="tvMirrorDuplicate" style="width:100%; height:100%; pointer-events:none; background:#121212;">
+                                            <!-- Dynamically filled with duplicated HTML of the controller screen -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="tv-stand"></div>
+                            <div class="tv-base"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Mobile Remote Simulator -->
+                    <div class="phone-column">
+                        <div class="phone-bezel">
+                            <div class="phone-screen" id="phoneScreen">
+                                <div class="phone-notch"></div>
+                                
+                                <!-- Phone Pairing Screen -->
+                                <div class="phone-view phone-pairing active" id="phonePairingScreen">
+                                    <div>
+                                        <div class="phone-title">TelePort Remote</div>
+                                        <div class="phone-subtitle">Connect to your TV client to start controlling</div>
+                                        <button class="phone-scan-btn" onclick="connectPhone()">Scan TV QR Code</button>
+                                        <div class="phone-divider">OR CONNECT VIA DISCOVERY</div>
+                                        <div class="phone-discovery-card">
+                                            <div class="phone-tv-item" onclick="connectPhone()">
+                                                <div class="phone-tv-info">
+                                                    <h5>Living Room Android TV</h5>
+                                                    <p>192.168.1.137:8080</p>
+                                                </div>
+                                                <span class="phone-connect-tag">Connect</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="phone-manual-ip">
+                                        <input type="text" class="phone-input" id="manualIpInput" placeholder="Enter TV IP address" value="192.168.1.137">
+                                        <button class="phone-go-btn" onclick="connectPhone()">Go</button>
+                                    </div>
+                                </div>
+
+                                <!-- Phone Controller Screen -->
+                                <div class="phone-view phone-controller" id="phoneControllerScreen">
+                                    <div class="phone-header">
+                                        <div class="phone-header-title">
+                                            <h4>TelePort Remote</h4>
+                                            <p style="color: var(--teal-accent); font-weight: bold;" id="phoneConnStatus">Connected</p>
+                                        </div>
+                                        <button class="phone-disconnect-btn" onclick="disconnectPhone()">Disconnect</button>
+                                    </div>
+
+                                    <!-- Glowing Stream Detected Banner -->
+                                    <div class="phone-stream-banner" id="streamCastBanner" onclick="launchExoPlayer()">
+                                        <div class="phone-stream-banner-text">
+                                            <h6>📺 Stream detected!</h6>
+                                            <p>Tap to play in Native Player</p>
+                                        </div>
+                                        <div class="phone-stream-banner-play">PLAY</div>
+                                    </div>
+
+                                    <div class="phone-tab-row">
+                                        <button class="phone-tab-btn active" onclick="switchPhoneTab(0, this)">Trackpad</button>
+                                        <button class="phone-tab-btn" onclick="switchPhoneTab(1, this)">D-Pad</button>
+                                        <button class="phone-tab-btn" onclick="switchPhoneTab(2, this)">Tabs</button>
+                                    </div>
+
+                                    <div class="phone-control-content">
+                                        
+                                        <!-- Trackpad Panel -->
+                                        <div class="phone-sub-panel active" id="panel-trackpad">
+                                            <div class="phone-switch-row">
+                                                <div class="phone-switch-label">
+                                                    <h6>Mirror Phone Screen</h6>
+                                                    <p>Cast phone display to TV</p>
+                                                </div>
+                                                <label class="toggle-switch">
+                                                    <input type="checkbox" id="mirrorSwitch" onchange="toggleMirroring(this.checked)">
+                                                    <span class="toggle-slider"></span>
+                                                </label>
+                                            </div>
+                                            <div class="phone-switch-row">
+                                                <div class="phone-switch-label">
+                                                    <h6>Air Mouse Mode</h6>
+                                                    <p>Move mouse by dragging/moving</p>
+                                                </div>
+                                                <label class="toggle-switch">
+                                                    <input type="checkbox" id="airMouseSwitch" onchange="toggleAirMouse(this.checked)">
+                                                    <span class="toggle-slider"></span>
+                                                </label>
+                                            </div>
+                                            <div class="phone-trackpad-canvas" id="phoneTrackpad">
+                                                <div class="phone-trackpad-label" id="trackpadInstructions">
+                                                    TRACKPAD<br>Drag inside to move TV cursor<br>Tap to click
+                                                </div>
+                                            </div>
+                                            <div class="phone-scroll-helpers">
+                                                <button class="phone-scroll-btn" onclick="sendScroll(0, -100)">Scroll Up</button>
+                                                <button class="phone-scroll-btn" onclick="sendScroll(0, 100)">Scroll Down</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- D-Pad Panel -->
+                                        <div class="phone-sub-panel" id="panel-dpad">
+                                            <div class="phone-dpad-top">
+                                                <button class="phone-dpad-btn" onclick="sendBack()">Back</button>
+                                                <button class="phone-dpad-btn" onclick="sendPlayPause()">Play / Pause</button>
+                                            </div>
+                                            <div class="phone-dpad-compass">
+                                                <button class="compass-btn compass-btn-up" onclick="sendScroll(0, -60)">▲</button>
+                                                <button class="compass-btn compass-btn-left" onclick="sendScroll(-60, 0)">◀</button>
+                                                <button class="compass-btn compass-btn-ok" onclick="sendClick()">OK</button>
+                                                <button class="compass-btn compass-btn-right" onclick="sendScroll(60, 0)">▶</button>
+                                                <button class="compass-btn compass-btn-down" onclick="sendScroll(0, 60)">▼</button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Tabs Panel -->
+                                        <div class="phone-sub-panel" id="panel-tabs">
+                                            <div class="phone-tabs-input-row">
+                                                <input type="text" class="phone-input" id="newUrlInput" placeholder="Enter URL (https://...)">
+                                                <button class="phone-add-tab-btn" onclick="openNewUrl()">+</button>
+                                            </div>
+                                            <div class="phone-tabs-list" id="phoneTabsListContainer">
+                                                <!-- Dynamic Mobile Tab Rows -->
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sticky Keyboard Input Bar -->
+                                    <div class="phone-input-bar">
+                                        <input type="text" class="phone-input" id="keyboardTextInput" placeholder="Type text to TV input fields..." style="height:32px;">
+                                        <button class="phone-send-btn" onclick="sendKeyboardText()">Send</button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Logs Inspector Console -->
+                <div class="logs-section">
+                    <div class="logs-header">
+                        <h5>Local WebSocket Packet Inspector (Port 8080)</h5>
+                        <button class="logs-clear" onclick="clearLogs()">Clear Console</button>
+                    </div>
+                    <div class="logs-console" id="logsConsole">
+                        <div class="log-entry info">System: Awaiting connection. Select "Connect" on the phone remote.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Video Showcase -->
+    <section id="video" class="video-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-tag">Product Walkthrough</div>
+                <h2 class="section-title">See TelePort in Action</h2>
+                <p class="section-desc">Watch a screen recording showing real-time mobile remote trackpad movements, gyroscope tracking, and ExoPlayer streams casting natively.</p>
+            </div>
+            
+            <div class="video-wrapper">
+                <video controls muted playsinline poster="screenshots/tv_pairing_screen.png">
+                    <source src="demo_video.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-tag">Powerful Ecosystem</div>
+                <h2 class="section-title">Fully Packed TV Browser Features</h2>
+                <p class="section-desc">TelePort compiles into a single APK file that auto-detects its environment on launch to deploy either the client engine or remote controller UI.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3 class="feature-title">Native Ad & Popup Blocker</h3>
+                    <p class="feature-desc">Integrated domain-based blocker intercepts ad queries and disables malicious popups inside WebView before they can disrupt navigation.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🖱️</div>
+                    <h3 class="feature-title">Air Mouse Gyro Pointer</h3>
+                    <p class="feature-desc">Streams pitch and yaw gyroscope sensor logs directly from your mobile device to draw a smooth, hardware-accelerated cursor on the TV WebView.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎞️</div>
+                    <h3 class="feature-title">ExoPlayer Cast Engine</h3>
+                    <p class="feature-desc">Scans active pages for standard media streams (.mp4, .m3u8), intercepts URL queries, and feeds them into a fullscreen native ExoPlayer for hardware decoding.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📡</div>
+                    <h3 class="feature-title">mDNS Network Discovery</h3>
+                    <p class="feature-desc">Uses local network Network Service Discovery (NSD) to link controllers automatically without external cloud databases or account creation.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3 class="feature-title">Zero-Cloud Security</h3>
+                    <p class="feature-desc">Runs entirely on a secure local WebSocket server inside your home LAN. No information ever leaves your network. 100% serverless.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3 class="feature-title">Screen Mirroring</h3>
+                    <p class="feature-desc">Easily mirror the mobile display directly onto the TV browser using low-latency MediaProjection API streaming across local sockets.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Architecture Section -->
+    <section id="architecture" class="tech-section">
+        <div class="container">
+            <div class="tech-grid">
+                <div class="tech-content">
+                    <div class="section-tag">Architecture</div>
+                    <h3>Local Network Socket Protocol</h3>
+                    <p>TelePort relies on a lightweight Kotlin Serialization Command model. The TV client spins up an embedded Ktor HTTP & WebSockets Server. The mobile remote opens a WebSocket connection using the discovered IP address and streams JSON commands directly.</p>
+                    <p>This design allows sub-5ms input latency, providing a highly responsive tracking feeling matching hardware mice.</p>
+                    
+                    <div style="margin-top:20px;">
+                        <a href="privacy.html" class="btn btn-secondary">Read Privacy Policy</a>
+                    </div>
+                </div>
+                <div>
+                    <div class="code-container">
+<span class="code-comment">// Shared WebSocket Message Contracts</span>
+<span class="code-keyword">@Serializable</span>
+<span class="code-keyword">sealed class</span> <span class="code-type">Command</span> {
+    <span class="code-keyword">data class</span> <span class="code-type">OpenUrl</span>(<span class="code-keyword">val</span> <span class="code-var">url</span>: String) : Command()
+    <span class="code-keyword">data class</span> <span class="code-type">MoveCursor</span>(<span class="code-keyword">val</span> <span class="code-var">dx</span>: Float, <span class="code-keyword">val</span> <span class="code-var">dy</span>: Float) : Command()
+    <span class="code-keyword">object</span> <span class="code-type">Click</span> : Command()
+    <span class="code-keyword">data class</span> <span class="code-type">Scroll</span>(<span class="code-keyword">val</span> <span class="code-var">dx</span>: Float, <span class="code-keyword">val</span> <span class="code-var">dy</span>: Float) : Command()
+    <span class="code-keyword">data class</span> <span class="code-type">PlayStreamNatively</span>(<span class="code-keyword">val</span> <span class="code-var">streamUrl</span>: String) : Command()
+    <span class="code-keyword">data class</span> <span class="code-type">SendText</span>(<span class="code-keyword">val</span> <span class="code-var">text</span>: String) : Command()
+}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Accordion Section -->
+    <section id="faq" class="faq-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-tag">Help & Documentation</div>
+                <h2 class="section-title">Frequently Asked Questions</h2>
+                <p class="section-desc">Find quick resolutions for connection issues, firewall configurations, and general product questions.</p>
+            </div>
+
+            <div class="faq-accordion">
+                <div class="faq-item">
+                    <button class="faq-question">
+                        How do the mobile device and Android TV connect?
+                        <svg class="faq-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Connection is established locally on your home Wi-Fi network. The Android TV app advertises a connection point using Network Service Discovery (NSD/mDNS). The phone remote automatically detects it on the same network. If mDNS is blocked by your router's security policies, you can simply scan the QR code displayed on the TV screen or enter the TV IP address manually to connect immediately.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <button class="faq-question">
+                        What should I do if the remote fails to discover the TV?
+                        <svg class="faq-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p>1. Make sure both devices are on the exact same Wi-Fi SSID.<br>
+                        2. Verify that client-to-client isolation (AP Isolation) is disabled in your Wi-Fi router settings.<br>
+                        3. If discovery still fails, tap the Manual IP entry field on your phone remote and type the IP address shown on the TV pairing screen.<br>
+                        4. For developer emulators, make sure to configure ADB port forwarding as detailed in the project's README: <code>adb forward tcp:8080 tcp:8080</code> and <code>adb reverse tcp:8080 tcp:8080</code>.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        How does the ExoPlayer Stream Extractor work?
+                        <svg class="faq-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p>When browsing websites, the TV's native WebView monitors and intercepts URL resource requests. If it detects video resources (such as direct <code>.mp4</code> links or HTTP Live Streaming <code>.m3u8</code> playlist formats), it automatically extracts the stream URL and updates the connected phone remote. Tapping "PLAY" on the remote shuts down the WebView overlay and spins up a native Media3 ExoPlayer instance on the TV, which decodes the video directly with hardware acceleration for maximum smoothness and no frame skips.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        Does the app track browsing history or personal data?
+                        <svg class="faq-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p>No. TelePort is designed with absolute privacy in mind. There are zero cloud databases, analytical SDKs, or third-party ads integrated. The app does not save search terms, browsing history, or remote tracking coordinates. All communication packets flow directly between your phone and your TV over your local network and never leave your router.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        Does it bypass standard screen mirror DRM constraints?
+                        <svg class="faq-arrow" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Yes. Many media streaming apps block standard Chromecast casting or Miracast screen mirroring due to DRM restrictions. Since TelePort runs the browser natively on the TV device itself and only routes coordinates/input commands from the phone, DRM restrictions related to mirroring are completely bypassed, enabling you to load video players on the TV natively.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <span class="footer-logo">TelePort</span>
+            <ul class="footer-links">
+                <li><a href="#">Home</a></li>
+                <li><a href="#demo">Interactive Demo</a></li>
+                <li><a href="#video">Demo Video</a></li>
+                <li><a href="privacy.html">Privacy Policy</a></li>
+            </ul>
+            <div class="footer-copy">
+                &copy; 2026 TelePort. Released under the MIT License. Developed for Android TV ecosystems.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive Simulator Scripts -->
+    <script>
+        // Simulator State
+        let isConnected = false;
+        let activePhoneTab = 0; // 0: Trackpad, 1: Dpad, 2: Tabs
+        let activeTvTab = 0; // 0: Google, 1: YouTube, 2: Netflix, 3: Custom
+        let tvTabs = [
+            { title: "Google", url: "https://www.google.com", pageId: "page-google" },
+            { title: "VideoHub", url: "https://www.youtube.com", pageId: "page-youtube" },
+            { title: "NetStream", url: "https://www.netflix.com", pageId: "page-netflix" }
+        ];
+        let cursorX = 50; // percentage based (0-100)
+        let cursorY = 50;
+        let airMouseEnabled = false;
+        let mirroringEnabled = false;
+        let detectedStream = null;
+        let exoPlaying = true;
+
+        // Elements Cache
+        const tvScreen = document.getElementById("tvScreen");
+        const tvPairingScreen = document.getElementById("tvPairingScreen");
+        const tvBrowserScreen = document.getElementById("tvBrowserScreen");
+        const tvExoPlayerScreen = document.getElementById("tvExoPlayerScreen");
+        const tvMirrorScreen = document.getElementById("tvMirrorScreen");
+        const phonePairingScreen = document.getElementById("phonePairingScreen");
+        const phoneControllerScreen = document.getElementById("phoneControllerScreen");
+        const phoneTrackpad = document.getElementById("phoneTrackpad");
+        const tvCursor = document.getElementById("tvCursor");
+        const logsConsole = document.getElementById("logsConsole");
+        const tvTabContainer = document.getElementById("tvTabContainer");
+        const tvAddressDisplay = document.getElementById("tvAddressDisplay");
+        const phoneTabsListContainer = document.getElementById("phoneTabsListContainer");
+        const streamCastBanner = document.getElementById("streamCastBanner");
+        const tvMirrorDuplicate = document.getElementById("tvMirrorDuplicate");
+        
+        // Log Helper
+        function log(message, type = "info") {
+            const entry = document.createElement("div");
+            entry.className = `log-entry ${type}`;
+            entry.textContent = message;
+            logsConsole.appendChild(entry);
+            logsConsole.scrollTop = logsConsole.scrollHeight;
+        }
+
+        function clearLogs() {
+            logsConsole.innerHTML = "";
+            log("System: Logs cleared.", "info");
+        }
+
+        // Connection Handlers
+        function connectPhone() {
+            isConnected = true;
+            phonePairingScreen.classList.remove("active");
+            phoneControllerScreen.classList.add("active");
+            
+            tvPairingScreen.classList.remove("active");
+            tvBrowserScreen.classList.add("active");
+            tvCursor.style.display = "block";
+
+            log("WS: Client connected from 192.168.1.189", "info");
+            log(`TV sent: {"status":"Connected","tvState":{"tabs":${JSON.stringify(tvTabs)},"activeTabIndex":0}}`, "received");
+            
+            renderTabs();
+        }
+
+        function disconnectPhone() {
+            isConnected = false;
+            // Reset switches
+            document.getElementById("mirrorSwitch").checked = false;
+            document.getElementById("airMouseSwitch").checked = false;
+            mirroringEnabled = false;
+            airMouseEnabled = false;
+            detectedStream = null;
+            streamCastBanner.style.display = "none";
+
+            phoneControllerScreen.classList.remove("active");
+            phonePairingScreen.classList.add("active");
+
+            tvBrowserScreen.classList.remove("active");
+            tvExoPlayerScreen.classList.remove("active");
+            tvMirrorScreen.classList.remove("active");
+            tvPairingScreen.classList.add("active");
+            tvCursor.style.display = "none";
+
+            log("WS: Client disconnected.", "info");
+        }
+
+        // Tab Rendering for TV and Mobile
+        function renderTabs() {
+            // Render TV Tabs
+            tvTabContainer.innerHTML = "";
+            tvTabs.forEach((tab, index) => {
+                const tabEl = document.createElement("div");
+                tabEl.className = `tv-browser-tab ${index === activeTvTab ? "active" : ""}`;
+                tabEl.innerHTML = `${tab.title} <span style="font-size:0.5rem; opacity:0.6;" onclick="closeTab(${index}); event.stopPropagation();">✕</span>`;
+                tabEl.onclick = () => selectTab(index);
+                tvTabContainer.appendChild(tabEl);
+            });
+
+            // Update URL display
+            if (tvTabs[activeTvTab]) {
+                tvAddressDisplay.textContent = tvTabs[activeTvTab].url;
+            }
+
+            // Render Mobile Tabs List
+            phoneTabsListContainer.innerHTML = "";
+            tvTabs.forEach((tab, index) => {
+                const item = document.createElement("div");
+                item.className = `phone-tab-item ${index === activeTvTab ? "active" : ""}`;
+                item.onclick = () => selectTab(index);
+                item.innerHTML = `
+                    <div class="phone-tab-item-info">
+                        <h6>${tab.title}</h6>
+                        <p>${tab.url}</p>
+                    </div>
+                    <button class="phone-tab-item-close" onclick="closeTab(${index}); event.stopPropagation();">✕</button>
+                `;
+                phoneTabsListContainer.appendChild(item);
+            });
+        }
+
+        function selectTab(index) {
+            if (!isConnected) return;
+            activeTvTab = index;
+            log(`Phone sent: {"command":"SelectTab","index":${index}}`, "sent");
+            
+            // Toggle active webpage
+            document.querySelectorAll(".tv-browser-content .mock-page").forEach(page => {
+                page.classList.remove("active");
+            });
+
+            const currentTab = tvTabs[activeTvTab];
+            if (currentTab) {
+                const pageEl = document.getElementById(currentTab.pageId);
+                if (pageEl) pageEl.classList.add("active");
+            }
+
+            log(`TV state updated: activeTabIndex = ${index}`, "received");
+            renderTabs();
+        }
+
+        function closeTab(index) {
+            if (!isConnected) return;
+            log(`Phone sent: {"command":"CloseTab","index":${index}}`, "sent");
+            
+            tvTabs.splice(index, 1);
+            if (activeTvTab >= tvTabs.length) {
+                activeTvTab = Math.max(0, tvTabs.length - 1);
+            }
+            
+            // Fallback if all tabs closed
+            if (tvTabs.length === 0) {
+                tvTabs.push({ title: "Blank Page", url: "about:blank", pageId: "page-google" });
+                activeTvTab = 0;
+            }
+
+            selectTab(activeTvTab);
+        }
+
+        function openNewUrl() {
+            const input = document.getElementById("newUrlInput");
+            let url = input.value.trim();
+            if (!url) return;
+
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "https://" + url;
+            }
+
+            let domain = url.replace('https://', '').replace('http://', '').split('/')[0];
+            let title = domain.charAt(0).toUpperCase() + domain.slice(1);
+
+            log(`Phone sent: {"command":"OpenUrl","url":"${url}"}`, "sent");
+
+            // Setup mock page customizer
+            let newPageId = "page-custom";
+            if (url.includes("google.com")) newPageId = "page-google";
+            else if (url.includes("youtube.com")) newPageId = "page-youtube";
+            else if (url.includes("netflix.com")) newPageId = "page-netflix";
+            else {
+                document.getElementById("customPageTitle").textContent = title;
+                document.getElementById("customPageUrl").textContent = url;
+            }
+
+            tvTabs.push({ title: title, url: url, pageId: newPageId });
+            activeTvTab = tvTabs.length - 1;
+            
+            input.value = "";
+            selectTab(activeTvTab);
+        }
+
+        // Phone Tabs Swapping
+        function switchPhoneTab(tabIndex, buttonEl) {
+            activePhoneTab = tabIndex;
+            
+            // Remove active classes
+            document.querySelectorAll(".phone-tab-btn").forEach(btn => btn.classList.remove("active"));
+            document.querySelectorAll(".phone-sub-panel").forEach(pnl => pnl.classList.remove("active"));
+
+            buttonEl.classList.add("active");
+            
+            if (tabIndex === 0) document.getElementById("panel-trackpad").classList.add("active");
+            else if (tabIndex === 1) document.getElementById("panel-dpad").classList.add("active");
+            else if (tabIndex === 2) document.getElementById("panel-tabs").classList.add("active");
+
+            // Mirror screen copy trigger
+            if (mirroringEnabled) {
+                syncMirrorDisplay();
+            }
+        }
+
+        // Keyboard sends text
+        function sendKeyboardText() {
+            const input = document.getElementById("keyboardTextInput");
+            const text = input.value;
+            if (!text) return;
+
+            log(`Phone sent: {"command":"SendText","text":"${text}"}`, "sent");
+
+            // Simulate putting text in search input if active tab is google
+            if (tvTabs[activeTvTab] && tvTabs[activeTvTab].pageId === "page-google") {
+                const tvSearch = document.getElementById("googleSearchInput");
+                tvSearch.value = text;
+                log(`TV updated: Input text field updated`, "received");
+                
+                // Show mock results
+                document.getElementById("googleResults").style.display = "block";
+            }
+
+            input.value = "";
+        }
+
+        // Trackpad dragging logic
+        let isDragging = false;
+        phoneTrackpad.addEventListener("mousedown", (e) => {
+            isDragging = true;
+            processTrackpadMove(e);
+        });
+
+        window.addEventListener("mouseup", () => {
+            isDragging = false;
+        });
+
+        phoneTrackpad.addEventListener("mousemove", (e) => {
+            if (!isDragging) return;
+            processTrackpadMove(e);
+        });
+
+        // Touch support
+        phoneTrackpad.addEventListener("touchstart", (e) => {
+            isDragging = true;
+            processTrackpadMove(e.touches[0]);
+        });
+        window.addEventListener("touchend", () => {
+            isDragging = false;
+        });
+        phoneTrackpad.addEventListener("touchmove", (e) => {
+            if (!isDragging) return;
+            processTrackpadMove(e.touches[0]);
+        });
+
+        function processTrackpadMove(e) {
+            if (!isConnected || mirroringEnabled) return;
+            
+            const rect = phoneTrackpad.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            
+            // Constrain
+            cursorX = Math.max(2, Math.min(98, x));
+            cursorY = Math.max(2, Math.min(98, y));
+
+            // Move cursor
+            tvCursor.style.left = `${cursorX}%`;
+            tvCursor.style.top = `${cursorY}%`;
+
+            // Logs output
+            log(`Phone sent: {"command":"MoveCursor","dx":${(x - 50).toFixed(1)},"dy":${(y - 50).toFixed(1)}}`, "sent");
+            
+            // Check highlights
+            checkHoverHighlights();
+        }
+
+        // Simulating tapping/clicking
+        phoneTrackpad.addEventListener("click", () => {
+            if (!isConnected || mirroringEnabled) return;
+            sendClick();
+        });
+
+        function sendClick() {
+            log(`Phone sent: {"command":"Click"}`, "sent");
+            tvCursor.classList.add("clicking");
+            setTimeout(() => tvCursor.classList.remove("clicking"), 150);
+
+            // Trigger clicks on simulated TV links
+            triggerMockClicks();
+        }
+
+        function triggerMockClicks() {
+            // If on YouTube page and hovering cards
+            if (tvTabs[activeTvTab] && tvTabs[activeTvTab].pageId === "page-youtube") {
+                // If cursor is in coordinates of cards
+                if (cursorX > 10 && cursorX < 40 && cursorY > 20 && cursorY < 60) {
+                    document.getElementById("yt-card-1").click();
+                } else if (cursorX > 40 && cursorX < 70 && cursorY > 20 && cursorY < 60) {
+                    document.getElementById("yt-card-2").click();
+                } else if (cursorX > 70 && cursorX < 98 && cursorY > 20 && cursorY < 60) {
+                    document.getElementById("yt-card-3").click();
+                }
+            }
+        }
+
+        function checkHoverHighlights() {
+            if (tvTabs[activeTvTab] && tvTabs[activeTvTab].pageId === "page-youtube") {
+                document.querySelectorAll(".mock-yt-card").forEach(c => c.classList.remove("highlight"));
+                if (cursorX > 10 && cursorX < 40 && cursorY > 20 && cursorY < 60) {
+                    document.getElementById("yt-card-1").classList.add("highlight");
+                } else if (cursorX > 40 && cursorX < 70 && cursorY > 20 && cursorY < 60) {
+                    document.getElementById("yt-card-2").classList.add("highlight");
+                } else if (cursorX > 70 && cursorX < 98 && cursorY > 20 && cursorY < 60) {
+                    document.getElementById("yt-card-3").classList.add("highlight");
+                }
+            }
+        }
+
+        // Air Mouse Sim checkbox
+        function toggleAirMouse(enabled) {
+            airMouseEnabled = enabled;
+            log(`Phone sent: {"command":"SetAirRemoteMode","enabled":${enabled}}`, "sent");
+            if (enabled) {
+                document.getElementById("trackpadInstructions").innerHTML = "AIR MOUSE ENABLED<br>Hover mouse on trackpad<br>to stream motion pointer";
+            } else {
+                document.getElementById("trackpadInstructions").innerHTML = "TRACKPAD<br>Drag inside to move TV cursor<br>Tap to click";
+            }
+        }
+
+        // Scroll commands
+        function sendScroll(dx, dy) {
+            if (!isConnected) return;
+            log(`Phone sent: {"command":"Scroll","dx":${dx},"dy":${dy}}`, "sent");
+            
+            // Scroll TV Page Content
+            const activePage = document.querySelector(".mock-page.active");
+            if (activePage) {
+                activePage.scrollTop += dy;
+            }
+        }
+
+        function sendBack() {
+            if (!isConnected) return;
+            log(`Phone sent: {"command":"GoBack"}`, "sent");
+            // If in video player, close it
+            if (tvExoPlayerScreen.classList.contains("active")) {
+                closeExoPlayer();
+            } else {
+                // Otherwise navigate to tab 0
+                selectTab(0);
+            }
+        }
+
+        function sendPlayPause() {
+            if (!isConnected) return;
+            log(`Phone sent: {"command":"PlayPause"}`, "sent");
+            if (tvExoPlayerScreen.classList.contains("active")) {
+                exoPlaying = !exoPlaying;
+                document.getElementById("exoPlayState").innerHTML = exoPlaying ? "<span>⏸</span>" : "<span>▶</span>";
+                log(`TV updated: Player ${exoPlaying ? "Playing" : "Paused"}`, "received");
+            }
+        }
+
+        // Mirror Switcher
+        function toggleMirroring(enabled) {
+            mirroringEnabled = enabled;
+            if (enabled) {
+                log(`Phone sent: {"command":"StartMirroring"}`, "sent");
+                tvBrowserScreen.classList.remove("active");
+                tvMirrorScreen.classList.add("active");
+                tvCursor.style.display = "none";
+                syncMirrorDisplay();
+                log("TV received: Mirroring session initialized.", "received");
+            } else {
+                log(`Phone sent: {"command":"StopMirroring"}`, "sent");
+                tvMirrorScreen.classList.remove("active");
+                tvBrowserScreen.classList.add("active");
+                if (isConnected) tvCursor.style.display = "block";
+            }
+        }
+
+        // Copy phone layout code to mirror canvas
+        function syncMirrorDisplay() {
+            if (!mirroringEnabled) return;
+            
+            // Create a styled duplication layout inside the TV screen
+            tvMirrorDuplicate.innerHTML = `
+                <div style="background:#181920; padding:15px 10px; border-bottom:1px solid #333; text-align:center;">
+                    <h5 style="color:white; font-size:0.8rem; margin:0;">Mirroring Active</h5>
+                    <p style="color:var(--teal-accent); font-size:0.5rem; margin:0;">Latency: 3ms</p>
+                </div>
+                <div style="padding:15px; display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center; height:240px; color:#555;">
+                    <div style="font-size:2rem; animation: float 2s infinite;">📱</div>
+                    <span style="font-size:0.6rem; color:#aaa; text-align:center;">Phone Screen streams H.264 packets directly over sockets.</span>
+                </div>
+            `;
+        }
+
+        // Media Stream Extractor Event Simulation
+        function triggerStreamDetected(streamUrl, title) {
+            detectedStream = { url: streamUrl, title: title };
+            streamCastBanner.style.display = "flex";
+            log(`TV sent: {"status":"StreamDetected","streamUrl":"${streamUrl}","title":"${title}"}`, "received");
+        }
+
+        // Launch Native ExoPlayer
+        function launchExoPlayer() {
+            if (!detectedStream) return;
+
+            log(`Phone sent: {"command":"PlayStreamNatively","streamUrl":"${detectedStream.url}"}`, "sent");
+            
+            tvBrowserScreen.classList.remove("active");
+            tvExoPlayerScreen.classList.add("active");
+            tvCursor.style.display = "none";
+
+            document.getElementById("exoVideoTitle").textContent = detectedStream.title;
+            
+            streamCastBanner.style.display = "none";
+            detectedStream = null;
+
+            log("TV received: Opening ExoPlayer Native Media Component.", "received");
+        }
+
+        function closeExoPlayer() {
+            tvExoPlayerScreen.classList.remove("active");
+            tvBrowserScreen.classList.add("active");
+            if (isConnected) tvCursor.style.display = "block";
+            log("System: ExoPlayer closed, returned to WebView.", "info");
+        }
+
+
+        // Collapsible FAQ Accordion Logic
+        const faqItems = document.querySelectorAll(".faq-item");
+        faqItems.forEach(item => {
+            const question = item.querySelector(".faq-question");
+            const answer = item.querySelector(".faq-answer");
+
+            question.addEventListener("click", () => {
+                const isActive = item.classList.contains("active");
+
+                // Close all items
+                faqItems.forEach(otherItem => {
+                    otherItem.classList.remove("active");
+                    otherItem.querySelector(".faq-answer").style.maxHeight = "0px";
+                });
+
+                // Toggle this item
+                if (!isActive) {
+                    item.classList.add("active");
+                    answer.style.maxHeight = answer.scrollHeight + "px";
+                }
+            });
+        });
+    </script>
+</body>
+</html>

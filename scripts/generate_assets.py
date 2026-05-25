@@ -83,5 +83,20 @@ def main():
     banner_resized.save(banner_output, "PNG")
     print(f"Saved Android TV Banner: {banner_output} (320x180)")
 
+    # 3. Chrome Extension Icons
+    chrome_icons_dir = os.path.join(project_root, "chrome-extension", "icons")
+    os.makedirs(chrome_icons_dir, exist_ok=True)
+    chrome_configs = {
+        "icon-16.png": 16,
+        "icon-48.png": 48,
+        "icon-128.png": 128
+    }
+    for filename, size in chrome_configs.items():
+        icon_resized = logo_img.resize((size, size), Image.Resampling.LANCZOS)
+        icon_output = os.path.join(chrome_icons_dir, filename)
+        icon_resized.save(icon_output, "PNG")
+        print(f"Saved Chrome Extension Icon: {icon_output} ({size}x{size})")
+
+
 if __name__ == "__main__":
     main()
