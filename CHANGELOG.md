@@ -2,6 +2,11 @@
 
 ## [2026-05-25] - Automated Release
 
+- docs: Align landing page branding, security, and connection loader states (929c3b9) by Raviteja Kamalapuram
+
+
+## [2026-05-25] - Automated Release
+
 - feat: implement Wave 4 Chrome Extension, design guidelines, and dev runner CLI (45d47f8) by Raviteja Kamalapuram
 
 
