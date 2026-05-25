@@ -62,6 +62,7 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
     val TAG = "TvActivityContent"
     val clientConnected by TvEventBus.clientConnected.collectAsState()
     val isMirroring by tabManager.isMirroring.collectAsState()
+    val tabs by tabManager.tabs.collectAsState()
     val connectionUrl = "http://$localIp:${ThemeTokens.PORT}/remote"
 
     // Listen for incoming commands in the event bus and route them to tabManager
@@ -95,7 +96,7 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
     ) {
         if (isMirroring) {
             MirrorPlayerScreen(tabManager)
-        } else if (clientConnected) {
+        } else if (clientConnected || tabs.isNotEmpty()) {
             BrowserScreen(tabManager)
         } else {
             PairingScreen(connectionUrl, localIp)
