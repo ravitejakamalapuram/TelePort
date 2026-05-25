@@ -2,6 +2,11 @@
 
 ## [2026-05-25] - Automated Release
 
+- fix: resolve air remote lag, invert vertical axis, and persist tv browser screen when remote disconnects (d9f071b) by Raviteja Kamalapuram
+
+
+## [2026-05-25] - Automated Release
+
 - feat: implement single source of truth for branding tokens, app name, and port settings (44b0b22) by Raviteja Kamalapuram
 
 
