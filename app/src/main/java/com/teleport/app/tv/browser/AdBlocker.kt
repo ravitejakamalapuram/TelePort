@@ -35,11 +35,12 @@ object AdBlocker {
 
     fun isAd(url: String): Boolean {
         try {
-            val host = java.net.URL(url).host?.lowercase() ?: return false
+            val host = android.net.Uri.parse(url).host?.lowercase() ?: return false
 
-            // Check if host matches or ends with any ad domain
-            for (adDomain in AD_DOMAINS) {
-                if (host == adDomain || host.endsWith(".$adDomain")) {
+            // O(1) domain lookup checking host and its parent domains
+            var currentHost = host
+            while (currentHost.isNotEmpty()) {
+                if (AD_DOMAINS.contains(currentHost)) {
                     try {
                         Log.d(TAG, "Blocked Ad Request: $url")
                     } catch (e: Throwable) {
@@ -47,6 +48,9 @@ object AdBlocker {
                     }
                     return true
                 }
+                val dotIndex = currentHost.indexOf('.')
+                if (dotIndex == -1) break
+                currentHost = currentHost.substring(dotIndex + 1)
             }
         } catch (e: Exception) {
             // Ignore malformed URLs
