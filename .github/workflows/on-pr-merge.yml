@@ -163,5 +163,5 @@ jobs:
           serviceAccountJsonPlainText: ${{ env.PLAY_SERVICE_ACCOUNT_KEY }}
           packageName: com.carfry369.teleport
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
-          track: alpha
+          tracks: alpha
 
