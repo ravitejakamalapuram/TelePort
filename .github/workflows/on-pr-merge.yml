@@ -114,9 +114,14 @@ jobs:
           # Increment patch version
           NEW_PATCH=$((PATCH + 1))
           NEW_TAG="v$MAJOR.$MINOR.$NEW_PATCH"
+          VERSION_NAME="$MAJOR.$MINOR.$NEW_PATCH"
+          VERSION_CODE=$(git rev-list --count HEAD)
           
           echo "New tag: $NEW_TAG"
+          echo "Version Code: $VERSION_CODE"
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
 
       - name: Create and Push New Git Tag
         run: |
@@ -136,7 +141,7 @@ jobs:
           fi
 
       - name: Compile and Sign Android Release Binary (APK & AAB)
-        run: ./gradlew bundleRelease assembleRelease
+        run: ./gradlew bundleRelease assembleRelease -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ env.VERSION_NAME }}
         env:
           KEYSTORE_FILE: ${{ env.KEYSTORE_FILE }}
           KEYSTORE_PASSWORD: ${{ env.KEYSTORE_PASSWORD }}

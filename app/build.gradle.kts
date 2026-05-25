@@ -14,8 +14,8 @@ android {
         applicationId = "com.carfry369.teleport"
         minSdk = 26 // Required for Ktor Netty and Media3
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.0"
+        versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 5
+        versionName = (project.findProperty("versionName") as? String) ?: "1.0"
     }
 
     signingConfigs {
