@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026-05-26] - Automated Release
+
+- chore: delete GitHub Actions crash-monitor workflow in favor of local scheduler (4778fc6) by Raviteja Kamalapuram
+
+
 ## [2026-05-25] - Automated Release
 
 - fix: resolve air remote lag, invert vertical axis, and persist tv browser screen when remote disconnects (d9f071b) by Raviteja Kamalapuram
