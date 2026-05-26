@@ -1,3 +1,6 @@
 ## 2024-06-12 - WebView Resource Interception Bottleneck
 **Learning:** Instantiating `java.net.URL` for every single HTTP request intercepted by `WebViewClient.shouldInterceptRequest` creates massive memory pressure and CPU overhead on Android TVs. Native Java URL parsing is surprisingly expensive (due to protocol handler instantiation) and doing this hundreds of times per second during page load blocks the main thread. Additionally, checking if a host matches a domain list using `O(n)` string iterations with `.endsWith()` further degrades performance.
 **Action:** Always avoid `java.net.URL` object allocation in high-frequency callbacks. Instead, use lightweight string manipulation to extract hostnames from URLs. Combine this with `O(1)` `HashSet` lookups using parent domain traversal rather than iterating over entire blocked domain lists.
+## 2024-08-16 - Bitmap.setPixel JNI Overhead
+**Learning:** Calling `Bitmap.setPixel()` in a nested loop (e.g., for generating a 512x512 QR code) forces hundreds of thousands of individual JNI calls. This massive overhead freezes the main thread on low-end TV devices during generation.
+**Action:** Always batch pixel modifications. Pre-allocate an `IntArray`, populate the color data in memory, and dispatch it natively with a single `Bitmap.setPixels()` call.

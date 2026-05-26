@@ -257,11 +257,16 @@ private fun generateQrCodeBitmap(content: String): Bitmap? {
         val width = bitMatrix.width
         val height = bitMatrix.height
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
-        for (x in 0 until width) {
-            for (y in 0 until height) {
-                bitmap.setPixel(x, y, if (bitMatrix.get(x, y)) AndroidColor.BLACK else AndroidColor.WHITE)
+        // Optimization: Use IntArray to batch pixel updates instead of
+        // hundreds of thousands of individual JNI setPixel calls.
+        val pixels = IntArray(width * height)
+        var offset = 0
+        for (y in 0 until height) {
+            for (x in 0 until width) {
+                pixels[offset++] = if (bitMatrix.get(x, y)) AndroidColor.BLACK else AndroidColor.WHITE
             }
         }
+        bitmap.setPixels(pixels, 0, width, 0, 0, width, height)
         return bitmap
     } catch (e: Exception) {
         Log.e("TvActivityContent", "Error generating QR code", e)
