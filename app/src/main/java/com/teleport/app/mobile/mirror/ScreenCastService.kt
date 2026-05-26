@@ -48,7 +48,7 @@ class ScreenCastService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent == null) {
-            stopSelf()
+            showDefaultNotificationAndStop()
             return START_NOT_STICKY
         }
 
@@ -65,7 +65,7 @@ class ScreenCastService : Service() {
 
         if (resultCode == -1 || resultData == null || tvIp.isBlank()) {
             Log.e(TAG, "Invalid parameters for ScreenCastService")
-            stopSelf()
+            showDefaultNotificationAndStop()
             return START_NOT_STICKY
         }
 
@@ -78,7 +78,17 @@ class ScreenCastService : Service() {
         }
 
         startCast(resultCode, resultData, tvIp)
-        return START_STICKY
+        return START_NOT_STICKY
+    }
+
+    private fun showDefaultNotificationAndStop() {
+        val notification = createNotification()
+        try {
+            startForeground(100, notification)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error calling startForeground in error fallback", e)
+        }
+        stopSelf()
     }
 
     private fun startCast(resultCode: Int, resultData: Intent, tvIp: String) {
