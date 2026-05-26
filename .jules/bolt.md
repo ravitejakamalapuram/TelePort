@@ -4,3 +4,6 @@
 ## 2024-08-16 - Bitmap.setPixel JNI Overhead
 **Learning:** Calling `Bitmap.setPixel()` in a nested loop (e.g., for generating a 512x512 QR code) forces hundreds of thousands of individual JNI calls. This massive overhead freezes the main thread on low-end TV devices during generation.
 **Action:** Always batch pixel modifications. Pre-allocate an `IntArray`, populate the color data in memory, and dispatch it natively with a single `Bitmap.setPixels()` call.
+## 2024-05-18 - Manual URL parsing regressions
+**Learning:** Optimizing `android.net.Uri.parse` using manual string indexing for performance causes regressions in edge cases like IPv6 URLs (e.g. `http://[2001:db8::1]/`) and Basic Auth credentials (e.g. `https://user:pass@domain.com/`). The correctness loss outweighs the micro-optimization.
+**Action:** Do NOT replace robust URL parsing APIs like `android.net.Uri.parse` with fragile manual string splitting, even for hot paths. Instead, look for string allocation overheads like `.lowercase()` and use built-in matching like `.contains(..., ignoreCase = true)`.
