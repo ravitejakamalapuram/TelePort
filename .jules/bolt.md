@@ -4,3 +4,6 @@
 ## 2024-08-16 - Bitmap.setPixel JNI Overhead
 **Learning:** Calling `Bitmap.setPixel()` in a nested loop (e.g., for generating a 512x512 QR code) forces hundreds of thousands of individual JNI calls. This massive overhead freezes the main thread on low-end TV devices during generation.
 **Action:** Always batch pixel modifications. Pre-allocate an `IntArray`, populate the color data in memory, and dispatch it natively with a single `Bitmap.setPixels()` call.
+## $(date +%Y-%m-%d) - Zero-Allocation Host Extraction in High-Frequency Callbacks
+**Learning:** In high-frequency WebView callbacks like `shouldInterceptRequest`, standard URL parsing (`android.net.Uri.parse(url)`) creates significant garbage collection overhead due to repeated object allocations and regex matching on every resource request.
+**Action:** Replace heavy parsing utilities with custom, zero-allocation string manipulation functions for extracting necessary URL components (like the host) when performance is critical, but ensure the custom logic accounts for standard URL features (paths, queries, ports, auth).

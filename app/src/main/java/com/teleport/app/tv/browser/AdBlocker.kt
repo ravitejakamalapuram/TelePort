@@ -33,9 +33,36 @@ object AdBlocker {
         "adnxs-simple.com"
     )
 
+    // Optimization: avoid Uri.parse() allocations in high-frequency callbacks
+    // like WebViewClient.shouldInterceptRequest to reduce garbage collection overhead
+    private fun extractHost(url: String): String? {
+        val schemeEnd = url.indexOf("://")
+        if (schemeEnd == -1) return null
+
+        var start = schemeEnd + 3
+        var end = url.length
+
+        for (i in start until url.length) {
+            val c = url[i]
+            if (c == '/' || c == '?' || c == '#') {
+                end = i
+                break
+            }
+        }
+
+        val atIndex = url.indexOf('@', start)
+        if (atIndex != -1 && atIndex < end) start = atIndex + 1
+
+        val portIndex = url.indexOf(':', start)
+        if (portIndex != -1 && portIndex < end) end = portIndex
+
+        if (start >= end) return null
+        return url.substring(start, end).lowercase()
+    }
+
     fun isAd(url: String): Boolean {
         try {
-            val host = android.net.Uri.parse(url).host?.lowercase() ?: return false
+            val host = extractHost(url) ?: return false
 
             // O(1) domain lookup checking host and its parent domains
             var currentHost = host
