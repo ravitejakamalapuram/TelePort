@@ -47,12 +47,21 @@ class ScreenCastService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        val action = intent?.action
+
+        // Always call startForeground immediately for any start paths other than STOP.
+        // This prevents ForegroundServiceDidNotStartInTimeException if checking parameters or initializing takes time,
+        // or if we decide to stopSelf() due to invalid parameters.
+        if (action != "STOP") {
+            val notification = createNotification()
+            startForeground(100, notification)
+        }
+
         if (intent == null) {
             stopSelf()
             return START_NOT_STICKY
         }
 
-        val action = intent.action
         if (action == "STOP") {
             stopCast()
             stopSelf()
@@ -69,7 +78,7 @@ class ScreenCastService : Service() {
             return START_NOT_STICKY
         }
 
-        // Start Foreground Service
+        // Promote to media projection foreground service type once parameters are validated and casting starts
         val notification = createNotification()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(100, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
@@ -78,7 +87,7 @@ class ScreenCastService : Service() {
         }
 
         startCast(resultCode, resultData, tvIp)
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
     private fun startCast(resultCode: Int, resultData: Intent, tvIp: String) {
