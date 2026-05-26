@@ -47,6 +47,14 @@ class ScreenCastService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Start Foreground Service immediately to satisfy Android OS requirements
+        val notification = createNotification()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(100, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
+        } else {
+            startForeground(100, notification)
+        }
+
         if (intent == null) {
             stopSelf()
             return START_NOT_STICKY
@@ -67,14 +75,6 @@ class ScreenCastService : Service() {
             Log.e(TAG, "Invalid parameters for ScreenCastService")
             stopSelf()
             return START_NOT_STICKY
-        }
-
-        // Start Foreground Service
-        val notification = createNotification()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(100, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
-        } else {
-            startForeground(100, notification)
         }
 
         startCast(resultCode, resultData, tvIp)
