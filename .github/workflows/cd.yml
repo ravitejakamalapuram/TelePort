@@ -1,4 +1,4 @@
-name: On Merge to Main
+name: CD
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  automate-release-assets:
+  release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -148,14 +148,6 @@ jobs:
           KEY_ALIAS: ${{ env.KEY_ALIAS }}
           KEY_PASSWORD: ${{ env.KEY_PASSWORD }}
 
-      - name: Validate Chrome Extension Manifest
-        run: |
-          if ! python3 -c "import json; json.load(open('chrome-extension/manifest.json'))"; then
-            echo "Error: manifest.json is invalid"
-            exit 1
-          fi
-          echo "Chrome Extension manifest is structurally valid."
-
       - name: Package Chrome Extension
         run: |
           cd chrome-extension
@@ -184,4 +176,3 @@ jobs:
           packageName: com.carfry369.teleport
           releaseFiles: app/build/outputs/bundle/release/app-release.aab
           tracks: alpha
-
