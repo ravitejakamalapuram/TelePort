@@ -54,7 +54,11 @@ class ScreenCastService : Service() {
         // or if we decide to stopSelf() due to invalid parameters.
         if (action != "STOP") {
             val notification = createNotification()
-            startForeground(100, notification)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(100, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
+            } else {
+                startForeground(100, notification)
+            }
         }
 
         if (intent == null) {
