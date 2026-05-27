@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -72,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.teleport.app.mobile.connection.ConnectionState
@@ -301,19 +303,27 @@ fun ControllerScreen(
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
+                var isDarkModeEnabled by remember { mutableStateOf(false) }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .toggleable(
+                            value = isDarkModeEnabled,
+                            role = Role.Switch,
+                            onValueChange = {
+                                isDarkModeEnabled = it
+                                connectionManager.sendCommand(Command.ToggleDarkMode(it))
+                            }
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
-                    var isDarkModeEnabled by remember { mutableStateOf(false) }
                     Text("Dark Mode", color = ThemeTokens.TextSub, fontSize = 12.sp)
                     Spacer(modifier = Modifier.width(4.dp))
                     Switch(
                         checked = isDarkModeEnabled,
-                        onCheckedChange = {
-                            isDarkModeEnabled = it
-                            connectionManager.sendCommand(Command.ToggleDarkMode(it))
-                        },
+                        onCheckedChange = null,
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = ThemeTokens.Accent,
                             checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
@@ -432,6 +442,18 @@ fun TrackpadTab(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(ThemeTokens.CardBg, RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(12.dp))
+                .toggleable(
+                    value = isCasting,
+                    role = Role.Switch,
+                    onValueChange = { checked ->
+                        if (checked) {
+                            startMirroring()
+                        } else {
+                            stopMirroring()
+                        }
+                    }
+                )
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -442,13 +464,7 @@ fun TrackpadTab(
             }
             Switch(
                 checked = isCasting,
-                onCheckedChange = { checked ->
-                    if (checked) {
-                        startMirroring()
-                    } else {
-                        stopMirroring()
-                    }
-                },
+                onCheckedChange = null,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = ThemeTokens.Accent,
                     checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
@@ -463,6 +479,12 @@ fun TrackpadTab(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(ThemeTokens.CardBg, RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(12.dp))
+                .toggleable(
+                    value = isAirMouseOn,
+                    role = Role.Switch,
+                    onValueChange = { isAirMouseOn = it }
+                )
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -473,7 +495,7 @@ fun TrackpadTab(
             }
             Switch(
                 checked = isAirMouseOn,
-                onCheckedChange = { isAirMouseOn = it },
+                onCheckedChange = null,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = ThemeTokens.Accent,
                     checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
