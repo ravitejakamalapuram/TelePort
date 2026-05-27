@@ -17,3 +17,8 @@
 **Vulnerability:** In `LocalServerService.kt`, the Web Remote `renderTabs` function injects tab titles and URLs directly into `innerHTML` using string interpolation without escaping.
 **Learning:** XSS occurs because the tab URL or title (received from the TV State) could contain arbitrary code (e.g. from malicious sites).
 **Prevention:** Added an `escapeHtml` JavaScript function that escapes `&`, `<`, `>`, `"`, `'` and used it to sanitize variables injected into `innerHTML`.
+
+## 2024-05-30 - Insecure WebView Configuration (Mixed Content & File Access)
+**Vulnerability:** The WebView in `TabManager.kt` had `mixedContentMode` set to `MIXED_CONTENT_ALWAYS_ALLOW` and did not explicitly disable `allowFileAccess` (which can be vulnerable in older Android versions). This could allow malicious active mixed content (scripts) to be executed or local files to be accessed via path traversal/LFI vulnerabilities if untrusted URLs are loaded.
+**Learning:** WebView configurations must be hardened against common Web vulnerabilities (MITM XSS, local file theft).
+**Prevention:** Set `mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE` (or `NEVER_ALLOW`) and explicitly set `allowFileAccess = false`.
