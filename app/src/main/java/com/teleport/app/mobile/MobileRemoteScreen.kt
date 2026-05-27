@@ -809,13 +809,24 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = tab.title.ifBlank { "Loading page..." },
-                                    color = ThemeTokens.TextMain,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                               )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = tab.title.ifBlank { "Loading page..." },
+                                        color = ThemeTokens.TextMain,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false)
+                                    )
+                                    if (tab.isLoading) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(12.dp),
+                                            color = ThemeTokens.Accent,
+                                            strokeWidth = 2.dp
+                                        )
+                                    }
+                                }
                                 Text(
                                     text = tab.url,
                                     color = ThemeTokens.TextSub,
