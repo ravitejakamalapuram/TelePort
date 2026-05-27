@@ -7,3 +7,7 @@
 ## 2024-05-18 - Manual URL parsing regressions
 **Learning:** Optimizing `android.net.Uri.parse` using manual string indexing for performance causes regressions in edge cases like IPv6 URLs (e.g. `http://[2001:db8::1]/`) and Basic Auth credentials (e.g. `https://user:pass@domain.com/`). The correctness loss outweighs the micro-optimization.
 **Action:** Do NOT replace robust URL parsing APIs like `android.net.Uri.parse` with fragile manual string splitting, even for hot paths. Instead, look for string allocation overheads like `.lowercase()` and use built-in matching like `.contains(..., ignoreCase = true)`.
+
+## 2024-10-25 - Safe Manual URL Parsing for AdBlocker
+**Learning:** While manual URL parsing can cause regressions (as noted in 2024-05-18), it *is* safe and necessary to replace `android.net.Uri.parse` in high-frequency paths like `WebViewClient.shouldInterceptRequest` *if* the parsing correctly handles credentials (`user:pass@`) and ports (`:8080`), and *if* the extracted host is only being checked against a known list of standard alphanumeric domain names (like in an AdBlocker). The `Uri.parse()` allocations are too heavy for Android TVs.
+**Action:** Use manual host extraction in `AdBlocker.isAd` by parsing `://`, skipping up to `@` for credentials, and stopping at `:` for ports or `/`/`?`/`#` for paths. This avoids allocations and GC pauses while safely handling standard URLs.

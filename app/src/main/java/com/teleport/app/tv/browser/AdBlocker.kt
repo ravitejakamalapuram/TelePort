@@ -33,9 +33,11 @@ object AdBlocker {
         "adnxs-simple.com"
     )
 
+    // Optimized host extraction to prevent Uri.parse() allocations in shouldInterceptRequest
+    // Expected Impact: Reduces GC pauses and main thread blocking on page loads.
     fun isAd(url: String): Boolean {
         try {
-            val host = android.net.Uri.parse(url).host?.lowercase() ?: return false
+            val host = extractHost(url) ?: return false
 
             // O(1) domain lookup checking host and its parent domains
             var currentHost = host
@@ -56,5 +58,32 @@ object AdBlocker {
             // Ignore malformed URLs
         }
         return false
+    }
+
+    private fun extractHost(url: String): String? {
+        var start = url.indexOf("://")
+        if (start == -1) return null
+        start += 3
+
+        var end = url.length
+        for (i in start until url.length) {
+            val c = url[i]
+            if (c == '/' || c == '?' || c == '#') {
+                end = i
+                break
+            }
+        }
+
+        val atIndex = url.indexOf('@', start)
+        if (atIndex != -1 && atIndex < end) {
+            start = atIndex + 1
+        }
+
+        val portIndex = url.indexOf(':', start)
+        if (portIndex != -1 && portIndex < end) {
+            end = portIndex
+        }
+
+        return if (start >= end) null else url.substring(start, end).lowercase()
     }
 }
