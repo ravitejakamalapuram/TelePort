@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026-05-27] - Automated Release
+
+- 🛡️ Sentinel: [HIGH] Secure WebView against Mixed Content and Local File Access (#21) (260501d) by raviteja kamalapuram
+
+
 ## [2026-05-26] - Automated Release
 
 - ⚡ Bolt: Optimize QR code generation using setPixels (#13) (40047b4) by raviteja kamalapuram
