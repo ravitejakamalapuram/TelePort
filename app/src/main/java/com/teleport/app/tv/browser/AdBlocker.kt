@@ -34,17 +34,21 @@ object AdBlocker {
     )
 
     fun isAd(url: String): Boolean {
+        return isAd(android.net.Uri.parse(url))
+    }
+
+    fun isAd(uri: android.net.Uri): Boolean {
         try {
-            val host = android.net.Uri.parse(url).host?.lowercase() ?: return false
+            val host = uri.host?.lowercase() ?: return false
 
             // O(1) domain lookup checking host and its parent domains
             var currentHost = host
             while (currentHost.isNotEmpty()) {
                 if (AD_DOMAINS.contains(currentHost)) {
                     try {
-                        Log.d(TAG, "Blocked Ad Request: $url")
+                        Log.d(TAG, "Blocked Ad Request: $uri")
                     } catch (e: Throwable) {
-                        println("Blocked Ad Request: $url")
+                        println("Blocked Ad Request: $uri")
                     }
                     return true
                 }

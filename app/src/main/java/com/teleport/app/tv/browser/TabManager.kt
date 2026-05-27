@@ -338,10 +338,11 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                     view: WebView?,
                     request: WebResourceRequest?
                 ): WebResourceResponse? {
-                    val reqUrl = request?.url?.toString() ?: return null
+                    val uri = request?.url ?: return null
+                    val reqUrl = uri.toString()
 
-                    // 1. Intercept Ads
-                    if (AdBlocker.isAd(reqUrl)) {
+                    // 1. Intercept Ads (Optimization: Pass pre-parsed Uri to avoid expensive Uri.parse re-allocation)
+                    if (AdBlocker.isAd(uri)) {
                         // Return empty response to block the request
                         return WebResourceResponse(
                             "text/plain",
