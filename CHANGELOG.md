@@ -2,6 +2,11 @@
 
 ## [2026-05-27] - Automated Release
 
+- Fix ForegroundServiceDidNotStartInTimeException on Android 14+ by specifying service types in startForeground calls (#22) (331f03f) by raviteja kamalapuram
+
+
+## [2026-05-27] - Automated Release
+
 - 🛡️ Sentinel: [HIGH] Secure WebView against Mixed Content and Local File Access (#21) (260501d) by raviteja kamalapuram
 
 
