@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
@@ -231,6 +232,13 @@ fun PairingScreen(
                         }
                     }
                 ),
+                trailingIcon = {
+                    if (manualIp.isNotEmpty()) {
+                        IconButton(onClick = { manualIp = "" }) {
+                            Icon(Icons.Filled.Clear, contentDescription = "Clear IP", tint = ThemeTokens.TextSub)
+                        }
+                    }
+                },
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = ThemeTokens.Accent,
                     focusedLabelColor = ThemeTokens.Accent,
@@ -747,6 +755,13 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                     }
                 }
             ),
+            trailingIcon = {
+                if (newUrl.isNotEmpty()) {
+                    IconButton(onClick = { newUrl = "" }) {
+                        Icon(Icons.Filled.Clear, contentDescription = "Clear URL", tint = ThemeTokens.TextSub)
+                    }
+                }
+            },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = ThemeTokens.Accent,
                 focusedLabelColor = ThemeTokens.Accent,
@@ -894,6 +909,13 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
                     }
                 }
             ),
+            trailingIcon = {
+                if (textInput.isNotEmpty()) {
+                    IconButton(onClick = { textInput = "" }) {
+                        Icon(Icons.Filled.Clear, contentDescription = "Clear input", tint = ThemeTokens.TextSub)
+                    }
+                }
+            },
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = ThemeTokens.Background,
                 unfocusedContainerColor = ThemeTokens.Background,
