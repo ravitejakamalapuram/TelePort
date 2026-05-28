@@ -59,6 +59,16 @@ class NativePlayerActivity : ComponentActivity() {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        TvEventBus.setNativePlaying(true)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        TvEventBus.setNativePlaying(false)
+    }
+
     @OptIn(UnstableApi::class)
     @Composable
     fun VideoPlayer(streamUrl: String) {

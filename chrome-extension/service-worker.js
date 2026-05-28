@@ -21,13 +21,14 @@ async function hasOffscreenDocument() {
 }
 
 // Beam a URL directly to the TV by opening a WS connection and sending OpenUrl
-function beamUrl(tvIp, url) {
+function beamUrl(tvIp, url, headless = false) {
   return new Promise((resolve) => {
     const ws = new WebSocket(`ws://${tvIp}:8080/control`);
     ws.onopen = () => {
       ws.send(JSON.stringify({
         type: "com.teleport.app.protocol.Command.OpenUrl",
-        url: url
+        url: url,
+        headless: headless
       }));
       setTimeout(() => {
         ws.close();
@@ -225,7 +226,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         sendResponse({ success: false, error: "No TV IP" });
         return;
       }
-      const success = await beamUrl(tvIp, message.url);
+      const success = await beamUrl(tvIp, message.url, message.headless || false);
       sendResponse({ success });
     } else if (message.type === 'CAST_ERROR') {
       console.warn("Cast error received from offscreen:", message.error);

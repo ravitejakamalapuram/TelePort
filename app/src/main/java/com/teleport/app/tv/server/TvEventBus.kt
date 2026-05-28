@@ -24,6 +24,13 @@ object TvEventBus {
     private val _activeClientIds = MutableStateFlow<Set<String>>(emptySet())
     val activeClientIds: StateFlow<Set<String>> = _activeClientIds.asStateFlow()
 
+    private val _isNativePlaying = MutableStateFlow(false)
+    val isNativePlaying: StateFlow<Boolean> = _isNativePlaying.asStateFlow()
+
+    fun setNativePlaying(playing: Boolean) {
+        _isNativePlaying.value = playing
+    }
+
     fun postCommand(clientId: String, command: Command) {
         _commands.tryEmit(ClientCommand(clientId, command))
     }

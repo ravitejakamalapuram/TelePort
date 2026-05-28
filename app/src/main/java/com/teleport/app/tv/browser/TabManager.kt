@@ -64,6 +64,14 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
 
     val isDarkModeEnabled = MutableStateFlow(false)
     val isMirroring = MutableStateFlow(false)
+    val isResolvingHeadlessly = MutableStateFlow(false)
+    val resolvingUrl = MutableStateFlow<String?>(null)
+    val isNativePlaying = MutableStateFlow(false)
+
+    private val _headlessWebView = MutableStateFlow<WebView?>(null)
+    val headlessWebView: StateFlow<WebView?> = _headlessWebView.asStateFlow()
+
+    private var headlessTimeoutJob: kotlinx.coroutines.Job? = null
 
     fun startMirroring() {
         isMirroring.value = true
@@ -83,6 +91,18 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
         }
         coroutineScope.launch {
             detectedStreamUrl.collect { syncState() }
+        }
+        coroutineScope.launch {
+            isResolvingHeadlessly.collect { syncState() }
+        }
+        coroutineScope.launch {
+            resolvingUrl.collect { syncState() }
+        }
+        coroutineScope.launch {
+            TvEventBus.isNativePlaying.collect { playing ->
+                isNativePlaying.value = playing
+                syncState()
+            }
         }
         // Sync cursors with registered active clients
         coroutineScope.launch {
@@ -115,14 +135,62 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
         clampCursor()
     }
 
-    fun openTab(url: String) {
+    fun openTab(url: String, headless: Boolean = false) {
         coroutineScope.launch(Dispatchers.Main) {
-            val webView = createWebView(url)
+            if (headless) {
+                cancelHeadlessExtraction()
+                isResolvingHeadlessly.value = true
+                resolvingUrl.value = url
+                detectedStreamUrl.value = null
+
+                val webView = createWebView(url)
+                _headlessWebView.value = webView
+
+                // Start 10-second timeout
+                headlessTimeoutJob = coroutineScope.launch(Dispatchers.Main) {
+                    kotlinx.coroutines.delay(10000)
+                    if (isResolvingHeadlessly.value && _headlessWebView.value == webView) {
+                        promoteHeadlessToVisible()
+                    }
+                }
+            } else {
+                val webView = createWebView(url)
+                val currentList = _tabs.value.toMutableList()
+                currentList.add(webView)
+                _tabs.value = currentList
+                _activeTabIndex.value = currentList.size - 1
+                detectedStreamUrl.value = null // Reset stream state
+            }
+        }
+    }
+
+    private fun promoteHeadlessToVisible() {
+        coroutineScope.launch(Dispatchers.Main) {
+            val webView = _headlessWebView.value ?: return@launch
+            headlessTimeoutJob?.cancel()
+            headlessTimeoutJob = null
+            _headlessWebView.value = null
+
             val currentList = _tabs.value.toMutableList()
             currentList.add(webView)
             _tabs.value = currentList
             _activeTabIndex.value = currentList.size - 1
-            detectedStreamUrl.value = null // Reset stream state
+            isResolvingHeadlessly.value = false
+            resolvingUrl.value = null
+        }
+    }
+
+    fun cancelHeadlessExtraction() {
+        coroutineScope.launch(Dispatchers.Main) {
+            headlessTimeoutJob?.cancel()
+            headlessTimeoutJob = null
+            _headlessWebView.value?.apply {
+                stopLoading()
+                destroy()
+            }
+            _headlessWebView.value = null
+            isResolvingHeadlessly.value = false
+            resolvingUrl.value = null
         }
     }
 
@@ -289,7 +357,10 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
             TvState(
                 tabs = tabInfos,
                 activeTabIndex = _activeTabIndex.value,
-                detectedStreamUrl = detectedStreamUrl.value
+                detectedStreamUrl = detectedStreamUrl.value,
+                isResolvingHeadlessly = isResolvingHeadlessly.value,
+                resolvingUrl = resolvingUrl.value,
+                isNativePlaying = isNativePlaying.value
             )
         )
     }
@@ -353,6 +424,12 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                     // 2. Extract media stream URLs
                     if (isStreamUrl(reqUrl) && detectedStreamUrl.value != reqUrl) {
                         detectedStreamUrl.value = reqUrl
+                        if (isResolvingHeadlessly.value) {
+                            coroutineScope.launch(Dispatchers.Main) {
+                                playNatively(reqUrl)
+                                cancelHeadlessExtraction()
+                            }
+                        }
                     }
 
                     return super.shouldInterceptRequest(view, request)
