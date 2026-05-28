@@ -33,18 +33,22 @@ object AdBlocker {
         "adnxs-simple.com"
     )
 
-    fun isAd(url: String): Boolean {
+    fun isAd(uri: android.net.Uri?): Boolean {
+        if (uri == null) return false
         try {
-            val host = android.net.Uri.parse(url).host?.lowercase() ?: return false
+            var host = uri.host ?: return false
+
+            // .lowercase() internally checks for case and avoids allocation if already lowercase
+            host = host.lowercase()
 
             // O(1) domain lookup checking host and its parent domains
             var currentHost = host
             while (currentHost.isNotEmpty()) {
                 if (AD_DOMAINS.contains(currentHost)) {
                     try {
-                        Log.d(TAG, "Blocked Ad Request: $url")
+                        Log.d(TAG, "Blocked Ad Request: $uri")
                     } catch (e: Throwable) {
-                        println("Blocked Ad Request: $url")
+                        println("Blocked Ad Request: $uri")
                     }
                     return true
                 }
@@ -53,8 +57,17 @@ object AdBlocker {
                 currentHost = currentHost.substring(dotIndex + 1)
             }
         } catch (e: Exception) {
-            // Ignore malformed URLs
+            // Ignore
         }
         return false
+    }
+
+    fun isAd(url: String?): Boolean {
+        if (url.isNullOrEmpty()) return false
+        return try {
+            isAd(android.net.Uri.parse(url))
+        } catch (e: Exception) {
+            false
+        }
     }
 }

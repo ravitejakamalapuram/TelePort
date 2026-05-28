@@ -409,10 +409,11 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                     view: WebView?,
                     request: WebResourceRequest?
                 ): WebResourceResponse? {
-                    val reqUrl = request?.url?.toString() ?: return null
+                    val uri = request?.url ?: return null
 
                     // 1. Intercept Ads
-                    if (AdBlocker.isAd(reqUrl)) {
+                    // Pass Uri directly to avoid String allocation and double parsing
+                    if (AdBlocker.isAd(uri)) {
                         // Return empty response to block the request
                         return WebResourceResponse(
                             "text/plain",
@@ -422,6 +423,7 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                     }
 
                     // 2. Extract media stream URLs
+                    val reqUrl = uri.toString()
                     if (isStreamUrl(reqUrl) && detectedStreamUrl.value != reqUrl) {
                         detectedStreamUrl.value = reqUrl
                         if (isResolvingHeadlessly.value) {

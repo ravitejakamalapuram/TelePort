@@ -7,3 +7,6 @@
 ## 2024-05-18 - Manual URL parsing regressions
 **Learning:** Optimizing `android.net.Uri.parse` using manual string indexing for performance causes regressions in edge cases like IPv6 URLs (e.g. `http://[2001:db8::1]/`) and Basic Auth credentials (e.g. `https://user:pass@domain.com/`). The correctness loss outweighs the micro-optimization.
 **Action:** Do NOT replace robust URL parsing APIs like `android.net.Uri.parse` with fragile manual string splitting, even for hot paths. Instead, look for string allocation overheads like `.lowercase()` and use built-in matching like `.contains(..., ignoreCase = true)`.
+## 2024-05-28 - String.lowercase() JVM Optimization
+**Learning:** In modern Kotlin/JVM, `String.lowercase()` internally checks for case differences and avoids allocation if the string is already lowercase. Manually looping over characters to check `isUpperCase()` before calling `.lowercase()` is redundant and adds overhead.
+**Action:** Do not write manual pre-checks for `.lowercase()`. Rely on the standard library's internal optimizations for case conversion.
