@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed class Command {
     @Serializable
-    data class OpenUrl(val url: String) : Command()
+    data class OpenUrl(val url: String, val headless: Boolean = false) : Command()
 
     @Serializable
     data class CloseTab(val index: Int) : Command()
@@ -58,5 +58,8 @@ data class TabInfo(
 data class TvState(
     val tabs: List<TabInfo>,
     val activeTabIndex: Int,
-    val detectedStreamUrl: String? = null // Extracted video stream URL (if any) on active page
+    val detectedStreamUrl: String? = null, // Extracted video stream URL (if any) on active page
+    val isResolvingHeadlessly: Boolean = false,
+    val resolvingUrl: String? = null,
+    val isNativePlaying: Boolean = false
 )

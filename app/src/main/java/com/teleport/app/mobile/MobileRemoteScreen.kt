@@ -283,128 +283,137 @@ fun ControllerScreen(
     stopMirroring: () -> Unit
 ) {
     val tvState by connectionManager.tvState.collectAsState()
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabTitles = remember { listOf("Trackpad", "D-Pad", "Tabs") }
+    val isResolvingHeadlessly = tvState?.isResolvingHeadlessly ?: false
+    val isNativePlaying = tvState?.isNativePlaying ?: false
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        // Header Bar
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(ThemeTokens.CardBg)
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "${ThemeTokens.APP_NAME} Remote",
-                    color = ThemeTokens.TextMain,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-                var isDarkModeEnabled by remember { mutableStateOf(false) }
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .padding(top = 4.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .toggleable(
-                            value = isDarkModeEnabled,
-                            role = Role.Switch,
-                            onValueChange = {
-                                isDarkModeEnabled = it
-                                connectionManager.sendCommand(Command.ToggleDarkMode(it))
-                            }
+    if (isResolvingHeadlessly) {
+        MobileCastingScreen(connectionManager, tvState)
+    } else if (isNativePlaying) {
+        MobileMediaRemoteScreen(connectionManager, tvState)
+    } else {
+        var selectedTabIndex by remember { mutableIntStateOf(0) }
+        val tabTitles = remember { listOf("Trackpad", "D-Pad", "Tabs") }
+
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Header Bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(ThemeTokens.CardBg)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "${ThemeTokens.APP_NAME} Remote",
+                        color = ThemeTokens.TextMain,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                    var isDarkModeEnabled by remember { mutableStateOf(false) }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(top = 4.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .toggleable(
+                                value = isDarkModeEnabled,
+                                role = Role.Switch,
+                                onValueChange = {
+                                    isDarkModeEnabled = it
+                                    connectionManager.sendCommand(Command.ToggleDarkMode(it))
+                                }
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text("Dark Mode", color = ThemeTokens.TextSub, fontSize = 12.sp)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Switch(
+                            checked = isDarkModeEnabled,
+                            onCheckedChange = null,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = ThemeTokens.Accent,
+                                checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
+                            ),
+                            modifier = Modifier.scale(0.7f)
                         )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                    }
+                }
+                Button(
+                    onClick = { connectionManager.disconnect() },
+                    colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error.copy(alpha = 0.8f))
                 ) {
-                    Text("Dark Mode", color = ThemeTokens.TextSub, fontSize = 12.sp)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Switch(
-                        checked = isDarkModeEnabled,
-                        onCheckedChange = null,
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = ThemeTokens.Accent,
-                            checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
-                        ),
-                        modifier = Modifier.scale(0.7f)
+                    Text("Disconnect", color = ThemeTokens.TextMain, fontSize = 12.sp)
+                }
+            }
+
+            // GLOWING NATIVE STREAM DETECTED BANNER
+            tvState?.detectedStreamUrl?.let { streamUrl ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                        .clickable {
+                            connectionManager.sendCommand(Command.PlayStreamNatively(streamUrl))
+                        },
+                    colors = CardDefaults.cardColors(containerColor = ThemeTokens.Primary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("📺 Media stream detected!", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text("Tap to play cleanly in Native Player", color = ThemeTokens.TextSub, fontSize = 11.sp)
+                        }
+                        Text("PLAY", color = ThemeTokens.Accent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    }
+                }
+            }
+
+            // Tab Selection
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                containerColor = ThemeTokens.CardBg,
+                contentColor = ThemeTokens.TextMain,
+                indicator = { tabPositions ->
+                    TabRowDefaults.Indicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                        color = ThemeTokens.Accent
+                    )
+                }
+            ) {
+                tabTitles.forEachIndexed { index, title ->
+                    Tab(
+                        selected = selectedTabIndex == index,
+                        onClick = { selectedTabIndex = index },
+                        text = { Text(title, fontWeight = FontWeight.Bold) }
                     )
                 }
             }
-            Button(
-                onClick = { connectionManager.disconnect() },
-                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error.copy(alpha = 0.8f))
-            ) {
-                Text("Disconnect", color = ThemeTokens.TextMain, fontSize = 12.sp)
-            }
-        }
 
-        // GLOWING NATIVE STREAM DETECTED BANNER
-        tvState?.detectedStreamUrl?.let { streamUrl ->
-            Card(
+            // Active Tab Content
+            Box(
                 modifier = Modifier
+                    .weight(1f)
                     .fillMaxWidth()
-                    .padding(8.dp)
-                    .clickable {
-                        connectionManager.sendCommand(Command.PlayStreamNatively(streamUrl))
-                    },
-                colors = CardDefaults.cardColors(containerColor = ThemeTokens.Primary),
-                shape = RoundedCornerShape(12.dp)
+                    .background(ThemeTokens.Background)
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("📺 Media stream detected!", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Text("Tap to play cleanly in Native Player", color = ThemeTokens.TextSub, fontSize = 11.sp)
-                    }
-                    Text("PLAY", color = ThemeTokens.Accent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                when (selectedTabIndex) {
+                    0 -> TrackpadTab(connectionManager, gyroTracker, startMirroring, stopMirroring)
+                    1 -> DpadTab(connectionManager)
+                    2 -> TabsManagerTab(connectionManager, tvState)
                 }
             }
-        }
 
-        // Tab Selection
-        TabRow(
-            selectedTabIndex = selectedTabIndex,
-            containerColor = ThemeTokens.CardBg,
-            contentColor = ThemeTokens.TextMain,
-            indicator = { tabPositions ->
-                TabRowDefaults.Indicator(
-                    Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                    color = ThemeTokens.Accent
-                )
-            }
-        ) {
-            tabTitles.forEachIndexed { index, title ->
-                Tab(
-                    selected = selectedTabIndex == index,
-                    onClick = { selectedTabIndex = index },
-                    text = { Text(title, fontWeight = FontWeight.Bold) }
-                )
-            }
+            // Keyboard/Input Bar (Sticky at bottom)
+            QuickInputBar(connectionManager)
         }
-
-        // Active Tab Content
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .background(ThemeTokens.Background)
-        ) {
-            when (selectedTabIndex) {
-                0 -> TrackpadTab(connectionManager, gyroTracker, startMirroring, stopMirroring)
-                1 -> DpadTab(connectionManager)
-                2 -> TabsManagerTab(connectionManager, tvState)
-            }
-        }
-
-        // Keyboard/Input Bar (Sticky at bottom)
-        QuickInputBar(connectionManager)
     }
 }
 
@@ -715,58 +724,73 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Row(
+        OutlinedTextField(
+            value = newUrl,
+            onValueChange = { newUrl = it },
+            label = { Text("Web URL or Video Link") },
+            placeholder = { Text("https://...") },
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = newUrl,
-                onValueChange = { newUrl = it },
-                label = { Text("Open URL on TV") },
-                placeholder = { Text("https://...") },
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Uri,
-                    imeAction = ImeAction.Go
-                ),
-                keyboardActions = KeyboardActions(
-                    onGo = {
-                        if (newUrl.isNotBlank()) {
-                            var formattedUrl = newUrl.trim()
-                            if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
-                                formattedUrl = "https://$formattedUrl"
-                            }
-                            connectionManager.sendCommand(Command.OpenUrl(formattedUrl))
-                            newUrl = ""
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Uri,
+                imeAction = ImeAction.Go
+            ),
+            keyboardActions = KeyboardActions(
+                onGo = {
+                    if (newUrl.isNotBlank()) {
+                        var formattedUrl = newUrl.trim()
+                        if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+                            formattedUrl = "https://$formattedUrl"
                         }
+                        connectionManager.sendCommand(Command.OpenUrl(formattedUrl, headless = true))
+                        newUrl = ""
                     }
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ThemeTokens.Accent,
-                    focusedLabelColor = ThemeTokens.Accent,
-                    unfocusedBorderColor = ThemeTokens.Border,
-                    focusedTextColor = ThemeTokens.TextMain,
-                    unfocusedTextColor = ThemeTokens.TextMain
-                )
+                }
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = ThemeTokens.Accent,
+                focusedLabelColor = ThemeTokens.Accent,
+                unfocusedBorderColor = ThemeTokens.Border,
+                focusedTextColor = ThemeTokens.TextMain,
+                unfocusedTextColor = ThemeTokens.TextMain
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            IconButton(
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Button(
                 onClick = {
                     if (newUrl.isNotBlank()) {
                         var formattedUrl = newUrl.trim()
                         if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
                             formattedUrl = "https://$formattedUrl"
                         }
-                        connectionManager.sendCommand(Command.OpenUrl(formattedUrl))
+                        connectionManager.sendCommand(Command.OpenUrl(formattedUrl, headless = true))
                         newUrl = ""
                     }
                 },
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(ThemeTokens.Accent, RoundedCornerShape(12.dp))
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent)
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "Open Tab", tint = ThemeTokens.Background)
+                Text("Cast Video 📺", color = ThemeTokens.Background, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Button(
+                onClick = {
+                    if (newUrl.isNotBlank()) {
+                        var formattedUrl = newUrl.trim()
+                        if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+                            formattedUrl = "https://$formattedUrl"
+                        }
+                        connectionManager.sendCommand(Command.OpenUrl(formattedUrl, headless = false))
+                        newUrl = ""
+                    }
+                },
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Border)
+            ) {
+                Text("Open Page 🌐", color = ThemeTokens.TextMain)
             }
         }
 
@@ -916,6 +940,177 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)
         ) {
             Text("Send", color = ThemeTokens.Background, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun MobileCastingScreen(
+    connectionManager: TvConnectionManager,
+    tvState: com.teleport.app.protocol.TvState?
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CircularProgressIndicator(
+            color = ThemeTokens.Accent,
+            modifier = Modifier.size(64.dp),
+            strokeWidth = 4.dp
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+        Text(
+            text = "Resolving Video Stream...",
+            color = ThemeTokens.TextMain,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        tvState?.resolvingUrl?.let { url ->
+            val host = remember(url) {
+                try {
+                    java.net.URI(url).host?.replace("www.", "") ?: url
+                } catch (e: Exception) {
+                    url
+                }
+            }
+            Text(
+                text = "Extracting video from $host",
+                color = ThemeTokens.TextSub,
+                fontSize = 14.sp
+            )
+        }
+        Spacer(modifier = Modifier.height(48.dp))
+        Button(
+            onClick = { connectionManager.sendCommand(Command.GoBack) },
+            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error.copy(alpha = 0.8f)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp)
+        ) {
+            Text("Cancel Casting", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun MobileMediaRemoteScreen(
+    connectionManager: TvConnectionManager,
+    tvState: com.teleport.app.protocol.TvState?
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(top = 32.dp)
+        ) {
+            Text(
+                text = "Playing on TV 📺",
+                color = ThemeTokens.Accent,
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Active Video Stream",
+                        color = ThemeTokens.TextSub,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = tvState?.detectedStreamUrl?.substringAfterLast("/")?.substringBefore("?") ?: "Direct Native Player",
+                        color = ThemeTokens.TextMain,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            }
+        }
+
+        // Playback Control D-Pad/Row
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.weight(1f)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                // Seek Backward Button (-10s)
+                IconButton(
+                    onClick = { connectionManager.sendCommand(Command.Scroll(-100f, 0f)) },
+                    modifier = Modifier
+                        .size(80.dp)
+                        .background(ThemeTokens.CardBg, CircleShape)
+                ) {
+                    Icon(
+                        Icons.Filled.KeyboardArrowLeft,
+                        contentDescription = "Seek Back",
+                        tint = ThemeTokens.TextMain,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                // Play / Pause Circle
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .background(ThemeTokens.Primary, CircleShape)
+                        .clickable { connectionManager.sendCommand(Command.PlayPause) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("PLAY\nPAUSE", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 16.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                }
+
+                Spacer(modifier = Modifier.width(24.dp))
+
+                // Seek Forward Button (+10s)
+                IconButton(
+                    onClick = { connectionManager.sendCommand(Command.Scroll(100f, 0f)) },
+                    modifier = Modifier
+                        .size(80.dp)
+                        .background(ThemeTokens.CardBg, CircleShape)
+                ) {
+                    Icon(
+                        Icons.Filled.KeyboardArrowRight,
+                        contentDescription = "Seek Forward",
+                        tint = ThemeTokens.TextMain,
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+            }
+        }
+
+        // Stop / Go Back button
+        Button(
+            onClick = { connectionManager.sendCommand(Command.GoBack) },
+            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error.copy(alpha = 0.8f)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp)
+        ) {
+            Text("Stop Playback / Exit", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
         }
     }
 }

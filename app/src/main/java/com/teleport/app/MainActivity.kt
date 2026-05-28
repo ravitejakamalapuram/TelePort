@@ -162,9 +162,9 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(connState, sharedUrl) {
                             val url = sharedUrl
                             if (connState == ConnectionState.Connected && url != null) {
-                                connectionManager.sendCommand(Command.OpenUrl(url))
+                                connectionManager.sendCommand(Command.OpenUrl(url, headless = true))
                                 pendingSharedUrl.value = null
-                                Toast.makeText(this@MainActivity, "Opened shared URL on TV", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this@MainActivity, "Casting shared URL to TV...", Toast.LENGTH_SHORT).show()
                             }
                         }
 
@@ -225,7 +225,7 @@ class MainActivity : ComponentActivity() {
                     pendingSharedUrl.value = url
                     Log.d(TAG, "Captured shared URL: $url")
                     if (::connectionManager.isInitialized && connectionManager.connectionState.value == ConnectionState.Connected) {
-                        connectionManager.sendCommand(Command.OpenUrl(url))
+                        connectionManager.sendCommand(Command.OpenUrl(url, headless = true))
                         pendingSharedUrl.value = null
                     }
                 }

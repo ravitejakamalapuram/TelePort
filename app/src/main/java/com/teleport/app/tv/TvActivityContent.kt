@@ -51,6 +51,7 @@ import android.media.MediaFormat
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.os.Build
+import android.webkit.WebView
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
@@ -63,6 +64,9 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
     val clientConnected by TvEventBus.clientConnected.collectAsState()
     val isMirroring by tabManager.isMirroring.collectAsState()
     val tabs by tabManager.tabs.collectAsState()
+    val isResolvingHeadlessly by tabManager.isResolvingHeadlessly.collectAsState()
+    val resolvingUrl by tabManager.resolvingUrl.collectAsState()
+    val headlessWebView by tabManager.headlessWebView.collectAsState()
     val connectionUrl = "http://$localIp:${ThemeTokens.PORT}/remote"
 
     // Listen for incoming commands in the event bus and route them to tabManager
@@ -72,7 +76,7 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
             val command = clientCommand.command
             Log.d(TAG, "Executing command from $clientId: $command")
             when (command) {
-                is Command.OpenUrl -> tabManager.openTab(command.url)
+                is Command.OpenUrl -> tabManager.openTab(command.url, command.headless)
                 is Command.CloseTab -> tabManager.closeTab(command.index)
                 is Command.SelectTab -> tabManager.selectTab(command.index)
                 is Command.Scroll -> tabManager.scrollActive(command.dx, command.dy)
@@ -96,11 +100,83 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
     ) {
         if (isMirroring) {
             MirrorPlayerScreen(tabManager)
+        } else if (isResolvingHeadlessly) {
+            CastingScreen(resolvingUrl ?: "")
         } else if (clientConnected || tabs.isNotEmpty()) {
             BrowserScreen(tabManager)
         } else {
             PairingScreen(connectionUrl, localIp)
         }
+    }
+
+    // Hidden container for headless WebView to ensure it is active and attached to Window
+    if (headlessWebView != null) {
+        Box(modifier = Modifier.size(1.dp).background(Color.Transparent)) {
+            AndroidView(
+                factory = { ctx ->
+                    FrameLayout(ctx).apply {
+                        layoutParams = ViewGroup.LayoutParams(1, 1)
+                        headlessWebView?.let { hwv ->
+                            (hwv.parent as? ViewGroup)?.removeView(hwv)
+                            addView(hwv)
+                        }
+                    }
+                },
+                update = { container ->
+                    val hwv = headlessWebView
+                    if (hwv != null && container.getChildAt(0) != hwv) {
+                        container.removeAllViews()
+                        (hwv.parent as? ViewGroup)?.removeView(hwv)
+                        container.addView(hwv)
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun CastingScreen(url: String) {
+    val host = remember(url) {
+        try {
+            java.net.URI(url).host?.replace("www.", "") ?: url
+        } catch (e: Exception) {
+            url
+        }
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.size(140.dp)
+        ) {
+            CircularProgressIndicator(
+                color = ThemeTokens.Accent,
+                strokeWidth = 6.dp,
+                modifier = Modifier.size(100.dp)
+            )
+            Text(
+                text = "📺",
+                fontSize = 42.sp
+            )
+        }
+        Spacer(modifier = Modifier.height(32.dp))
+        Text(
+            text = "Connecting to Video Stream...",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = ThemeTokens.TextMain
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Text(
+            text = "Extracting video from $host",
+            fontSize = 16.sp,
+            color = ThemeTokens.TextSub
+        )
     }
 }
 

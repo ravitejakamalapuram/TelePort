@@ -13,6 +13,7 @@ const saveIpBtn = document.getElementById('saveIpBtn');
 const actionsCard = document.getElementById('actionsCard');
 const castToggle = document.getElementById('castToggle');
 const beamLinkBtn = document.getElementById('beamLinkBtn');
+const castVideoBtn = document.getElementById('castVideoBtn');
 const darkModeToggle = document.getElementById('darkModeToggle');
 
 const remoteControlsContainer = document.getElementById('remoteControlsContainer');
@@ -60,6 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Bind Link Beaming
   beamLinkBtn.addEventListener('click', beamActiveTabUrl);
+  castVideoBtn.addEventListener('click', castActiveTabVideo);
 
   // Bind Dark Mode
   darkModeToggle.addEventListener('change', toggleTvDarkMode);
@@ -197,7 +199,20 @@ async function beamActiveTabUrl() {
 
   chrome.runtime.sendMessage({
     type: 'BEAM_URL',
-    url: tab.url
+    url: tab.url,
+    headless: false
+  });
+}
+
+// Cast active tab video to TV (headless extraction)
+async function castActiveTabVideo() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab || !tab.url) return;
+
+  chrome.runtime.sendMessage({
+    type: 'BEAM_URL',
+    url: tab.url,
+    headless: true
   });
 }
 
