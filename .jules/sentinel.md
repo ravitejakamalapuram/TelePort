@@ -22,3 +22,8 @@
 **Vulnerability:** The WebView in `TabManager.kt` had `mixedContentMode` set to `MIXED_CONTENT_ALWAYS_ALLOW` and did not explicitly disable `allowFileAccess` (which can be vulnerable in older Android versions). This could allow malicious active mixed content (scripts) to be executed or local files to be accessed via path traversal/LFI vulnerabilities if untrusted URLs are loaded.
 **Learning:** WebView configurations must be hardened against common Web vulnerabilities (MITM XSS, local file theft).
 **Prevention:** Set `mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE` (or `NEVER_ALLOW`) and explicitly set `allowFileAccess = false`.
+
+## 2024-06-25 - Local File Inclusion (LFI) via content:// URIs and Malicious Schemes in WebView
+**Vulnerability:** The WebView in `TabManager.kt` did not explicitly disable `allowContentAccess`, and `openTab` allowed arbitrary URL strings to be loaded. This could permit LFI via `content://` URIs or cross-site scripting/arbitrary code execution via `javascript:`, `intent:`, or `file:` schemes if an attacker provided a malicious link.
+**Learning:** WebViews inherently trust the URLs they are given and the `content://` scheme is permitted by default. Input sanitization is critical before invoking `loadUrl`.
+**Prevention:** Added `allowContentAccess = false` to the WebView configuration. Added URL scheme validation in `openTab` to ensure the parsed URI scheme is `http`, `https`, `about`, or `data`, falling back to `about:blank` for unsupported schemes or prepending `https://` if no scheme is provided.
