@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026-05-28] - Automated Release
+
+- feat: implement headless video casting and native player controls (#26) (177450d) by raviteja kamalapuram
+
+
 ## [2026-05-27] - Automated Release
 
 - Fix ForegroundServiceDidNotStartInTimeException on Android 14+ by specifying service types in startForeground calls (#22) (331f03f) by raviteja kamalapuram
