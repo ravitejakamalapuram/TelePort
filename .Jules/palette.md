@@ -7,3 +7,6 @@
 ## 2026-05-26 - Modifier.toggleable() vs Raw Switch for Accessibility
 **Learning:** Using a standalone `Switch` inside a Row forces users with motor impairments to tap a very small target, and screen readers read the descriptive text and the switch state as two separate elements. This causes a disjointed and frustrating accessibility experience.
 **Action:** Always wrap the entire Row containing the setting description and the `Switch` with `Modifier.toggleable(value = state, role = Role.Switch, onValueChange = { ... })`, and set the `Switch`'s `onCheckedChange` to `null`. This unifies the semantics into a single accessible toggle with a massive, easy-to-hit touch target.
+## 2024-05-27 - Inline Clear Buttons in TextFields
+**Learning:** Users often need to rapidly clear entire inputs, such as manual IP addresses, URLs, or command inputs. Without an explicit UI affordance, users are forced to manually highlight text or hold the backspace key, causing unnecessary friction.
+**Action:** Add a trailing IconButton (e.g., Icons.Filled.Clear) inside primary TextFields/OutlinedTextFields that appears when the input is not empty, enabling instant clearing of the field.
