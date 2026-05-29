@@ -2,6 +2,12 @@
 
 ## [2026-05-29] - Automated Release
 
+- fix(test): correct Robolectric qualifier to mdpi for TV pairing screen to prevent cropping (2e6e832) by Raviteja Kamalapuram
+- docs: fix broken logo icon on GitHub Pages (ce45d0e) by Raviteja Kamalapuram
+
+
+## [2026-05-29] - Automated Release
+
 - fix(mobile): implement custom rotatable QrScanActivity with close button (c25aff0) by Raviteja Kamalapuram
 
 
