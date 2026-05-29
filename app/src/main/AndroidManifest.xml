@@ -67,6 +67,14 @@
             android:screenOrientation="landscape"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
+        <!-- Custom QR Code Scanner Activity for Mobile pairing -->
+        <activity
+            android:name="com.teleport.app.mobile.connection.QrScanActivity"
+            android:screenOrientation="fullSensor"
+            android:stateNotNeeded="true"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:windowSoftInputMode="stateAlwaysHidden" />
+
         <!-- Ktor Background Server Foreground Service -->
         <service
             android:name="com.teleport.app.tv.server.LocalServerService"

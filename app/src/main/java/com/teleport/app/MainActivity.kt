@@ -24,6 +24,7 @@ import com.teleport.app.mobile.MobileRemoteScreen
 import com.teleport.app.ui.theme.ThemeTokens
 import com.teleport.app.mobile.connection.ConnectionState
 import com.teleport.app.mobile.connection.TvConnectionManager
+import com.teleport.app.mobile.connection.QrScanActivity
 import com.teleport.app.mobile.nsd.NsdHelper
 import com.teleport.app.mobile.sensors.GyroSensorTracker
 import com.teleport.app.protocol.Command
@@ -179,6 +180,8 @@ class MainActivity : ComponentActivity() {
                                     setCameraId(0)
                                     setBeepEnabled(false)
                                     setBarcodeImageEnabled(false)
+                                    setOrientationLocked(false)
+                                    setCaptureActivity(QrScanActivity::class.java)
                                 }
                                 qrCodeLauncher.launch(options)
                             },
