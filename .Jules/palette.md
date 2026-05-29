@@ -10,3 +10,6 @@
 ## 2024-05-27 - Inline Clear Buttons in TextFields
 **Learning:** Users often need to rapidly clear entire inputs, such as manual IP addresses, URLs, or command inputs. Without an explicit UI affordance, users are forced to manually highlight text or hold the backspace key, causing unnecessary friction.
 **Action:** Add a trailing IconButton (e.g., Icons.Filled.Clear) inside primary TextFields/OutlinedTextFields that appears when the input is not empty, enabling instant clearing of the field.
+## 2024-05-28 - Visually Disable Input-Dependent Buttons
+**Learning:** Action buttons that depend on text inputs (like entering an IP or URL) shouldn't just fail silently or do nothing when clicked if the input is blank. Users can be confused why tapping the button has no effect.
+**Action:** Always use the `enabled` parameter on `Button` bound to the input's blank state, and explicitly define `disabledContainerColor` and `disabledContentColor` to visually communicate that the action is not currently available.
