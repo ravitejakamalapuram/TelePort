@@ -96,7 +96,7 @@ class ScreenshotCapturerTest {
     }
 
     @Test
-    @Config(qualifiers = "w1920dp-h1080dp-xhdpi")
+    @Config(qualifiers = "w1920dp-h1080dp-mdpi")
     fun captureTvPairingScreen() {
         val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
         activity.setContent {
