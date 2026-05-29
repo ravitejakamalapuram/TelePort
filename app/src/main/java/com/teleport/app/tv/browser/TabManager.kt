@@ -136,14 +136,24 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
     }
 
     fun openTab(url: String, headless: Boolean = false) {
+        // Sanitize input URL to prevent javascript:, file:, intent: scheme abuse
+        val scheme = android.net.Uri.parse(url).scheme?.lowercase()
+        val safeUrl = if (scheme == "http" || scheme == "https" || scheme == "about" || scheme == "data") {
+            url
+        } else if (scheme == null) {
+            "https://$url"
+        } else {
+            "about:blank"
+        }
+
         coroutineScope.launch(Dispatchers.Main) {
             if (headless) {
                 cancelHeadlessExtraction()
                 isResolvingHeadlessly.value = true
-                resolvingUrl.value = url
+                resolvingUrl.value = safeUrl
                 detectedStreamUrl.value = null
 
-                val webView = createWebView(url)
+                val webView = createWebView(safeUrl)
                 _headlessWebView.value = webView
 
                 // Start 10-second timeout
@@ -154,7 +164,7 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                     }
                 }
             } else {
-                val webView = createWebView(url)
+                val webView = createWebView(safeUrl)
                 val currentList = _tabs.value.toMutableList()
                 currentList.add(webView)
                 _tabs.value = currentList
@@ -384,6 +394,7 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                 domStorageEnabled = true
                 databaseEnabled = true
                 allowFileAccess = false // Prevent local file access and path traversal
+                allowContentAccess = false // Prevent LFI via content:// URIs
                 mediaPlaybackRequiresUserGesture = false
                 mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE // Prevent active mixed content (MITM XSS risk)
                 userAgentString = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
