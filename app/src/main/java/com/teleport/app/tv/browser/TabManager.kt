@@ -420,10 +420,11 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                     view: WebView?,
                     request: WebResourceRequest?
                 ): WebResourceResponse? {
-                    val reqUrl = request?.url?.toString() ?: return null
+                    val reqUri = request?.url ?: return null
 
                     // 1. Intercept Ads
-                    if (AdBlocker.isAd(reqUrl)) {
+                    // Pass Uri directly to avoid redundant string allocations for blocked requests
+                    if (AdBlocker.isAd(reqUri)) {
                         // Return empty response to block the request
                         return WebResourceResponse(
                             "text/plain",
@@ -431,6 +432,9 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                             ByteArrayInputStream("".toByteArray())
                         )
                     }
+
+                    // Delay string allocation until after ad blocking to save memory/GC
+                    val reqUrl = reqUri.toString()
 
                     // 2. Extract media stream URLs
                     if (isStreamUrl(reqUrl) && detectedStreamUrl.value != reqUrl) {
