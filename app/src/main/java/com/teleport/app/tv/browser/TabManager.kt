@@ -380,12 +380,34 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
         cursorY.value = cursorY.value.coerceIn(0f, webViewHeight.toFloat())
     }
 
-    private fun isStreamUrl(url: String): Boolean {
-        return url.contains(".m3u8", ignoreCase = true) ||
-               url.contains(".mp4", ignoreCase = true) ||
-               url.contains(".mkv", ignoreCase = true) ||
-               url.contains("googlevideo.com/videoplayback", ignoreCase = true)
+    // Bolt: Accept Uri instead of String to defer allocating a String for every request
+    private fun isStreamUrl(uri: android.net.Uri): Boolean {
+        val path = uri.path
+        if (path != null) {
+            if (path.contains(".m3u8", ignoreCase = true) ||
+                path.contains(".mp4", ignoreCase = true) ||
+                path.contains(".mkv", ignoreCase = true)) {
+                return true
+            }
+        }
+        val query = uri.query
+        if (query != null) {
+            if (query.contains(".m3u8", ignoreCase = true) ||
+                query.contains(".mp4", ignoreCase = true) ||
+                query.contains(".mkv", ignoreCase = true)) {
+                return true
+            }
+        }
+        val host = uri.host
+        if (host != null && host.contains("googlevideo.com", ignoreCase = true) &&
+            path != null && path.contains("videoplayback", ignoreCase = true)) {
+            return true
+        }
+        return false
     }
+
+    // Bolt: Pre-allocate empty byte array to prevent repeated allocation when blocking ads
+    private val EMPTY_BYTE_ARRAY = ByteArray(0)
 
     private fun createWebView(url: String): WebView {
         return WebView(context).apply {
@@ -426,23 +448,25 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                     // Pass Uri directly to avoid redundant string allocations for blocked requests
                     if (AdBlocker.isAd(reqUri)) {
                         // Return empty response to block the request
+                        // Bolt: Use pre-allocated empty byte array
                         return WebResourceResponse(
                             "text/plain",
                             "UTF-8",
-                            ByteArrayInputStream("".toByteArray())
+                            ByteArrayInputStream(EMPTY_BYTE_ARRAY)
                         )
                     }
 
-                    // Delay string allocation until after ad blocking to save memory/GC
-                    val reqUrl = reqUri.toString()
-
                     // 2. Extract media stream URLs
-                    if (isStreamUrl(reqUrl) && detectedStreamUrl.value != reqUrl) {
-                        detectedStreamUrl.value = reqUrl
-                        if (isResolvingHeadlessly.value) {
-                            coroutineScope.launch(Dispatchers.Main) {
-                                playNatively(reqUrl)
-                                cancelHeadlessExtraction()
+                    // Bolt: Delay string allocation until we actually match a stream URL
+                    if (isStreamUrl(reqUri)) {
+                        val reqUrl = reqUri.toString()
+                        if (detectedStreamUrl.value != reqUrl) {
+                            detectedStreamUrl.value = reqUrl
+                            if (isResolvingHeadlessly.value) {
+                                coroutineScope.launch(Dispatchers.Main) {
+                                    playNatively(reqUrl)
+                                    cancelHeadlessExtraction()
+                                }
                             }
                         }
                     }
