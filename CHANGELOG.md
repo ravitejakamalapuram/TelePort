@@ -1,5 +1,10 @@
 # Changelog
 
+## [2026-05-29] - Automated Release
+
+- fix(mobile): implement custom rotatable QrScanActivity with close button (c25aff0) by Raviteja Kamalapuram
+
+
 ## [2026-05-28] - Automated Release
 
 - feat: implement headless video casting and native player controls (#26) (177450d) by raviteja kamalapuram
