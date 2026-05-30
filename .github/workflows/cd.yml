@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   release:
-    uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-cd.yml@v1.1.8
+    uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-cd.yml@v1.1.9
     with:
       java-version: '17'
       package-name: 'com.carfry369.teleport'
