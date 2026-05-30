@@ -10,3 +10,6 @@
 ## 2024-09-04 - Redundant String allocations in shouldInterceptRequest
 **Learning:** Passing strings representing URLs to helper functions like `isAd` from `WebViewClient.shouldInterceptRequest` forces redundant memory allocations (such as `Uri.parse(url)` or `.toString()`) inside high-frequency callbacks. This places unnecessary pressure on the Garbage Collector, contributing to main thread stutters.
 **Action:** Defer `.toString()` conversions as much as possible in high-frequency network interception callbacks. Prefer passing already instantiated wrapper objects like `android.net.Uri` directly, and perform fast-failure checks (like domain blacklisting) before committing to allocating Strings.
+## 2024-05-19 - Pre-allocated ByteArrays in High-Frequency Callbacks
+**Learning:** In high-frequency network callbacks like `WebViewClient.shouldInterceptRequest`, creating new empty byte arrays (e.g., `ByteArrayInputStream("".toByteArray())`) for blocked requests creates significant, continuous Garbage Collection (GC) pressure.
+**Action:** Always pre-allocate and reuse a static empty byte array (e.g., `val EMPTY_BYTE_ARRAY = ByteArray(0)`) to minimize object allocations when blocking requests or responding with empty bodies.

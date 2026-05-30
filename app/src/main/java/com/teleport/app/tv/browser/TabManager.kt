@@ -387,6 +387,10 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                url.contains("googlevideo.com/videoplayback", ignoreCase = true)
     }
 
+    companion object {
+        private val EMPTY_BYTE_ARRAY = ByteArray(0)
+    }
+
     private fun createWebView(url: String): WebView {
         return WebView(context).apply {
             settings.apply {
@@ -426,10 +430,11 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                     // Pass Uri directly to avoid redundant string allocations for blocked requests
                     if (AdBlocker.isAd(reqUri)) {
                         // Return empty response to block the request
+                        // Bolt: Prevent continuous string allocations and byte array copies, reducing GC pressure
                         return WebResourceResponse(
                             "text/plain",
                             "UTF-8",
-                            ByteArrayInputStream("".toByteArray())
+                            ByteArrayInputStream(EMPTY_BYTE_ARRAY)
                         )
                     }
 
