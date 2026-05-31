@@ -13,3 +13,6 @@
 ## 2024-05-19 - Pre-allocated ByteArrays in High-Frequency Callbacks
 **Learning:** In high-frequency network callbacks like `WebViewClient.shouldInterceptRequest`, creating new empty byte arrays (e.g., `ByteArrayInputStream("".toByteArray())`) for blocked requests creates significant, continuous Garbage Collection (GC) pressure.
 **Action:** Always pre-allocate and reuse a static empty byte array (e.g., `val EMPTY_BYTE_ARRAY = ByteArray(0)`) to minimize object allocations when blocking requests or responding with empty bodies.
+## 2024-10-25 - Redundant ByteArray Allocation in MediaCodec Encoding Loop
+**Learning:** In high-frequency video encoding loops (e.g. streaming `MediaCodec` output via WebSockets using Okio), reading data from a `ByteBuffer` into an intermediate `ByteArray` before creating a `ByteString` causes redundant memory allocation and data copying. This puts continuous pressure on the Garbage Collector and wastes CPU cycles.
+**Action:** Use Okio's `ByteBuffer.toByteString()` directly when converting remaining bytes in a `ByteBuffer` to a `ByteString`. This skips the intermediate array creation and copying, reducing GC pressure and improving performance in tight loops.
