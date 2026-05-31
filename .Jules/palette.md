@@ -13,3 +13,6 @@
 ## 2024-05-28 - Visually Disable Input-Dependent Buttons
 **Learning:** Action buttons that depend on text inputs (like entering an IP or URL) shouldn't just fail silently or do nothing when clicked if the input is blank. Users can be confused why tapping the button has no effect.
 **Action:** Always use the `enabled` parameter on `Button` bound to the input's blank state, and explicitly define `disabledContainerColor` and `disabledContentColor` to visually communicate that the action is not currently available.
+## 2026-05-31 - Jetpack Compose Box Touchable Ripple Bounds & A11y
+**Learning:** In Jetpack Compose, applying a `CircleShape` background to a `Box` and adding a `.clickable` modifier directly results in rectangular ripple bounds (unconstrained by the shape) and leaves the element without proper accessibility semantics.
+**Action:** Always apply `.clip(Shape)` before the `.clickable()` modifier to constrain the ripple, and pass `role = Role.Button` inside `.clickable()` to ensure screen readers announce it as an interactive button.

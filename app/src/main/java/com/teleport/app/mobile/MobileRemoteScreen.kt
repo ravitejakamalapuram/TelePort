@@ -698,8 +698,9 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                     modifier = Modifier
                         .padding(20.dp)
                         .size(90.dp)
+                        .clip(CircleShape)
                         .background(ThemeTokens.Primary, CircleShape)
-                        .clickable { connectionManager.sendCommand(Command.Click) },
+                        .clickable(role = Role.Button) { connectionManager.sendCommand(Command.Click) },
                     contentAlignment = Alignment.Center
                 ) {
                     Text("OK", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -1134,8 +1135,9 @@ fun MobileMediaRemoteScreen(
                 Box(
                     modifier = Modifier
                         .size(100.dp)
+                        .clip(CircleShape)
                         .background(ThemeTokens.Primary, CircleShape)
-                        .clickable { connectionManager.sendCommand(Command.PlayPause) },
+                        .clickable(role = Role.Button) { connectionManager.sendCommand(Command.PlayPause) },
                     contentAlignment = Alignment.Center
                 ) {
                     Text("PLAY\nPAUSE", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 16.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
