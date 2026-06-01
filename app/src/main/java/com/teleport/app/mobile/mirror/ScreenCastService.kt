@@ -174,11 +174,9 @@ class ScreenCastService : Service() {
                     outputBuffer.position(bufferInfo.offset)
                     outputBuffer.limit(bufferInfo.offset + bufferInfo.size)
 
-                    val data = ByteArray(bufferInfo.size)
-                    outputBuffer.get(data)
-
+                    // Bolt: Optimize frame extraction by avoiding intermediate ByteArray allocation and using Okio's toByteString directly
                     // Send NAL frames as binary WebSocket frames
-                    webSocket?.send(data.toByteString(0, bufferInfo.size))
+                    webSocket?.send(outputBuffer.toByteString())
                 }
                 codec.releaseOutputBuffer(outputBufferIndex, false)
             } else if (outputBufferIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
