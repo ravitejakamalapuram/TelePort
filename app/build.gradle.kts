@@ -136,4 +136,13 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
     implementation("com.google.firebase:firebase-crashlytics-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
+
+    // Monetization: Google AdMob
+    implementation("com.google.android.gms:play-services-ads:23.6.0")
+
+    // Monetization: User Messaging Platform (GDPR/CCPA consent)
+    implementation("com.google.android.ump:user-messaging-platform:3.1.0")
+
+    // Monetization: Google Play Billing for Premium subscriptions
+    implementation("com.android.billingclient:billing-ktx:7.1.1")
 }

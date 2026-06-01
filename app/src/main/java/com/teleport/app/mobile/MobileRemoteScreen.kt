@@ -83,6 +83,10 @@ import com.teleport.app.mobile.nsd.NsdHelper
 import com.teleport.app.mobile.sensors.GyroSensorTracker
 import com.teleport.app.protocol.Command
 import com.teleport.app.ui.theme.ThemeTokens
+import com.teleport.app.ads.BannerAd
+import com.teleport.app.ads.AdManager
+import com.teleport.app.billing.BillingManager
+import com.teleport.app.billing.PremiumState
 
 @Composable
 fun MobileRemoteScreen(
@@ -91,7 +95,8 @@ fun MobileRemoteScreen(
     gyroTracker: GyroSensorTracker,
     scanQr: () -> Unit,
     startMirroring: () -> Unit,
-    stopMirroring: () -> Unit
+    stopMirroring: () -> Unit,
+    billingManager: BillingManager
 ) {
     val connState by connectionManager.connectionState.collectAsState()
 
@@ -100,7 +105,7 @@ fun MobileRemoteScreen(
         color = ThemeTokens.Background
     ) {
         if (connState == ConnectionState.Connected) {
-            ControllerScreen(connectionManager, gyroTracker, startMirroring, stopMirroring)
+            ControllerScreen(connectionManager, gyroTracker, startMirroring, stopMirroring, billingManager)
         } else {
             PairingScreen(connectionManager, nsdHelper, scanQr)
         }
@@ -286,6 +291,10 @@ fun PairingScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Text("Error: ${(connState as ConnectionState.Error).message}", color = ThemeTokens.Error, fontSize = 12.sp)
         }
+
+        // Monetization: Banner ad at bottom of pairing screen
+        Spacer(modifier = Modifier.height(8.dp))
+        BannerAd()
     }
 }
 
@@ -294,11 +303,32 @@ fun ControllerScreen(
     connectionManager: TvConnectionManager,
     gyroTracker: GyroSensorTracker,
     startMirroring: () -> Unit,
-    stopMirroring: () -> Unit
+    stopMirroring: () -> Unit,
+    billingManager: BillingManager
 ) {
     val tvState by connectionManager.tvState.collectAsState()
     val isResolvingHeadlessly = tvState?.isResolvingHeadlessly ?: false
     val isNativePlaying = tvState?.isNativePlaying ?: false
+    var showPaywall by remember { mutableStateOf(false) }
+    var showTipJar by remember { mutableStateOf(false) }
+
+    // Paywall overlay
+    if (showPaywall) {
+        PaywallScreen(
+            billingManager = billingManager,
+            onDismiss = { showPaywall = false }
+        )
+        return
+    }
+
+    // Tip jar overlay
+    if (showTipJar) {
+        TipJarSheet(
+            billingManager = billingManager,
+            onDismiss = { showTipJar = false }
+        )
+        return
+    }
 
     if (isResolvingHeadlessly) {
         MobileCastingScreen(connectionManager, tvState)
@@ -354,22 +384,44 @@ fun ControllerScreen(
                         )
                     }
                 }
-                Button(
-                    onClick = { connectionManager.disconnect() },
-                    colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error.copy(alpha = 0.8f))
-                ) {
-                    Text("Disconnect", color = ThemeTokens.TextMain, fontSize = 12.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Tip jar button
+                    IconButton(onClick = { showTipJar = true }) {
+                        Text("☕", fontSize = 20.sp)
+                    }
+                    if (!PremiumState.isPremium) {
+                        Button(
+                            onClick = { showPaywall = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary)
+                        ) {
+                            Text("⭐ Pro", color = ThemeTokens.TextMain, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    Button(
+                        onClick = { connectionManager.disconnect() },
+                        colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error.copy(alpha = 0.8f))
+                    ) {
+                        Text("Disconnect", color = ThemeTokens.TextMain, fontSize = 12.sp)
+                    }
                 }
             }
 
             // GLOWING NATIVE STREAM DETECTED BANNER
             tvState?.detectedStreamUrl?.let { streamUrl ->
+                val context = LocalContext.current
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
                         .clickable {
-                            connectionManager.sendCommand(Command.PlayStreamNatively(streamUrl))
+                            // Monetization: Show interstitial before launching native player (free tier)
+                            if (!PremiumState.isPremium) {
+                                AdManager.showInterstitial(context as android.app.Activity) {
+                                    connectionManager.sendCommand(Command.PlayStreamNatively(streamUrl))
+                                }
+                            } else {
+                                connectionManager.sendCommand(Command.PlayStreamNatively(streamUrl))
+                            }
                         },
                     colors = CardDefaults.cardColors(containerColor = ThemeTokens.Primary),
                     shape = RoundedCornerShape(12.dp)
@@ -419,14 +471,35 @@ fun ControllerScreen(
                     .background(ThemeTokens.Background)
             ) {
                 when (selectedTabIndex) {
-                    0 -> TrackpadTab(connectionManager, gyroTracker, startMirroring, stopMirroring)
+                    0 -> TrackpadTab(connectionManager, gyroTracker, startMirroring, stopMirroring, onShowPaywall = { showPaywall = true })
                     1 -> DpadTab(connectionManager)
-                    2 -> TabsManagerTab(connectionManager, tvState)
+                    2 -> TabsManagerTab(connectionManager, tvState, onShowPaywall = { showPaywall = true })
                 }
             }
 
             // Keyboard/Input Bar (Sticky at bottom)
             QuickInputBar(connectionManager)
+
+            // Monetization: "Remove Ads" rewarded ad option
+            if (AdManager.shouldShowAds()) {
+                val context = LocalContext.current
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            AdManager.showRewarded(context as android.app.Activity) {
+                                AdManager.grantTemporaryAdFree()
+                            }
+                        }
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text("🎬 Watch ad to remove ads for 1 hour", color = ThemeTokens.Accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            // Monetization: Banner ad at bottom of controller screen
+            BannerAd()
         }
     }
 }
@@ -436,10 +509,12 @@ fun TrackpadTab(
     connectionManager: TvConnectionManager,
     gyroTracker: GyroSensorTracker,
     startMirroring: () -> Unit,
-    stopMirroring: () -> Unit
+    stopMirroring: () -> Unit,
+    onShowPaywall: () -> Unit
 ) {
     var isAirMouseOn by remember { mutableStateOf(false) }
     val isCasting by com.teleport.app.mobile.mirror.ScreenCastService.isCasting.collectAsState()
+    val context = LocalContext.current
 
     DisposableEffect(isAirMouseOn) {
         if (isAirMouseOn) {
@@ -460,7 +535,7 @@ fun TrackpadTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Mirror Screen Switch Header
+        // Mirror Screen Switch Header — PRO ONLY
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -470,10 +545,10 @@ fun TrackpadTab(
                     value = isCasting,
                     role = Role.Switch,
                     onValueChange = { checked ->
-                        if (checked) {
-                            startMirroring()
+                        if (!PremiumState.isPremium) {
+                            onShowPaywall()
                         } else {
-                            stopMirroring()
+                            if (checked) startMirroring() else stopMirroring()
                         }
                     }
                 )
@@ -482,7 +557,14 @@ fun TrackpadTab(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text("Mirror Phone Screen", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Mirror Phone Screen", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+                    if (!PremiumState.isPremium) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("PRO", color = ThemeTokens.Background, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.background(ThemeTokens.Primary, RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp))
+                    }
+                }
                 Text("Cast phone display to TV", color = ThemeTokens.TextSub, fontSize = 12.sp)
             }
             Switch(
@@ -497,7 +579,7 @@ fun TrackpadTab(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Air Mouse Switch Header
+        // Air Mouse Switch Header — Rewarded Ad unlock or PRO
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -506,15 +588,34 @@ fun TrackpadTab(
                 .toggleable(
                     value = isAirMouseOn,
                     role = Role.Switch,
-                    onValueChange = { isAirMouseOn = it }
+                    onValueChange = { wantsOn ->
+                        if (wantsOn && !PremiumState.isPremium) {
+                            // Free users: watch rewarded ad to unlock for this session
+                            AdManager.showRewarded(context as android.app.Activity) {
+                                isAirMouseOn = true
+                            }
+                        } else {
+                            isAirMouseOn = wantsOn
+                        }
+                    }
                 )
                 .padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text("Air Mouse Mode", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
-                Text("Point phone to move TV cursor", color = ThemeTokens.TextSub, fontSize = 12.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Air Mouse Mode", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+                    if (!PremiumState.isPremium) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("🎬 AD", color = ThemeTokens.Background, fontSize = 10.sp, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.background(ThemeTokens.Accent, RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp))
+                    }
+                }
+                Text(
+                    if (!PremiumState.isPremium) "Watch ad to unlock for this session" else "Point phone to move TV cursor",
+                    color = ThemeTokens.TextSub, fontSize = 12.sp
+                )
             }
             Switch(
                 checked = isAirMouseOn,
@@ -730,7 +831,7 @@ fun DpadTab(connectionManager: TvConnectionManager) {
 }
 
 @Composable
-fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport.app.protocol.TvState?) {
+fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport.app.protocol.TvState?, onShowPaywall: () -> Unit = {}) {
     var newUrl by remember { mutableStateOf("") }
 
     Column(
@@ -781,6 +882,12 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
             Button(
                 onClick = {
                     if (newUrl.isNotBlank()) {
+                        // Free tier: limit to 3 tabs
+                        val tabCount = tvState?.tabs?.size ?: 0
+                        if (!PremiumState.isPremium && tabCount >= 3) {
+                            onShowPaywall()
+                            return@Button
+                        }
                         var formattedUrl = newUrl.trim()
                         if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
                             formattedUrl = "https://$formattedUrl"
@@ -805,6 +912,12 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
             Button(
                 onClick = {
                     if (newUrl.isNotBlank()) {
+                        // Free tier: limit to 3 tabs
+                        val tabCount = tvState?.tabs?.size ?: 0
+                        if (!PremiumState.isPremium && tabCount >= 3) {
+                            onShowPaywall()
+                            return@Button
+                        }
                         var formattedUrl = newUrl.trim()
                         if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
                             formattedUrl = "https://$formattedUrl"
