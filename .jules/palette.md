@@ -1,0 +1,3 @@
+## 2024-10-24 - Bounded Ripples and Semantics for Custom Buttons
+**Learning:** In Jetpack Compose, applying `.background(Color, Shape)` before `.clickable()` without explicit clipping causes the touch ripple to extend beyond the intended shape (often resulting in a square ripple on a circular button). Furthermore, custom composables (like `Box`) acting as buttons need `role = Role.Button` to ensure screen readers announce them correctly as interactive elements.
+**Action:** Always use `.clip(Shape)` before `.clickable()` to properly bound touch ripples on custom shaped buttons, and explicitly set `role = Role.Button` within the clickable modifier.

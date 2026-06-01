@@ -191,7 +191,7 @@ fun PairingScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { connectionManager.connect(tv.ipAddress, tv.port) }
+                                .clickable(role = Role.Button) { connectionManager.connect(tv.ipAddress, tv.port) }
                                 .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
@@ -368,7 +368,8 @@ fun ControllerScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(8.dp)
-                        .clickable {
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(role = Role.Button) {
                             connectionManager.sendCommand(Command.PlayStreamNatively(streamUrl))
                         },
                     colors = CardDefaults.cardColors(containerColor = ThemeTokens.Primary),
@@ -698,8 +699,9 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                     modifier = Modifier
                         .padding(20.dp)
                         .size(90.dp)
-                        .background(ThemeTokens.Primary, CircleShape)
-                        .clickable { connectionManager.sendCommand(Command.Click) },
+                        .clip(CircleShape)
+                        .background(ThemeTokens.Primary)
+                        .clickable(role = Role.Button) { connectionManager.sendCommand(Command.Click) },
                     contentAlignment = Alignment.Center
                 ) {
                     Text("OK", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 18.sp)
@@ -852,7 +854,8 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 6.dp)
-                            .clickable { connectionManager.sendCommand(Command.SelectTab(index)) },
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(role = Role.Button) { connectionManager.sendCommand(Command.SelectTab(index)) },
                         colors = CardDefaults.cardColors(
                             containerColor = if (isActive) ThemeTokens.Border else ThemeTokens.CardBg
                         ),
@@ -1134,8 +1137,9 @@ fun MobileMediaRemoteScreen(
                 Box(
                     modifier = Modifier
                         .size(100.dp)
-                        .background(ThemeTokens.Primary, CircleShape)
-                        .clickable { connectionManager.sendCommand(Command.PlayPause) },
+                        .clip(CircleShape)
+                        .background(ThemeTokens.Primary)
+                        .clickable(role = Role.Button) { connectionManager.sendCommand(Command.PlayPause) },
                     contentAlignment = Alignment.Center
                 ) {
                     Text("PLAY\nPAUSE", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 16.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
