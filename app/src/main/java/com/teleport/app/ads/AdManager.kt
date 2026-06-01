@@ -66,6 +66,7 @@ object AdManager {
      * False if user is premium, or in a temporary ad-free window from rewarded ad.
      */
     fun shouldShowAds(): Boolean {
+        if (isEmulator()) return false
         if (PremiumState.isPremium) return false
         if (System.currentTimeMillis() < adFreeUntil) return false
         return true
@@ -205,5 +206,20 @@ object AdManager {
     /** Update the adsEnabled state based on current conditions. */
     fun refreshAdState() {
         _adsEnabled.value = shouldShowAds()
+    }
+
+    private fun isEmulator(): Boolean {
+        val brand = android.os.Build.BRAND
+        val device = android.os.Build.DEVICE
+        return (brand.startsWith("generic") && device.startsWith("generic")) ||
+                android.os.Build.FINGERPRINT.startsWith("generic") ||
+                android.os.Build.FINGERPRINT.startsWith("unknown") ||
+                android.os.Build.HARDWARE.contains("goldfish") ||
+                android.os.Build.HARDWARE.contains("ranchu") ||
+                android.os.Build.MODEL.contains("google_sdk") ||
+                android.os.Build.MODEL.contains("Emulator") ||
+                android.os.Build.MODEL.contains("Android SDK built for x86") ||
+                android.os.Build.MANUFACTURER.contains("Genymotion") ||
+                (brand.startsWith("google") && device.startsWith("google") && android.os.Build.PRODUCT.startsWith("sdk_gphone"))
     }
 }

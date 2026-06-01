@@ -147,13 +147,15 @@ class MainActivity : ComponentActivity() {
             billingManager.connect()
 
             // Initialize ad consent and preload ads
-            ConsentHelper.requestConsent(this, onConsentResult = { canRequestAds ->
-                if (canRequestAds) {
-                    AdManager.initialize(this)
-                    AdManager.preloadInterstitial(this)
-                    AdManager.preloadRewarded(this)
-                }
-            })
+            if (!isEmulator()) {
+                ConsentHelper.requestConsent(this, onConsentResult = { canRequestAds ->
+                    if (canRequestAds) {
+                        AdManager.initialize(this)
+                        AdManager.preloadInterstitial(this)
+                        AdManager.preloadRewarded(this)
+                    }
+                })
+            }
         }
 
         setContent {
