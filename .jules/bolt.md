@@ -7,3 +7,9 @@
 ## 2024-05-18 - Manual URL parsing regressions
 **Learning:** Optimizing `android.net.Uri.parse` using manual string indexing for performance causes regressions in edge cases like IPv6 URLs (e.g. `http://[2001:db8::1]/`) and Basic Auth credentials (e.g. `https://user:pass@domain.com/`). The correctness loss outweighs the micro-optimization.
 **Action:** Do NOT replace robust URL parsing APIs like `android.net.Uri.parse` with fragile manual string splitting, even for hot paths. Instead, look for string allocation overheads like `.lowercase()` and use built-in matching like `.contains(..., ignoreCase = true)`.
+## 2024-09-04 - Redundant String allocations in shouldInterceptRequest
+**Learning:** Passing strings representing URLs to helper functions like `isAd` from `WebViewClient.shouldInterceptRequest` forces redundant memory allocations (such as `Uri.parse(url)` or `.toString()`) inside high-frequency callbacks. This places unnecessary pressure on the Garbage Collector, contributing to main thread stutters.
+**Action:** Defer `.toString()` conversions as much as possible in high-frequency network interception callbacks. Prefer passing already instantiated wrapper objects like `android.net.Uri` directly, and perform fast-failure checks (like domain blacklisting) before committing to allocating Strings.
+## 2024-05-19 - Pre-allocated ByteArrays in High-Frequency Callbacks
+**Learning:** In high-frequency network callbacks like `WebViewClient.shouldInterceptRequest`, creating new empty byte arrays (e.g., `ByteArrayInputStream("".toByteArray())`) for blocked requests creates significant, continuous Garbage Collection (GC) pressure.
+**Action:** Always pre-allocate and reuse a static empty byte array (e.g., `val EMPTY_BYTE_ARRAY = ByteArray(0)`) to minimize object allocations when blocking requests or responding with empty bodies.

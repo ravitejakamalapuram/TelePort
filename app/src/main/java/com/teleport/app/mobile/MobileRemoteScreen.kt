@@ -256,9 +256,15 @@ fun PairingScreen(
                 },
                 modifier = Modifier.height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent)
+                enabled = manualIp.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ThemeTokens.Accent,
+                    contentColor = ThemeTokens.Background,
+                    disabledContainerColor = ThemeTokens.Accent.copy(alpha = 0.5f),
+                    disabledContentColor = ThemeTokens.Background.copy(alpha = 0.5f)
+                )
             ) {
-                Text("Go", color = ThemeTokens.Background, fontWeight = FontWeight.Bold)
+                Text("Go", fontWeight = FontWeight.Bold)
             }
         }
 
@@ -785,9 +791,15 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                 },
                 modifier = Modifier.weight(1f).height(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent)
+                enabled = newUrl.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ThemeTokens.Accent,
+                    contentColor = ThemeTokens.Background,
+                    disabledContainerColor = ThemeTokens.Accent.copy(alpha = 0.5f),
+                    disabledContentColor = ThemeTokens.Background.copy(alpha = 0.5f)
+                )
             ) {
-                Text("Cast Video 📺", color = ThemeTokens.Background, fontWeight = FontWeight.Bold)
+                Text("Cast Video 📺", fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.width(12.dp))
             Button(
@@ -803,9 +815,15 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                 },
                 modifier = Modifier.weight(1f).height(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Border)
+                enabled = newUrl.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = ThemeTokens.Border,
+                    contentColor = ThemeTokens.TextMain,
+                    disabledContainerColor = ThemeTokens.Border.copy(alpha = 0.5f),
+                    disabledContentColor = ThemeTokens.TextMain.copy(alpha = 0.5f)
+                )
             ) {
-                Text("Open Page 🌐", color = ThemeTokens.TextMain)
+                Text("Open Page 🌐")
             }
         }
 
@@ -969,10 +987,16 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
                     textInput = ""
                 }
             },
-            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent),
+            enabled = textInput.isNotBlank(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ThemeTokens.Accent,
+                contentColor = ThemeTokens.Background,
+                disabledContainerColor = ThemeTokens.Accent.copy(alpha = 0.5f),
+                disabledContentColor = ThemeTokens.Background.copy(alpha = 0.5f)
+            ),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)
         ) {
-            Text("Send", color = ThemeTokens.Background, fontWeight = FontWeight.Bold)
+            Text("Send", fontWeight = FontWeight.Bold)
         }
     }
 }

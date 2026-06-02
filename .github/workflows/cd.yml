@@ -6,9 +6,12 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   release:
-    uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-cd.yml@v1.1.2
+    uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-cd.yml@v1.1.9
     with:
       java-version: '17'
       package-name: 'com.carfry369.teleport'

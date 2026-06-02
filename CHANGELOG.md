@@ -2,6 +2,11 @@
 
 ## [2026-05-29] - Automated Release
 
+- ⚡ Bolt: [performance improvement] Avoid redundant Uri allocations in shouldInterceptRequest (#28) (c0aaa66) by raviteja kamalapuram
+
+
+## [2026-05-29] - Automated Release
+
 - fix(test): correct Robolectric qualifier to mdpi for TV pairing screen to prevent cropping (2e6e832) by Raviteja Kamalapuram
 - docs: fix broken logo icon on GitHub Pages (ce45d0e) by Raviteja Kamalapuram
 
