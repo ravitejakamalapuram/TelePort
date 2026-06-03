@@ -13,3 +13,6 @@
 ## 2024-05-28 - Visually Disable Input-Dependent Buttons
 **Learning:** Action buttons that depend on text inputs (like entering an IP or URL) shouldn't just fail silently or do nothing when clicked if the input is blank. Users can be confused why tapping the button has no effect.
 **Action:** Always use the `enabled` parameter on `Button` bound to the input's blank state, and explicitly define `disabledContainerColor` and `disabledContentColor` to visually communicate that the action is not currently available.
+## 2024-05-29 - Improve Ripple Effect Bounds and Screen Reader Identification on Custom Interactive Elements
+**Learning:** When creating custom interactive elements (like `Box` shaped with `CircleShape` and made interactive with `.clickable`), the Material touch ripple effect will by default fill the rectangular bounds of the component, looking messy. Additionally, a simple `.clickable` modifier might not give sufficient context to screen readers.
+**Action:** Always apply `.clip(Shape)` (e.g., `.clip(CircleShape)`) *before* the `.clickable` modifier to ensure the ripple effect is neatly bounded to the element's visual shape. Also, explicitly set `role = Role.Button` within `.clickable()` to ensure screen readers properly announce the custom element as an interactive button.
