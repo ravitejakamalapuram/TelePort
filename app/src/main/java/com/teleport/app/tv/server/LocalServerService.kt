@@ -101,7 +101,7 @@ class LocalServerService : Service() {
                         webSocket("/control") {
                             val origin = call.request.headers["Origin"]
                             val host = call.request.headers["Host"]
-                            if (origin != null && host != null && !origin.contains(host)) {
+                            if (origin != null && host != null && origin != "http://$host" && origin != "https://$host") {
                                 Log.w(TAG, "CSWSH prevented: Rejected control connection from invalid Origin: $origin for Host: $host")
                                 close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "CSWSH Check Failed"))
                                 return@webSocket
@@ -159,7 +159,7 @@ class LocalServerService : Service() {
                         webSocket("/mirror") {
                             val origin = call.request.headers["Origin"]
                             val host = call.request.headers["Host"]
-                            if (origin != null && host != null && !origin.contains(host)) {
+                            if (origin != null && host != null && origin != "http://$host" && origin != "https://$host") {
                                 Log.w(TAG, "CSWSH prevented: Rejected mirror connection from invalid Origin: $origin for Host: $host")
                                 close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "CSWSH Check Failed"))
                                 return@webSocket
