@@ -174,11 +174,10 @@ class ScreenCastService : Service() {
                     outputBuffer.position(bufferInfo.offset)
                     outputBuffer.limit(bufferInfo.offset + bufferInfo.size)
 
-                    val data = ByteArray(bufferInfo.size)
-                    outputBuffer.get(data)
-
+                    // Bolt: Avoid copying data into an intermediate ByteArray to reduce redundant
+                    // memory allocations, GC pressure, and CPU copying overhead in this high-frequency loop.
                     // Send NAL frames as binary WebSocket frames
-                    webSocket?.send(data.toByteString(0, bufferInfo.size))
+                    webSocket?.send(outputBuffer.toByteString())
                 }
                 codec.releaseOutputBuffer(outputBufferIndex, false)
             } else if (outputBufferIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
