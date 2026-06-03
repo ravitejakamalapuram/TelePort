@@ -23,7 +23,9 @@ import io.ktor.server.routing.get
 import io.ktor.server.response.respondText
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.webSocket
+import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
+import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import io.ktor.websocket.readBytes
 import io.ktor.websocket.send
@@ -97,6 +99,14 @@ class LocalServerService : Service() {
                         }
                         
                         webSocket("/control") {
+                            val origin = call.request.headers["Origin"]
+                            val host = call.request.headers["Host"]
+                            if (origin != null && host != null && !origin.contains(host)) {
+                                Log.w(TAG, "CSWSH prevented: Rejected control connection from invalid Origin: $origin for Host: $host")
+                                close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "CSWSH Check Failed"))
+                                return@webSocket
+                            }
+
                             val clientId = UUID.randomUUID().toString()
                             Log.d(TAG, "Client connected via WebSocket: $clientId")
                             TvEventBus.registerClient(clientId)
@@ -147,6 +157,14 @@ class LocalServerService : Service() {
                         }
                         
                         webSocket("/mirror") {
+                            val origin = call.request.headers["Origin"]
+                            val host = call.request.headers["Host"]
+                            if (origin != null && host != null && !origin.contains(host)) {
+                                Log.w(TAG, "CSWSH prevented: Rejected mirror connection from invalid Origin: $origin for Host: $host")
+                                close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "CSWSH Check Failed"))
+                                return@webSocket
+                            }
+
                             Log.d(TAG, "Mirror socket connected")
                             try {
                                 for (frame in incoming) {
@@ -193,6 +211,7 @@ private val REMOTE_HTML = """
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws: wss:;">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TelePort Web Remote</title>
     <style>
