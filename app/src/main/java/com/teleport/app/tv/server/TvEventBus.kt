@@ -59,7 +59,11 @@ object TvEventBus {
         }
     }
 
-    private val _mirrorFrames = MutableSharedFlow<ByteArray>(extraBufferCapacity = 256)
+    private val _mirrorFrames = MutableSharedFlow<ByteArray>(
+        replay = 0,
+        extraBufferCapacity = 64,
+        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
+    )
     val mirrorFrames: SharedFlow<ByteArray> = _mirrorFrames.asSharedFlow()
 
     fun postMirrorFrame(data: ByteArray) {

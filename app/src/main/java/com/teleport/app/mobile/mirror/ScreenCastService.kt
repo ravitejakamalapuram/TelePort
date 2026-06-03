@@ -142,10 +142,33 @@ class ScreenCastService : Service() {
             setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
             setInteger(MediaFormat.KEY_FRAME_RATE, fps)
             setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1) // 1 second keyframes
+            
+            // Attempt to configure Constant Bitrate (CBR) and ultra low latency
+            setInteger(MediaFormat.KEY_BITRATE_MODE, MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                setInteger(MediaFormat.KEY_LATENCY, 1)
+            }
         }
 
+        var isConfigured = false
         encoder = MediaCodec.createEncoderByType("video/avc").apply {
-            configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+            try {
+                configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+                isConfigured = true
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to configure encoder with low-latency CBR, falling back to default configuration", e)
+            }
+
+            if (!isConfigured) {
+                val fallbackFormat = MediaFormat.createVideoFormat("video/avc", width, height).apply {
+                    setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
+                    setInteger(MediaFormat.KEY_BIT_RATE, bitrate)
+                    setInteger(MediaFormat.KEY_FRAME_RATE, fps)
+                    setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
+                }
+                configure(fallbackFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+            }
+
             val inputSurface = createInputSurface()
             start()
 
@@ -162,15 +185,81 @@ class ScreenCastService : Service() {
         }
     }
 
+    private fun updateEncoderBitrate(newBitrate: Int) {
+        try {
+            val params = android.os.Bundle().apply {
+                putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, newBitrate)
+            }
+            encoder?.setParameters(params)
+            Log.d(TAG, "Adaptive Bitrate changed encoder target to ${newBitrate / 1000} Kbps")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to dynamically adjust encoder bitrate", e)
+        }
+    }
+
+    private fun requestSyncFrame() {
+        try {
+            val params = android.os.Bundle().apply {
+                putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
+            }
+            encoder?.setParameters(params)
+            Log.d(TAG, "Requested sync frame (I-Frame) from encoder")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to request sync frame", e)
+        }
+    }
+
     private fun performEncodingLoop() {
         val codec = encoder ?: return
         val bufferInfo = MediaCodec.BufferInfo()
+
+        var frameCount = 0
+        var currentBitrate = 1_500_000
+        val minBitrate = 300_000
+        val maxBitrate = 3_500_000
+        var highQueueCount = 0
 
         while (isRunning) {
             val outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 10000L) // 10ms timeout
             if (outputBufferIndex >= 0) {
                 val outputBuffer = codec.getOutputBuffer(outputBufferIndex)
                 if (outputBuffer != null && bufferInfo.size > 0) {
+                    val queueSize = webSocket?.queueSize() ?: 0
+
+                    // Evaluate adaptive bitrate every 24 frames (~1s of video)
+                    frameCount++
+                    if (frameCount >= 24) {
+                        frameCount = 0
+
+                        if (queueSize > 800_000) { // > 800 KB queued
+                            currentBitrate = (currentBitrate * 0.6f).toInt().coerceAtLeast(minBitrate)
+                            updateEncoderBitrate(currentBitrate)
+                            requestSyncFrame()
+                        } else if (queueSize > 300_000) { // > 300 KB queued
+                            currentBitrate = (currentBitrate * 0.85f).toInt().coerceAtLeast(minBitrate)
+                            updateEncoderBitrate(currentBitrate)
+                        } else if (queueSize < 50_000) { // < 50 KB queued (healthy)
+                            if (currentBitrate < maxBitrate) {
+                                currentBitrate = (currentBitrate + 150_000).coerceAtMost(maxBitrate)
+                                updateEncoderBitrate(currentBitrate)
+                            }
+                        }
+                    }
+
+                    // WebSocket Frame Dropping / Skipping to prevent infinite lag
+                    if (queueSize > 1_500_000) { // > 1.5 MB queue size
+                        highQueueCount++
+                        val isKeyframe = (bufferInfo.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0
+                        if (!isKeyframe || highQueueCount > 10) {
+                            // Drop this output frame to avoid congesting the queue further
+                            codec.releaseOutputBuffer(outputBufferIndex, false)
+                            requestSyncFrame() // Request sync frame to recover immediately
+                            continue
+                        }
+                    } else {
+                        highQueueCount = 0
+                    }
+
                     outputBuffer.position(bufferInfo.offset)
                     outputBuffer.limit(bufferInfo.offset + bufferInfo.size)
 
