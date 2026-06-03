@@ -382,11 +382,27 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
         cursorY.value = cursorY.value.coerceIn(0f, webViewHeight.toFloat())
     }
 
-    private fun isStreamUrl(url: String): Boolean {
-        return url.contains(".m3u8", ignoreCase = true) ||
-               url.contains(".mp4", ignoreCase = true) ||
-               url.contains(".mkv", ignoreCase = true) ||
-               url.contains("googlevideo.com/videoplayback", ignoreCase = true)
+    // Bolt: Accept android.net.Uri directly to avoid redundant String allocations.
+    // Check path, query, and host specifically instead of a full toString() match.
+    private fun isStreamUrl(uri: android.net.Uri): Boolean {
+        val path = uri.path ?: ""
+        if (path.contains(".m3u8", ignoreCase = true) ||
+            path.contains(".mp4", ignoreCase = true) ||
+            path.contains(".mkv", ignoreCase = true)
+        ) {
+            return true
+        }
+
+        val query = uri.query ?: ""
+        if (query.contains(".m3u8", ignoreCase = true) ||
+            query.contains(".mp4", ignoreCase = true) ||
+            query.contains(".mkv", ignoreCase = true)
+        ) {
+            return true
+        }
+
+        val host = uri.host ?: ""
+        return host.contains("googlevideo.com", ignoreCase = true) && path.contains("videoplayback", ignoreCase = true)
     }
 
     private fun isEmulator(): Boolean {
@@ -463,16 +479,17 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                         )
                     }
 
-                    // Delay string allocation until after ad blocking to save memory/GC
-                    val reqUrl = reqUri.toString()
-
                     // 2. Extract media stream URLs
-                    if (isStreamUrl(reqUrl) && detectedStreamUrl.value != reqUrl) {
-                        detectedStreamUrl.value = reqUrl
-                        if (isResolvingHeadlessly.value) {
-                            coroutineScope.launch(Dispatchers.Main) {
-                                playNatively(reqUrl)
-                                cancelHeadlessExtraction()
+                    // Bolt: Defer .toString() allocation by checking isStreamUrl directly with Uri
+                    if (isStreamUrl(reqUri)) {
+                        val reqUrl = reqUri.toString()
+                        if (detectedStreamUrl.value != reqUrl) {
+                            detectedStreamUrl.value = reqUrl
+                            if (isResolvingHeadlessly.value) {
+                                coroutineScope.launch(Dispatchers.Main) {
+                                    playNatively(reqUrl)
+                                    cancelHeadlessExtraction()
+                                }
                             }
                         }
                     }
