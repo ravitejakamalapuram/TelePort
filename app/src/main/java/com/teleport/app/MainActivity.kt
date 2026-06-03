@@ -40,6 +40,9 @@ import java.net.URI
 import android.media.projection.MediaProjectionManager
 import android.content.Context
 import kotlinx.coroutines.launch
+import com.teleport.app.ads.AdManager
+import com.teleport.app.ads.ConsentHelper
+import com.teleport.app.billing.BillingManager
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
@@ -72,6 +75,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var connectionManager: TvConnectionManager
     private var gyroTracker: GyroSensorTracker? = null
     private val pendingSharedUrl = mutableStateOf<String?>(null)
+
+    private lateinit var billingManager: BillingManager
 
     // TV specific properties
     private lateinit var tabManager: TabManager
@@ -136,6 +141,19 @@ class MainActivity : ComponentActivity() {
             handleShareIntent(intent)
             handleDeepLinkIntent(intent)
             checkAndRequestNotificationPermission()
+
+            // Initialize billing for premium subscriptions
+            billingManager = BillingManager(this, lifecycleScope)
+            billingManager.connect()
+
+            // Initialize ad consent and preload ads
+            ConsentHelper.requestConsent(this, onConsentResult = { canRequestAds ->
+                if (canRequestAds) {
+                    AdManager.initialize(this)
+                    AdManager.preloadInterstitial(this)
+                    AdManager.preloadRewarded(this)
+                }
+            })
         }
 
         setContent {
@@ -156,6 +174,13 @@ class MainActivity : ComponentActivity() {
                             if (isEmulator() && connectionManager.connectionState.value == ConnectionState.Disconnected) {
                                 Log.i(TAG, "Emulator detected, auto-connecting to TV at 127.0.0.1:${ThemeTokens.PORT}")
                                 connectionManager.connect("127.0.0.1", ThemeTokens.PORT)
+                            }
+                        }
+
+                        // Monetization: Show interstitial ad on successful connection
+                        LaunchedEffect(connState) {
+                            if (connState == ConnectionState.Connected) {
+                                AdManager.showInterstitial(this@MainActivity)
                             }
                         }
 
@@ -195,7 +220,8 @@ class MainActivity : ComponentActivity() {
                                 }
                                 startService(intent)
                                 connectionManager.sendCommand(Command.StopMirroring)
-                            }
+                            },
+                            billingManager = billingManager
                         )
                     }
                 }
@@ -313,6 +339,9 @@ class MainActivity : ComponentActivity() {
         } else {
             if (::connectionManager.isInitialized) {
                 connectionManager.disconnect()
+            }
+            if (::billingManager.isInitialized) {
+                billingManager.disconnect()
             }
             gyroTracker?.stop()
         }

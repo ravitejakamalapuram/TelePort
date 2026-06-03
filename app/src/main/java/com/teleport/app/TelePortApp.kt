@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.Build
 import android.util.Log
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.teleport.app.ads.AdManager
 
 class TelePortApp : Application() {
     private val TAG = "TelePortApp"
@@ -11,6 +12,7 @@ class TelePortApp : Application() {
     override fun onCreate() {
         super.onCreate()
         initCrashlytics()
+        initAds()
     }
 
     private fun initCrashlytics() {
@@ -47,5 +49,11 @@ class TelePortApp : Application() {
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize Firebase Crashlytics", e)
         }
+    }
+
+    private fun initAds() {
+        // AdMob is initialized later via ConsentHelper, after consent is obtained.
+        // Pre-warm by just logging readiness here.
+        Log.i(TAG, "Ad infrastructure ready, consent will be requested on MainActivity launch")
     }
 }
