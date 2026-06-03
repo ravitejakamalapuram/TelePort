@@ -11,7 +11,7 @@ on:
 
 jobs:
   ci:
-    uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-ci.yml@v1.1.9
+    uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-ci.yml@v1.1.10
     with:
       runner-type: 'self-hosted'
       java-version: '17'
