@@ -148,6 +148,7 @@ class ScreenshotCapturerTest {
         val coroutineScope = CoroutineScope(Dispatchers.Main)
         val connectionManager = TvConnectionManager(coroutineScope)
         val gyroTracker = GyroSensorTracker(context) { _, _ -> }
+        val billingManager = com.teleport.app.billing.BillingManager(context, coroutineScope)
         
         setConnectionState(connectionManager, ConnectionState.Connected)
         
@@ -159,7 +160,8 @@ class ScreenshotCapturerTest {
                         connectionManager = connectionManager,
                         gyroTracker = gyroTracker,
                         startMirroring = {},
-                        stopMirroring = {}
+                        stopMirroring = {},
+                        billingManager = billingManager
                     )
                 }
             }
