@@ -29,6 +29,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -356,12 +357,24 @@ fun PaywallScreen(
 
             if (!hasBillingProducts) {
                 Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Billing is connecting… prices shown are estimates.",
-                    fontSize = 11.sp,
-                    color = ThemeTokens.TextSub,
-                    textAlign = TextAlign.Center
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(12.dp),
+                        color = ThemeTokens.Accent,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Billing is connecting… prices shown are estimates.",
+                        fontSize = 11.sp,
+                        color = ThemeTokens.TextSub,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
