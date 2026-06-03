@@ -13,6 +13,7 @@ jobs:
   release:
     uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-cd.yml@v1.1.9
     with:
+      runner-type: 'self-hosted'
       java-version: '17'
       package-name: 'com.carfry369.teleport'
       deploy-to-play: true
