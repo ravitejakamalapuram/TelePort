@@ -27,3 +27,12 @@
 **Vulnerability:** The WebView in `TabManager.kt` did not explicitly disable `allowContentAccess`, and `openTab` allowed arbitrary URL strings to be loaded. This could permit LFI via `content://` URIs or cross-site scripting/arbitrary code execution via `javascript:`, `intent:`, or `file:` schemes if an attacker provided a malicious link.
 **Learning:** WebViews inherently trust the URLs they are given and the `content://` scheme is permitted by default. Input sanitization is critical before invoking `loadUrl`.
 **Prevention:** Added `allowContentAccess = false` to the WebView configuration. Added URL scheme validation in `openTab` to ensure the parsed URI scheme is `http`, `https`, `about`, or `data`, falling back to `about:blank` for unsupported schemes or prepending `https://` if no scheme is provided.
+## 2026-06-02 - Cross-Site WebSocket Hijacking (CSWSH) in Local Server
+**Vulnerability:** The embedded Ktor WebSocket endpoints (`/control` and `/mirror`) did not validate the `Origin` header. A malicious website on the local network or loaded inside a TV/phone browser could connect to the local WebSocket server and execute commands (like `OpenUrl`, `PlayPause`) without authorization.
+**Learning:** When exposing local network WebSocket servers, CSWSH is a critical risk because web browsers do not enforce Same-Origin Policy on WebSockets unless the server explicitly validates the `Origin` header.
+**Prevention:** Added an `Origin` vs `Host` validation check in the Ktor `webSocket` block to reject connections from unauthorized origins (allowing null origins from the native Ktor `HttpClient` used by the mobile app).
+
+## 2026-06-02 - Missing Content Security Policy in Local Web Remote
+**Vulnerability:** The locally served `REMOTE_HTML` file lacked a Content Security Policy (CSP), leaving it vulnerable to potential future XSS injection points.
+**Learning:** Defense in depth is critical, even for locally served static HTML interfaces.
+**Prevention:** Added a strict CSP meta tag to the HTML header to restrict script and style sources to `'self' 'unsafe-inline'` and connections to `ws: wss:`.

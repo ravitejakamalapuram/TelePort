@@ -1,75 +1,64 @@
-# Chrome Web Store Listing Metadata
+# Chrome Web Store Listing — TelePort Cast & Remote
 
-## Extension Name
+> Last Updated: 2026-06-02
+
+## Store Listing
+
+**Extension Name**
 TelePort Cast & Remote
 
-## Short Description (132 characters max)
-Cast videos from your browser to TelePort TV and control playback remotely on your local network.
+**Short Description**
+Beam tabs, cast screens, and control your TelePort TV directly from Chrome.
 
-## Detailed Description
+**Detailed Description**
+TelePort Cast & Remote enables seamless screen sharing, tab casting, and remote control capabilities for your TelePort TV system. Instantly send your active tab, full screen, or media stream to your local receiver over Wi-Fi without any configuration.
 
-Transform your browser into a powerful remote control for TelePort-enabled TVs and Android devices on your local network.
-
-**Key Features:**
-
-🎬 **Easy Casting**
-- One-click casting of YouTube, Vimeo, and other web videos to your TelePort TV
-- Automatic media detection on supported websites
-- Seamless playback on your big screen
-
-📱 **Full Remote Control**
-- Control playback directly from your browser
-- Play, pause, seek, and adjust volume
-- Manage tabs and navigate content on your TV
-
-🔒 **Privacy First**
-- All communication happens locally on your network
-- No data collection or external tracking
-- Your viewing habits stay private
-
-🚀 **Simple Setup**
-- Automatically discovers TelePort devices on your local network
-- No complex configuration needed
-- Works instantly with your TelePort TV app
-
-**How It Works:**
-
-1. Install the extension
-2. Open a website with video content
-3. Click the TelePort icon to connect to your TV
-4. Cast and enjoy on the big screen!
-
-**Requirements:**
-- TelePort TV app installed on your Android TV or compatible device
-- Both browser and TV must be on the same local network
-
-**Open Source:**
-TelePort is open source software. View the code and contribute at: https://github.com/ravitejakamalapuram/TelePort
-
-## Category
+**Category**
 Productivity
 
-## Language
-English (United States)
+**Single Purpose**
+Enables users to stream browser tabs, screens, and media directly to local TelePort TV devices over the local network.
 
-## Screenshots
-- Screenshot 1: Extension popup showing discovered devices
-- Screenshot 2: Media control interface
-- Screenshot 3: Tab management view
+**Primary Language**
+English
 
-## Promotional Images
-- Small Tile: 440x280
-- Large Tile: 920x680
-- Marquee: 1400x560
+## Graphics & Assets
 
-## Support URL
-https://github.com/ravitejakamalapuram/TelePort
+| Asset | Dimensions | Status | Filename |
+|---|---|---|---|
+| Store Icon | 128×128 PNG | ✅ Ready | chrome-extension/icons/icon-128.png |
 
-## Homepage URL
-https://github.com/ravitejakamalapuram/TelePort
+## Permissions Justification
 
-## Version
-1.0.0
+Every permission in manifest.json needs a justification. The review team reads these.
 
-## Keywords
-cast, remote, tv, android tv, video, streaming, local network, media control, youtube, vimeo
+| Permission | Type | Justification |
+|---|---|---|
+| `tabs` | permissions | Used to query current browser tab details to initialize tab screen-casting. |
+| `contextMenus` | permissions | Used to register cast shortcuts in the browser context menu. |
+| `storage` | permissions | Used to store configurations and paired receiver settings locally. |
+| `tabCapture` | permissions | Used to capture the video and audio stream of the active tab for local network streaming. |
+| `offscreen` | permissions | Used to spawn background audio-processing or screen-capture context helpers. |
+| `http://*/*` | host_permissions | Used to capture and stream web content to the local cast receiver device. |
+| `https://*/*` | host_permissions | Used to capture and stream web content to the local cast receiver device. |
+
+## Privacy & Data Use
+
+### Data Collection
+**Does the extension collect user data?** No
+
+All extension preferences and inputs are stored locally on the device and never sent off-device.
+
+### Data Use Certification
+- [x] Data is NOT sold to third parties
+- [x] Data is NOT used for purposes unrelated to the extension's core functionality
+- [x] Data is NOT used for creditworthiness or lending purposes
+
+## Privacy Policy
+Privacy Policy available in `PRIVACY.md` in the project root. Recommended to host via GitHub Pages.
+
+## Version History
+
+| Version | Date | Changes | Status |
+|---|---|---|---|
+| 1.0.0 | 2026-06-02 | Initial release with tab and screen casting capabilities. | Active |

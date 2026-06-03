@@ -372,9 +372,28 @@ fun MirrorPlayerScreen(tabManager: TabManager) {
                 decoder = codec
 
                 val bufferInfo = MediaCodec.BufferInfo()
+
+                fun drainOutput(codec: MediaCodec) {
+                    var outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 0L)
+                    while (outputBufferIndex >= 0) {
+                        codec.releaseOutputBuffer(outputBufferIndex, true)
+                        outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 0L)
+                    }
+                }
+
                 TvEventBus.mirrorFrames.collect { frameData ->
-                    // Feed input buffer
-                    val inputBufferIndex = codec.dequeueInputBuffer(10000L) // 10ms timeout
+                    // 1. Drain output buffers before queuing to free up slots
+                    drainOutput(codec)
+
+                    // 2. Feed input buffer with retries if backlogged
+                    var inputBufferIndex = codec.dequeueInputBuffer(10000L) // 10ms timeout
+                    var attempts = 0
+                    while (inputBufferIndex < 0 && attempts < 3) {
+                        attempts++
+                        drainOutput(codec)
+                        inputBufferIndex = codec.dequeueInputBuffer(5000L) // 5ms timeout
+                    }
+
                     if (inputBufferIndex >= 0) {
                         val inputBuffer = codec.getInputBuffer(inputBufferIndex)
                         if (inputBuffer != null) {
@@ -388,14 +407,12 @@ fun MirrorPlayerScreen(tabManager: TabManager) {
                                 0
                             )
                         }
+                    } else {
+                        Log.w("MirrorPlayerScreen", "Dropped frame: Decoder input buffers remain full after retries")
                     }
 
-                    // Render output buffer
-                    var outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 10000L)
-                    while (outputBufferIndex >= 0) {
-                        codec.releaseOutputBuffer(outputBufferIndex, true)
-                        outputBufferIndex = codec.dequeueOutputBuffer(bufferInfo, 0L)
-                    }
+                    // 3. Drain output buffers again to present the new frame immediately
+                    drainOutput(codec)
                 }
             } catch (e: Exception) {
                 Log.e("MirrorPlayerScreen", "Decoder exception: ${e.message}", e)

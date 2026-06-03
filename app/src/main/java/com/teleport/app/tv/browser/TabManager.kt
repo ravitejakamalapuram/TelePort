@@ -20,6 +20,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import android.os.Build
+import android.view.View
 import kotlinx.coroutines.launch
 import java.io.ByteArrayInputStream
 
@@ -387,12 +389,35 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                url.contains("googlevideo.com/videoplayback", ignoreCase = true)
     }
 
+    private fun isEmulator(): Boolean {
+        val brand = Build.BRAND
+        val device = Build.DEVICE
+        val fingerprint = Build.FINGERPRINT
+        val hardware = Build.HARDWARE
+        val model = Build.MODEL
+        val manufacturer = Build.MANUFACTURER
+        val product = Build.PRODUCT
+        return (brand.startsWith("generic") && device.startsWith("generic")) ||
+                fingerprint.startsWith("generic") ||
+                fingerprint.startsWith("unknown") ||
+                hardware.contains("goldfish") ||
+                hardware.contains("ranchu") ||
+                model.contains("google_sdk") ||
+                model.contains("Emulator") ||
+                model.contains("Android SDK built for x86") ||
+                manufacturer.contains("Genymotion") ||
+                (brand.startsWith("google") && device.startsWith("google") && product.startsWith("sdk_gphone"))
+    }
+
     companion object {
         private val EMPTY_BYTE_ARRAY = ByteArray(0)
     }
 
     private fun createWebView(url: String): WebView {
         return WebView(context).apply {
+            if (isEmulator()) {
+                setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+            }
             settings.apply {
                 javaScriptEnabled = true
                 domStorageEnabled = true
