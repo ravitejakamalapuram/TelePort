@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- JavaScript is required for the TV browser WebView functionality -->
+    <issue id="SetJavaScriptEnabled" severity="informational">
+        <ignore path="src/main/java/com/teleport/app/tv/browser/TabManager.kt" />
+    </issue>
+    
+    <!-- Icon shape warnings are informational - icons meet Play Store requirements -->
+    <issue id="IconLauncherShape" severity="informational" />
+    <issue id="IconMissingDensityFolder" severity="informational" />
+    
+    <!-- Internationalization warnings for technical UI elements that don't need translation -->
+    <issue id="SetTextI18n" severity="informational">
+        <ignore path="src/main/java/com/teleport/app/tv/TvActivityContent.kt" />
+    </issue>
+    
+    <!-- The targetSdk is intentionally set to 35, matching compileSdk -->
+    <issue id="OldTargetApi" severity="informational" />
+    
+    <!-- ObsoleteLintCustomCheck - Compose lint checks will be updated with Compose BOM -->
+    <issue id="ObsoleteLintCustomCheck" severity="informational" />
+</lint>
