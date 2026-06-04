@@ -20,3 +20,6 @@
 ## 2024-11-20 - String Allocations in High-Frequency WebView Callbacks
 **Learning:** Checking URLs in high-frequency callbacks like `WebViewClient.shouldInterceptRequest` by continuously instantiating strings with `.toString()` on `Uri` objects or checking against full strings causes unnecessary object allocation and increases GC pressure.
 **Action:** Always avoid or delay `.toString()` conversions until strictly necessary. Prefer matching properties directly on the native URI wrapper, and only convert to strings when a known slow-path condition is met.
+## 2024-05-18 - Avoid IPC calls in high-frequency sensor callbacks
+**Learning:** Calling `Context.getSystemService` or querying device state like `Display.rotation` inside high-frequency sensor callbacks (e.g., `SensorEventListener.onSensorChanged`) introduces severe overhead due to repeated Inter-Process Communication (IPC) calls. This causes main-thread jank and drains battery.
+**Action:** Always cache device states that change infrequently. Use appropriate listeners (like `DisplayManager.DisplayListener` for rotation) to update the cached value asynchronously, and let the high-frequency callback read strictly from local memory.
