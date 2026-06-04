@@ -36,3 +36,7 @@
 **Vulnerability:** The locally served `REMOTE_HTML` file lacked a Content Security Policy (CSP), leaving it vulnerable to potential future XSS injection points.
 **Learning:** Defense in depth is critical, even for locally served static HTML interfaces.
 **Prevention:** Added a strict CSP meta tag to the HTML header to restrict script and style sources to `'self' 'unsafe-inline'` and connections to `ws: wss:`.
+## 2026-06-03 - Cross-Site WebSocket Hijacking (CSWSH) Bypass via Substring Matching
+**Vulnerability:** The local WebSocket endpoints (`/control` and `/mirror`) used an insecure check for the `Origin` header (`!origin.contains(host)`). This allowed an attacker to bypass the protection by embedding the target host in their domain name (e.g., `https://attacker-localhost:8080.com`) or query parameters (e.g., `https://evil.com?host=localhost:8080`).
+**Learning:** Substring checking (`contains`) is unsafe for origin verification. An origin string must be verified for exact equality against expected origins to prevent evasion.
+**Prevention:** Always parse the `Origin` into a URI object or use strict equality matching (e.g., `origin == "http://$host" || origin == "https://$host"`) when validating same-origin WebSocket requests.
