@@ -448,7 +448,7 @@ fun ControllerScreen(
                 containerColor = ThemeTokens.CardBg,
                 contentColor = ThemeTokens.TextMain,
                 indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
+                    TabRowDefaults.SecondaryIndicator(
                         Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
                         color = ThemeTokens.Accent
                     )
