@@ -29,9 +29,9 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -791,7 +791,7 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                         .size(80.dp)
                         .background(ThemeTokens.CardBg, CircleShape)
                 ) {
-                    Icon(Icons.Filled.KeyboardArrowLeft, contentDescription = "Scroll Left", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Scroll Left", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
                 }
 
                 // OK / CLICK
@@ -814,7 +814,7 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                         .size(80.dp)
                         .background(ThemeTokens.CardBg, CircleShape)
                 ) {
-                    Icon(Icons.Filled.KeyboardArrowRight, contentDescription = "Scroll Right", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Scroll Right", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
                 }
             }
 
@@ -1235,7 +1235,7 @@ fun MobileMediaRemoteScreen(
                         .background(ThemeTokens.CardBg, CircleShape)
                 ) {
                     Icon(
-                        Icons.Filled.KeyboardArrowLeft,
+                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
                         contentDescription = "Seek Back",
                         tint = ThemeTokens.TextMain,
                         modifier = Modifier.size(40.dp)
@@ -1266,7 +1266,7 @@ fun MobileMediaRemoteScreen(
                         .background(ThemeTokens.CardBg, CircleShape)
                 ) {
                     Icon(
-                        Icons.Filled.KeyboardArrowRight,
+                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = "Seek Forward",
                         tint = ThemeTokens.TextMain,
                         modifier = Modifier.size(40.dp)
