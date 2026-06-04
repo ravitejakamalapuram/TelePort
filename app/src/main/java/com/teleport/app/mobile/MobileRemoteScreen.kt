@@ -1361,8 +1361,11 @@ data class OnboardingStep(
 )
 
 @Composable
-fun OnboardingModal(onDismiss: () -> Unit) {
-    var currentSlide by remember { mutableStateOf(0) }
+fun OnboardingContent(
+    currentSlide: Int,
+    onCurrentSlideChange: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
     val steps = remember {
         listOf(
             OnboardingStep(
@@ -1398,165 +1401,175 @@ fun OnboardingModal(onDismiss: () -> Unit) {
         )
     }
 
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.85f))
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
+        Card(
             modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.85f))
-                .padding(24.dp),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(16.dp),
+            colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
+            shape = RoundedCornerShape(24.dp),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, ThemeTokens.Primary)
         ) {
-            Card(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
-                    .padding(16.dp),
-                colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
-                shape = RoundedCornerShape(24.dp),
-                border = androidx.compose.foundation.BorderStroke(1.5.dp, ThemeTokens.Primary)
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Header with Skip button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = "Skip",
+                        color = ThemeTokens.TextSub,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clickable { onDismiss() }
+                            .padding(8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Large Emoji
+                Text(
+                    text = steps[currentSlide].emoji,
+                    fontSize = 72.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Title
+                Text(
+                    text = steps[currentSlide].title,
+                    color = ThemeTokens.TextMain,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Description or custom content
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .height(150.dp), // Slightly taller to accommodate button
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    // Header with Skip button
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        Text(
-                            text = "Skip",
-                            color = ThemeTokens.TextSub,
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier
-                                .clickable { onDismiss() }
-                                .padding(8.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Large Emoji
                     Text(
-                        text = steps[currentSlide].emoji,
-                        fontSize = 72.sp,
-                        modifier = Modifier.padding(16.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Title
-                    Text(
-                        text = steps[currentSlide].title,
-                        color = ThemeTokens.TextMain,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Description or custom content
-                    Column(
+                        text = steps[currentSlide].description,
+                        color = ThemeTokens.TextSub,
+                        fontSize = 15.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        lineHeight = 22.sp,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(150.dp), // Slightly taller to accommodate button
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = steps[currentSlide].description,
-                            color = ThemeTokens.TextSub,
-                            fontSize = 15.sp,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                            lineHeight = 22.sp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 8.dp)
-                        )
-                        if (currentSlide == 5) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            val uriHandler = LocalUriHandler.current
-                            Button(
-                                onClick = { uriHandler.openUri("https://chromewebstore.google.com") },
-                                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.height(36.dp),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                            ) {
-                                Text("Open Chrome Web Store 🌐", color = ThemeTokens.TextMain, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Indicator Dots
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        steps.forEachIndexed { index, _ ->
-                            Box(
-                                modifier = Modifier
-                                    .size(if (index == currentSlide) 10.dp else 8.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (index == currentSlide) ThemeTokens.Accent else ThemeTokens.Border
-                                    )
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Bottom Navigation Buttons
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (currentSlide > 0) {
-                            Button(
-                                onClick = { currentSlide-- },
-                                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Border),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.height(48.dp)
-                            ) {
-                                Text("Back", color = ThemeTokens.TextMain)
-                            }
-                        } else {
-                            Spacer(modifier = Modifier.width(80.dp)) // Maintain alignment
-                        }
-
+                            .padding(horizontal = 8.dp)
+                    )
+                    if (currentSlide == 5) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        val uriHandler = LocalUriHandler.current
                         Button(
-                            onClick = {
-                                if (currentSlide < steps.size - 1) {
-                                    currentSlide++
-                                } else {
-                                    onDismiss()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent),
+                            onClick = { uriHandler.openUri("https://chromewebstore.google.com") },
+                            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.height(36.dp),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                        ) {
+                            Text("Open Chrome Web Store 🌐", color = ThemeTokens.TextMain, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Indicator Dots
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    steps.forEachIndexed { index, _ ->
+                        Box(
+                            modifier = Modifier
+                                .size(if (index == currentSlide) 10.dp else 8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (index == currentSlide) ThemeTokens.Accent else ThemeTokens.Border
+                                )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Bottom Navigation Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (currentSlide > 0) {
+                        Button(
+                            onClick = { onCurrentSlideChange(currentSlide - 1) },
+                            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Border),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.height(48.dp)
                         ) {
-                            Text(
-                                text = if (currentSlide == steps.size - 1) "Get Started 🚀" else "Next",
-                                color = ThemeTokens.Background,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text("Back", color = ThemeTokens.TextMain)
                         }
+                    } else {
+                        Spacer(modifier = Modifier.width(80.dp)) // Maintain alignment
+                    }
+
+                    Button(
+                        onClick = {
+                            if (currentSlide < steps.size - 1) {
+                                onCurrentSlideChange(currentSlide + 1)
+                            } else {
+                                onDismiss()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.height(48.dp)
+                    ) {
+                        Text(
+                            text = if (currentSlide == steps.size - 1) "Get Started 🚀" else "Next",
+                            color = ThemeTokens.Background,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+fun OnboardingModal(onDismiss: () -> Unit, initialSlide: Int = 0) {
+    var currentSlide by remember { mutableStateOf(initialSlide) }
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        OnboardingContent(
+            currentSlide = currentSlide,
+            onCurrentSlideChange = { currentSlide = it },
+            onDismiss = onDismiss
+        )
     }
 }
 

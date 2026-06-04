@@ -47,6 +47,9 @@ The project includes an automated task runner (`scripts/dev.sh`) to automate loc
 | `./scripts/dev.sh setup` | Audits system requirements and installs pip dependencies (e.g. Pillow). |
 | `./scripts/dev.sh assets` | Compiles Android mipmaps, TV banners, and Chrome Extension icons. |
 | `./scripts/dev.sh test` | Validates manifest structures, verifies icon paths exist, and runs unit tests. |
+| `./scripts/dev.sh verify-ui` | Generates headless UI screenshots and compares them pixel-by-pixel with baselines. |
+| `./scripts/dev.sh update-baselines` | Promotes current screenshot outputs to golden baselines. |
+| `./scripts/dev.sh generate-pr-diff` | Generates PR comment markdown comparing baseline vs current vs diff. |
 | `./scripts/dev.sh build` | Packages local extension zips and compiles debug Android APKs. |
 | `./scripts/dev.sh mock-crash` | Runs a dry-run local simulation of the Firebase crash auto-fix pipeline. |
 
@@ -56,7 +59,8 @@ The project includes an automated task runner (`scripts/dev.sh`) to automate loc
 
 Before submitting any Pull Request or staging commits:
 1. You **must** run `./scripts/dev.sh test` to ensure that all local assets are verified and Kotlin unit tests pass.
-2. Run `./scripts/dev.sh build` to verify the code packages successfully.
+2. Run `./scripts/dev.sh verify-ui` to verify that UI components match baseline screenshots and there are no visual regressions.
+3. Run `./scripts/dev.sh build` to verify the code packages successfully.
 
 ---
 
