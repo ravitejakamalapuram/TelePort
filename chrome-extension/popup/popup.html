@@ -18,7 +18,10 @@
         <span class="logo-icon">⚡</span>
         <h1><!-- APP_NAME -->TelePort<!-- /APP_NAME --> <span class="accent-text">TV</span></h1>
       </div>
-      <div id="connectionBadge" class="status-badge disconnected">Disconnected</div>
+      <div class="header-actions">
+        <button id="helpToggleBtn" class="btn-icon" title="View Help Guide">❓</button>
+        <div id="connectionBadge" class="status-badge disconnected">Disconnected</div>
+      </div>
     </header>
 
     <!-- TV IP Setup -->
@@ -135,6 +138,38 @@
       </div>
     </section>
   </div>
+
+  <!-- Help Modal Overlay -->
+  <div id="helpModal" class="help-overlay hidden">
+    <div class="help-content">
+      <div class="help-header">
+        <h3>TelePort TV Guide</h3>
+        <button id="closeHelpBtn" class="close-btn">&times;</button>
+      </div>
+      <div class="help-body">
+        <div class="help-section">
+          <h4>🔗 Connection Guide</h4>
+          <p>1. Install and launch the TelePort TV app on your Android TV device.</p>
+          <p>2. Find the TV's IP address on the TV screen (e.g., 192.168.1.15) and make sure both devices are on the same local Wi-Fi.</p>
+          <p>3. Enter the TV IP in the connection box above and click Save.</p>
+        </div>
+        <div class="help-section">
+          <h4>⚡ Core Actions</h4>
+          <ul>
+            <li><strong>Tab Cast:</strong> Live mirror the active Chrome tab to the TV.</li>
+            <li><strong>Cast Video:</strong> Detect, extract and stream web videos directly in full screen.</li>
+            <li><strong>Beam URL:</strong> Open the current website in the TV's native browser.</li>
+            <li><strong>Context Menu:</strong> Right-click anywhere on a webpage to quickly beam or cast it.</li>
+          </ul>
+        </div>
+        <div class="help-section">
+          <h4>🖱️ Interactive Remote</h4>
+          <p>Use the Trackpad tab to move the cursor (drag), click (tap), and scroll pages (two-finger scroll). Use the Buttons tab for direction pad controls, Back, and Play/Pause.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>

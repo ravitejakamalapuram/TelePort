@@ -9,6 +9,9 @@ let dragDistance = 0;
 const connectionBadge = document.getElementById('connectionBadge');
 const tvIpInput = document.getElementById('tvIpInput');
 const saveIpBtn = document.getElementById('saveIpBtn');
+const helpToggleBtn = document.getElementById('helpToggleBtn');
+const closeHelpBtn = document.getElementById('closeHelpBtn');
+const helpModal = document.getElementById('helpModal');
 
 const actionsCard = document.getElementById('actionsCard');
 const castToggle = document.getElementById('castToggle');
@@ -87,6 +90,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   sendTextBtn.addEventListener('click', sendKeyboardText);
   keyboardInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') sendKeyboardText();
+  });
+
+  // Bind Help Modal toggle events
+  helpToggleBtn.addEventListener('click', () => {
+    helpModal.classList.remove('hidden');
+  });
+  closeHelpBtn.addEventListener('click', () => {
+    helpModal.classList.add('hidden');
+  });
+  helpModal.addEventListener('click', (e) => {
+    if (e.target === helpModal) {
+      helpModal.classList.add('hidden');
+    }
   });
 });
 
