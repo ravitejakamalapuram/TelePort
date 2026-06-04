@@ -17,3 +17,6 @@
 ## 2024-05-18 - Optimize Okio conversions in video encoding
 **Learning:** In high-frequency operations like streaming video via WebSockets with `MediaCodec`, intermediate `ByteArray` allocations per frame (e.g., using `ByteArray(size)` and `outputBuffer.get(data)`) cause substantial memory thrashing and CPU copying overhead.
 **Action:** When integrating Java NIO `ByteBuffer`s (like from `MediaCodec`) with Okio sinks or WebSockets, avoid array extraction by using Okio's native extension `ByteBuffer.toByteString()`. This performs a direct conversion, bypassing redundant array creation and significantly lowering GC pressure.
+## 2024-11-20 - String Allocations in High-Frequency WebView Callbacks
+**Learning:** Checking URLs in high-frequency callbacks like `WebViewClient.shouldInterceptRequest` by continuously instantiating strings with `.toString()` on `Uri` objects or checking against full strings causes unnecessary object allocation and increases GC pressure.
+**Action:** Always avoid or delay `.toString()` conversions until strictly necessary. Prefer matching properties directly on the native URI wrapper, and only convert to strings when a known slow-path condition is met.
