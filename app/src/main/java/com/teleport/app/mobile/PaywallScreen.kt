@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -522,7 +523,7 @@ private fun PlanTab(
             .clip(RoundedCornerShape(10.dp))
             .background(bgColor, RoundedCornerShape(10.dp))
             .border(1.5.dp, borderColor, RoundedCornerShape(10.dp))
-            .clickable(onClick = onClick)
+            .clickable(role = Role.Button, onClick = onClick)
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -565,7 +566,8 @@ private fun SubscriptionCard(
     Card(
         modifier = modifier
             .border(2.dp, borderColor, RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick),
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(role = Role.Button, onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = containerColor)
     ) {

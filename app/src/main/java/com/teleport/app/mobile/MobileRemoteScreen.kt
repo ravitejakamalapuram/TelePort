@@ -631,7 +631,7 @@ fun ControllerScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .clickable(role = Role.Button) {
                             AdManager.showRewarded(context as android.app.Activity) {
                                 AdManager.grantTemporaryAdFree()
                             }
@@ -921,6 +921,7 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                 onClick = { connectionManager.sendCommand(Command.Scroll(0f, -150f)) },
                 modifier = Modifier
                     .size(80.dp)
+                    .clip(CircleShape)
                     .background(ThemeTokens.CardBg, CircleShape)
             ) {
                 Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Scroll Up", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
@@ -935,6 +936,7 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                     onClick = { connectionManager.sendCommand(Command.Scroll(-150f, 0f)) },
                     modifier = Modifier
                         .size(80.dp)
+                        .clip(CircleShape)
                         .background(ThemeTokens.CardBg, CircleShape)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Scroll Left", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
@@ -945,8 +947,8 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                     modifier = Modifier
                         .padding(20.dp)
                         .size(90.dp)
-                        .background(ThemeTokens.Primary, CircleShape)
                         .clip(CircleShape)
+                        .background(ThemeTokens.Primary, CircleShape)
                         .clickable(role = Role.Button) { connectionManager.sendCommand(Command.Click) },
                     contentAlignment = Alignment.Center
                 ) {
@@ -958,6 +960,7 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                     onClick = { connectionManager.sendCommand(Command.Scroll(150f, 0f)) },
                     modifier = Modifier
                         .size(80.dp)
+                        .clip(CircleShape)
                         .background(ThemeTokens.CardBg, CircleShape)
                 ) {
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Scroll Right", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
@@ -969,6 +972,7 @@ fun DpadTab(connectionManager: TvConnectionManager) {
                 onClick = { connectionManager.sendCommand(Command.Scroll(0f, 150f)) },
                 modifier = Modifier
                     .size(80.dp)
+                    .clip(CircleShape)
                     .background(ThemeTokens.CardBg, CircleShape)
             ) {
                 Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Scroll Down", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
@@ -1380,6 +1384,7 @@ fun MobileMediaRemoteScreen(
                     onClick = { connectionManager.sendCommand(Command.Scroll(-100f, 0f)) },
                     modifier = Modifier
                         .size(80.dp)
+                        .clip(CircleShape)
                         .background(ThemeTokens.CardBg, CircleShape)
                 ) {
                     Icon(
@@ -1396,8 +1401,8 @@ fun MobileMediaRemoteScreen(
                 Box(
                     modifier = Modifier
                         .size(100.dp)
-                        .background(ThemeTokens.Primary, CircleShape)
                         .clip(CircleShape)
+                        .background(ThemeTokens.Primary, CircleShape)
                         .clickable(role = Role.Button) { connectionManager.sendCommand(Command.PlayPause) },
                     contentAlignment = Alignment.Center
                 ) {
@@ -1411,6 +1416,7 @@ fun MobileMediaRemoteScreen(
                     onClick = { connectionManager.sendCommand(Command.Scroll(100f, 0f)) },
                     modifier = Modifier
                         .size(80.dp)
+                        .clip(CircleShape)
                         .background(ThemeTokens.CardBg, CircleShape)
                 ) {
                     Icon(
