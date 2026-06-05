@@ -40,3 +40,7 @@
 **Vulnerability:** The local WebSocket endpoints (`/control` and `/mirror`) used an insecure check for the `Origin` header (`!origin.contains(host)`). This allowed an attacker to bypass the protection by embedding the target host in their domain name (e.g., `https://attacker-localhost:8080.com`) or query parameters (e.g., `https://evil.com?host=localhost:8080`).
 **Learning:** Substring checking (`contains`) is unsafe for origin verification. An origin string must be verified for exact equality against expected origins to prevent evasion.
 **Prevention:** Always parse the `Origin` into a URI object or use strict equality matching (e.g., `origin == "http://$host" || origin == "https://$host"`) when validating same-origin WebSocket requests.
+## 2026-06-05 - URL Sanitization Bypass Fix
+**Vulnerability:** The URL scheme validation in `TabManager.kt` failed to account for leading whitespace. A URL like ` javascript:alert(1)` would bypass the allowlist check because `Uri.parse` yields a null scheme for URLs with leading spaces. The URL would then fall through to the fallback branch (`https://`), resulting in an invalid URL that could still potentially be parsed improperly by the WebView.
+**Learning:** URL sanitization must address whitespace trimming before parsing, as different parsers (e.g., `android.net.Uri` vs WebKit) handle whitespace differently, leading to bypasses.
+**Prevention:** Always `.trim()` URL strings before passing them to URL parsers or scheme validation logic.
