@@ -19,3 +19,7 @@
 ## 2024-05-30 - Interactive Element Touch Ripple Bounds and Semantics
 **Learning:** In Jetpack Compose, applying the `clickable` modifier without first applying a `clip` modifier to the corresponding shape (e.g., `CircleShape`, `RoundedCornerShape`) can cause touch ripple effects to bleed outside the intended visual boundaries of custom interactive elements, leading to poor visual feedback. Additionally, `clickable` alone does not convey to screen readers that a custom component acts as a button unless `role = Role.Button` is explicitly provided.
 **Action:** Always apply `.clip(Shape)` *before* `.clickable()` when creating custom interactive elements that have non-rectangular shapes. Moreover, always set `role = Role.Button` within the `clickable` modifier to ensure proper accessibility semantics for screen readers.
+
+## 2024-06-05 - Missing ARIA Labels on Emoji-Only Buttons
+**Learning:** In Jetpack Compose, an `IconButton` that uses text consisting only of an emoji (e.g., `Text("☕")`) does not automatically provide a meaningful semantic label to screen readers. This leaves visually impaired users without context for the button's action.
+**Action:** Always apply `modifier = Modifier.semantics { contentDescription = "[Action Name]" }` to `IconButton`s or similar interactive elements that rely solely on emojis or decorative glyphs, ensuring they are properly announced.
