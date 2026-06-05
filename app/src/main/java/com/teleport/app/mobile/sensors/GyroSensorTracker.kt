@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.hardware.display.DisplayManager
 import android.os.Build
 import android.util.Log
 import android.view.Surface
@@ -20,8 +21,18 @@ class GyroSensorTracker(
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
 
     private var isRunning = false
+    private var cachedRotation = Surface.ROTATION_0
+
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) {}
+        override fun onDisplayRemoved(displayId: Int) {}
+        override fun onDisplayChanged(displayId: Int) {
+            updateCachedRotation()
+        }
+    }
 
     // Tuning constants
     private val SENSITIVITY = 45f // Scale factor to turn radians/sec into pixels
@@ -39,6 +50,12 @@ class GyroSensorTracker(
             return
         }
 
+        // Initialize cached rotation
+        updateCachedRotation()
+
+        // Register display listener to keep cached rotation updated
+        displayManager.registerDisplayListener(displayListener, null)
+
         sensorManager.registerListener(
             this,
             gyroscope,
@@ -51,8 +68,24 @@ class GyroSensorTracker(
     fun stop() {
         if (!isRunning) return
         sensorManager.unregisterListener(this)
+        displayManager.unregisterDisplayListener(displayListener)
         isRunning = false
         Log.d(TAG, "Gyroscope sensor listener unregistered")
+    }
+
+    private fun updateCachedRotation() {
+        // Bolt: Cache rotation to prevent IPC overhead in high-frequency onSensorChanged callback
+        cachedRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                context.display?.rotation ?: Surface.ROTATION_0
+            } catch (e: Exception) {
+                @Suppress("DEPRECATION")
+                windowManager.defaultDisplay.rotation
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.rotation
+        }
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -64,24 +97,11 @@ class GyroSensorTracker(
         val pitchVal = event.values[0]
         val rollVal = event.values[1]
 
-        // Query display rotation dynamically to support all device orientations
-        val rotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            try {
-                context.display.rotation
-            } catch (e: Exception) {
-                @Suppress("DEPRECATION")
-                windowManager.defaultDisplay.rotation
-            }
-        } else {
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.rotation
-        }
-
         // Map sensor axes based on screen orientation
         var rawDx = 0f
         var rawDy = 0f
 
-        when (rotation) {
+        when (cachedRotation) {
             Surface.ROTATION_0 -> {
                 // Portrait (default): steering roll (rollVal) controls X, tilting forward-back (pitchVal) controls Y
                 rawDx = -rollVal
