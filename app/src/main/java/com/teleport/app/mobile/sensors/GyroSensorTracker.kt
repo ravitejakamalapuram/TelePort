@@ -20,8 +20,32 @@ class GyroSensorTracker(
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
     private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    private val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as android.hardware.display.DisplayManager
 
     private var isRunning = false
+    private var cachedRotation = Surface.ROTATION_0
+
+    private val displayListener = object : android.hardware.display.DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) {}
+        override fun onDisplayRemoved(displayId: Int) {}
+        override fun onDisplayChanged(displayId: Int) {
+            updateRotation()
+        }
+    }
+
+    private fun updateRotation() {
+        cachedRotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                context.display?.rotation ?: @Suppress("DEPRECATION") windowManager.defaultDisplay.rotation
+            } catch (e: Exception) {
+                @Suppress("DEPRECATION")
+                windowManager.defaultDisplay.rotation
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.rotation
+        }
+    }
 
     // Tuning constants
     private val SENSITIVITY = 45f // Scale factor to turn radians/sec into pixels
@@ -44,6 +68,8 @@ class GyroSensorTracker(
             gyroscope,
             SensorManager.SENSOR_DELAY_GAME // Game latency is smooth and doesn't require high sampling rate permission
         )
+        displayManager.registerDisplayListener(displayListener, null)
+        updateRotation()
         isRunning = true
         Log.d(TAG, "Gyroscope sensor listener registered")
     }
@@ -51,6 +77,7 @@ class GyroSensorTracker(
     fun stop() {
         if (!isRunning) return
         sensorManager.unregisterListener(this)
+        displayManager.unregisterDisplayListener(displayListener)
         isRunning = false
         Log.d(TAG, "Gyroscope sensor listener unregistered")
     }
@@ -64,18 +91,8 @@ class GyroSensorTracker(
         val pitchVal = event.values[0]
         val rollVal = event.values[1]
 
-        // Query display rotation dynamically to support all device orientations
-        val rotation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            try {
-                context.display.rotation
-            } catch (e: Exception) {
-                @Suppress("DEPRECATION")
-                windowManager.defaultDisplay.rotation
-            }
-        } else {
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.rotation
-        }
+        // Bolt: Use cached display rotation to avoid expensive IPC calls in high-frequency sensor callback
+        val rotation = cachedRotation
 
         // Map sensor axes based on screen orientation
         var rawDx = 0f
