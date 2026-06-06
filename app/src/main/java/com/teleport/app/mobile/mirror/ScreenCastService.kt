@@ -47,25 +47,12 @@ class ScreenCastService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val action = intent?.action
-
-        // Always call startForeground immediately for any start paths other than STOP.
-        // This prevents ForegroundServiceDidNotStartInTimeException if checking parameters or initializing takes time,
-        // or if we decide to stopSelf() due to invalid parameters.
-        if (action != "STOP") {
-            val notification = createNotification()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(100, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
-            } else {
-                startForeground(100, notification)
-            }
-        }
-
         if (intent == null) {
-            stopSelf()
+            showDefaultNotificationAndStop()
             return START_NOT_STICKY
         }
 
+        val action = intent.action
         if (action == "STOP") {
             stopCast()
             stopSelf()
@@ -78,11 +65,11 @@ class ScreenCastService : Service() {
 
         if (resultCode == -1 || resultData == null || tvIp.isBlank()) {
             Log.e(TAG, "Invalid parameters for ScreenCastService")
-            stopSelf()
+            showDefaultNotificationAndStop()
             return START_NOT_STICKY
         }
 
-        // Promote to media projection foreground service type once parameters are validated and casting starts
+        // Start Foreground Service with MEDIA_PROJECTION type immediately before starting casting operations
         val notification = createNotification()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(100, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION)
@@ -92,6 +79,16 @@ class ScreenCastService : Service() {
 
         startCast(resultCode, resultData, tvIp)
         return START_NOT_STICKY
+    }
+
+    private fun showDefaultNotificationAndStop() {
+        val notification = createNotification()
+        try {
+            startForeground(100, notification)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error calling startForeground in error fallback", e)
+        }
+        stopSelf()
     }
 
     private fun startCast(resultCode: Int, resultData: Intent, tvIp: String) {
