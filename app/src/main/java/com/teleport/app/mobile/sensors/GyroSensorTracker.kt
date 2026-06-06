@@ -42,7 +42,7 @@ class GyroSensorTracker(
         sensorManager.registerListener(
             this,
             gyroscope,
-            SensorManager.SENSOR_DELAY_FASTEST // Use fastest possible latency to reduce sensor lag
+            SensorManager.SENSOR_DELAY_GAME // Game latency is smooth and doesn't require high sampling rate permission
         )
         isRunning = true
         Log.d(TAG, "Gyroscope sensor listener registered")

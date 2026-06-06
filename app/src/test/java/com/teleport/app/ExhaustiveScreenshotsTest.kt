@@ -59,7 +59,7 @@ class ExhaustiveScreenshotsTest {
     // ========================================================================
 
     @Test
-    @Config(qualifiers = "w1920dp-h1080dp-mdpi")
+    @Config(qualifiers = "w960dp-h540dp-xhdpi")
     fun captureTvPairingDashboard_Raw() {
         ScreenshotEngine.capture(
             name = "tv_pairing_dashboard.png",
@@ -69,6 +69,20 @@ class ExhaustiveScreenshotsTest {
             TvPairingScreen(
                 connectionUrl = "ws://192.168.1.100:8080/remote",
                 localIp = "192.168.1.100"
+            )
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "w960dp-h540dp-xhdpi")
+    fun captureTvCastingScreen_Raw() {
+        ScreenshotEngine.capture(
+            name = "tv_casting_screen.png",
+            device = ScreenshotEngine.DeviceConfig.Tv,
+            isDarkMode = true
+        ) {
+            com.teleport.app.tv.CastingScreen(
+                url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
             )
         }
     }
@@ -202,7 +216,7 @@ class ExhaustiveScreenshotsTest {
     // ========================================================================
 
     @Test
-    @Config(qualifiers = "w1920dp-h1080dp-mdpi")
+    @Config(qualifiers = "w960dp-h540dp-xhdpi")
     fun captureTvPlayStoreAsset() {
         ScreenshotEngine.capture(
             name = "store_asset_tv_pairing.png",
@@ -216,6 +230,24 @@ class ExhaustiveScreenshotsTest {
             TvPairingScreen(
                 connectionUrl = "ws://192.168.1.100:8080/remote",
                 localIp = "192.168.1.100"
+            )
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "w960dp-h540dp-xhdpi")
+    fun captureTvPlayStoreCastingAsset() {
+        ScreenshotEngine.capture(
+            name = "store_asset_tv_casting.png",
+            device = ScreenshotEngine.DeviceConfig.Tv,
+            isDarkMode = true,
+            decoration = ScreenshotEngine.DecorationConfig(
+                title = "Video Link Casting Resolver",
+                description = "Paste any streaming URL to resolve and play high-quality video files cleanly on the TV."
+            )
+        ) {
+            com.teleport.app.tv.CastingScreen(
+                url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
             )
         }
     }

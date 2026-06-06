@@ -19,6 +19,13 @@ import org.robolectric.shadows.ShadowLooper
 import java.io.File
 import java.io.FileOutputStream
 import java.util.Locale
+import androidx.compose.runtime.Recomposer
+import androidx.compose.ui.platform.InfiniteAnimationPolicy
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * ScreenshotEngine: A reusable, framework-agnostic screenshot generator for Jetpack Compose UIs.
@@ -39,7 +46,7 @@ object ScreenshotEngine {
         companion object {
             val Phone = DeviceConfig(1080, 2400, 480, DeviceType.MOBILE)
             val Tablet = DeviceConfig(2560, 1600, 320, DeviceType.TABLET)
-            val Tv = DeviceConfig(1920, 1080, 240, DeviceType.TV)
+            val Tv = DeviceConfig(1920, 1080, 320, DeviceType.TV)
         }
     }
 
@@ -72,9 +79,14 @@ object ScreenshotEngine {
         @Suppress("DEPRECATION")
         resources.updateConfiguration(config, resources.displayMetrics)
 
-        // Build Activity and set content
+        // Build Activity and set content with a custom Recomposer to disable infinite animations
+        val recomposer = Recomposer(Dispatchers.Main + DisableAnimationsPolicy)
+        val recomposerJob = CoroutineScope(Dispatchers.Main).launch {
+            recomposer.runRecomposeAndApplyChanges()
+        }
+
         val activity = Robolectric.buildActivity(ComponentActivity::class.java).setup().get()
-        activity.setContent {
+        activity.setContent(recomposer) {
             MaterialTheme {
                 Surface(color = if (isDarkMode) Color(0xFF0D0D11) else Color.White) {
                     content()
@@ -90,11 +102,15 @@ object ScreenshotEngine {
             View.MeasureSpec.makeMeasureSpec(device.height, View.MeasureSpec.EXACTLY)
         )
         contentView.layout(0, 0, device.width, device.height)
-        ShadowLooper.runUiThreadTasksIncludingDelayedTasks()
+        ShadowLooper.runUiThreadTasks()
 
         val rawBitmap = Bitmap.createBitmap(device.width, device.height, Bitmap.Config.ARGB_8888)
         val rawCanvas = Canvas(rawBitmap)
         contentView.draw(rawCanvas)
+
+        // Clean up recomposer resources
+        recomposer.close()
+        recomposerJob.cancel()
 
         val finalBitmap = if (decoration != null) {
             decorate(rawBitmap, device, decoration)
@@ -210,5 +226,12 @@ object ScreenshotEngine {
         canvas.restore()
 
         return decorated
+    }
+}
+
+private object DisableAnimationsPolicy : InfiniteAnimationPolicy {
+    override val key: CoroutineContext.Key<*> get() = InfiniteAnimationPolicy
+    override suspend fun <R> onInfiniteOperation(block: suspend () -> R): R {
+        throw CancellationException("Infinite animations are disabled in screenshot tests")
     }
 }

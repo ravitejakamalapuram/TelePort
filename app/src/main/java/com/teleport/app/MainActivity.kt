@@ -37,6 +37,9 @@ import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.net.URI
+import android.net.ConnectivityManager
+import android.net.wifi.WifiManager
+import java.util.Locale
 import android.media.projection.MediaProjectionManager
 import android.content.Context
 import kotlinx.coroutines.launch
@@ -50,6 +53,7 @@ import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 
 class MainActivity : ComponentActivity() {
@@ -118,6 +122,7 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         // Initialize Google Play Update Manager
@@ -146,14 +151,16 @@ class MainActivity : ComponentActivity() {
             billingManager = BillingManager(this, lifecycleScope)
             billingManager.connect()
 
-            // Initialize ad consent and preload ads
-            ConsentHelper.requestConsent(this, onConsentResult = { canRequestAds ->
-                if (canRequestAds) {
-                    AdManager.initialize(this)
-                    AdManager.preloadInterstitial(this)
-                    AdManager.preloadRewarded(this)
-                }
-            })
+            // Initialize ad consent and preload ads if enabled
+            if (com.teleport.app.config.FeatureFlags.ENABLE_ADVERTISEMENTS) {
+                ConsentHelper.requestConsent(this, onConsentResult = { canRequestAds ->
+                    if (canRequestAds) {
+                        AdManager.initialize(this)
+                        AdManager.preloadInterstitial(this)
+                        AdManager.preloadRewarded(this)
+                    }
+                })
+            }
         }
 
         setContent {
@@ -169,11 +176,11 @@ class MainActivity : ComponentActivity() {
                         val connState by connectionManager.connectionState.collectAsState()
                         val sharedUrl by pendingSharedUrl
 
-                        // Automatically connect to 127.0.0.1:8080 if running on an emulator and disconnected
+                        // Automatically connect to 10.0.2.2:8080 if running on an emulator and disconnected
                         LaunchedEffect(Unit) {
                             if (isEmulator() && connectionManager.connectionState.value == ConnectionState.Disconnected) {
-                                Log.i(TAG, "Emulator detected, auto-connecting to TV at 127.0.0.1:${ThemeTokens.PORT}")
-                                connectionManager.connect("127.0.0.1", ThemeTokens.PORT)
+                                Log.i(TAG, "Emulator detected, auto-connecting to TV at 10.0.2.2:${ThemeTokens.PORT}")
+                                connectionManager.connect("10.0.2.2", ThemeTokens.PORT)
                             }
                         }
 
@@ -308,6 +315,55 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun getLocalIpAddress(): String {
+        // 1. Try ConnectivityManager (Modern API, handles Wi-Fi, Ethernet, and multi-network interfaces)
+        try {
+            val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            if (cm != null) {
+                val activeNetwork = cm.activeNetwork
+                if (activeNetwork != null) {
+                    val linkProps = cm.getLinkProperties(activeNetwork)
+                    if (linkProps != null) {
+                        for (linkAddr in linkProps.linkAddresses) {
+                            val addr = linkAddr.address
+                            if (!addr.isLoopbackAddress && addr is Inet4Address) {
+                                val ip = addr.hostAddress ?: ""
+                                if (!ip.startsWith("127.")) {
+                                    return ip
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting IP via ConnectivityManager", e)
+        }
+
+        // 2. Fallback to WifiManager (Useful for older APIs or specific Wi-Fi configurations)
+        try {
+            val wm = applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+            if (wm != null) {
+                val connectionInfo = wm.connectionInfo
+                val ipInt = connectionInfo.ipAddress
+                if (ipInt != 0) {
+                    val ip = String.format(
+                        Locale.US,
+                        "%d.%d.%d.%d",
+                        (ipInt and 0xff),
+                        (ipInt shr 8 and 0xff),
+                        (ipInt shr 16 and 0xff),
+                        (ipInt shr 24 and 0xff)
+                    )
+                    if (ip != "0.0.0.0" && ip != "127.0.0.1") {
+                        return ip
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting IP via WifiManager", e)
+        }
+
+        // 3. Fallback to NetworkInterface traversal (Standard legacy Java API)
         try {
             val en = NetworkInterface.getNetworkInterfaces()
             while (en.hasMoreElements()) {
@@ -323,9 +379,10 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        } catch (ex: SocketException) {
-            Log.e(TAG, "SocketException getting IP", ex)
+        } catch (ex: Exception) {
+            Log.e(TAG, "Exception getting IP via NetworkInterface", ex)
         }
+
         return "127.0.0.1"
     }
 

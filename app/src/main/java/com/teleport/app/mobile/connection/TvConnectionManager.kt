@@ -58,11 +58,13 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
         activeIp = ip
         _connectionState.value = ConnectionState.Connecting
         connectionJob = coroutineScope.launch(Dispatchers.IO) {
+            var localSession: DefaultClientWebSocketSession? = null
             try {
                 val hostUrl = "ws://$ip:$port/control"
                 Log.d(TAG, "Connecting to TV at $hostUrl")
                 
                 client.webSocket(hostUrl) {
+                    localSession = this
                     session = this
                     _connectionState.value = ConnectionState.Connected
                     Log.d(TAG, "Connected successfully")
@@ -79,12 +81,16 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
                         }
                     }
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Connection failed or interrupted", e)
                 _connectionState.value = ConnectionState.Error(e.localizedMessage ?: "Unknown connection error")
             } finally {
-                session = null
-                _tvState.value = null
+                if (session == localSession) {
+                    session = null
+                    _tvState.value = null
+                }
                 if (_connectionState.value is ConnectionState.Connected) {
                     _connectionState.value = ConnectionState.Disconnected
                 }

@@ -191,7 +191,7 @@ fun PairingScreen(connectionUrl: String, localIp: String) {
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .padding(48.dp),
+            .padding(horizontal = 48.dp, vertical = 24.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -205,74 +205,102 @@ fun PairingScreen(connectionUrl: String, localIp: String) {
         ) {
             Text(
                 text = "${ThemeTokens.APP_NAME} TV",
-                fontSize = 44.sp,
+                fontSize = 36.sp,
                 fontWeight = FontWeight.Bold,
                 color = ThemeTokens.TextMain
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Scan QR or enter IP to connect your remote",
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 color = ThemeTokens.TextSub,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
                     .background(ThemeTokens.CardBg, RoundedCornerShape(20.dp))
-                    .padding(24.dp)
+                    .padding(16.dp)
+                    .fillMaxWidth()
             ) {
                 if (qrBitmap != null) {
                     Image(
                         bitmap = qrBitmap.asImageBitmap(),
                         contentDescription = "Pairing QR Code",
                         modifier = Modifier
-                            .size(160.dp)
+                            .size(130.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(ThemeTokens.TextMain)
-                            .padding(8.dp)
+                            .padding(6.dp)
                     )
                 } else {
                     Box(
-                        modifier = Modifier.size(160.dp),
+                        modifier = Modifier.size(130.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(color = ThemeTokens.Accent)
                     }
                 }
 
-                Spacer(modifier = Modifier.width(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
                         text = "1. Install & open TelePort Remote on phone",
-                        fontSize = 14.sp,
-                        color = ThemeTokens.TextSub
+                        fontSize = 13.sp,
+                        color = ThemeTokens.TextSub,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "2. Connect phone to same Wi-Fi",
-                        fontSize = 14.sp,
-                        color = ThemeTokens.TextSub
+                        fontSize = 13.sp,
+                        color = ThemeTokens.TextSub,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "3. Scan QR or connect to IP:",
-                        fontSize = 14.sp,
-                        color = ThemeTokens.TextSub
+                        fontSize = 13.sp,
+                        color = ThemeTokens.TextSub,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = localIp,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ThemeTokens.Success
-                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val isDisconnected = localIp == "127.0.0.1" || localIp.isBlank()
+                    val displayIp = if (isDisconnected) "No Wi-Fi Connection" else localIp
+                    val ipColor = if (isDisconnected) ThemeTokens.Error else ThemeTokens.TextMain
+                    val borderColor = if (isDisconnected) ThemeTokens.Error else ThemeTokens.Accent
+                    val emoji = if (isDisconnected) "⚠️" else "🌐"
+
+                    Surface(
+                        color = ThemeTokens.Background,
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.5.dp, borderColor)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = emoji,
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(
+                                text = displayIp,
+                                fontSize = if (isDisconnected) 15.sp else 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = ipColor
+                            )
+                        }
+                    }
                 }
             }
         }
