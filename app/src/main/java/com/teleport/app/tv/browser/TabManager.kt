@@ -139,11 +139,12 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
 
     fun openTab(url: String, headless: Boolean = false) {
         // Sanitize input URL to prevent javascript:, file:, intent: scheme abuse
-        val scheme = android.net.Uri.parse(url).scheme?.lowercase()
+        val trimmedUrl = url.trim()
+        val scheme = android.net.Uri.parse(trimmedUrl).scheme?.lowercase()
         val safeUrl = if (scheme == "http" || scheme == "https" || scheme == "about" || scheme == "data") {
-            url
+            trimmedUrl
         } else if (scheme == null) {
-            "https://$url"
+            "https://$trimmedUrl"
         } else {
             "about:blank"
         }
