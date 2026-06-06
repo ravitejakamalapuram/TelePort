@@ -10,12 +10,40 @@ on:
   workflow_dispatch:
 
 jobs:
-  ci:
-    uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-ci.yml@v1.1.10
-    with:
-      runner-type: 'self-hosted'
-      java-version: '17'
-      run-tests: true
-      validate-extension: true
-      extension-dir: 'chrome-extension'
-      gradle-args: '-x lintVitalAnalyzeRelease -x lintVitalReportRelease'
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run tests
+        run: ./gradlew testDebugUnitTest -x lintVitalAnalyzeRelease -x lintVitalReportRelease
+
+      - name: Build debug APK
+        run: ./gradlew assembleDebug -x lintVitalAnalyzeRelease -x lintVitalReportRelease
+
+      - name: Validate Chrome Extension
+        run: |
+          cd chrome-extension
+          if [ -f manifest.json ]; then
+            echo "✅ Chrome Extension manifest.json found"
+            # Basic validation
+            if command -v jq &> /dev/null; then
+              jq empty manifest.json && echo "✅ manifest.json is valid JSON"
+            else
+              echo "⚠️  jq not installed, skipping JSON validation"
+            fi
+          else
+            echo "❌ Chrome Extension manifest.json not found"
+            exit 1
+          fi
