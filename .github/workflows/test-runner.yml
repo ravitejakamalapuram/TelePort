@@ -6,7 +6,7 @@ on:
 jobs:
   test-runner:
     name: Test Runner Connection
-    runs-on: self-hosted
+    runs-on: [self-hosted, macOS, X64]
     timeout-minutes: 5
     
     steps:
