@@ -39,7 +39,6 @@ def detect_devices():
     # If we couldn't distinguish but have 2 devices, assign arbitrarily as fallback
     if len(devices) == 2 and (not tv_id or not phone_id):
         print("Warning: Could not automatically distinguish devices. Assigning based on ports.")
-        # Usually 5554 is TV (Television_1080p) or phone depending on boot order
         tv_id = devices[0]
         phone_id = devices[1]
         
@@ -60,37 +59,32 @@ def wait_for_boot(device_id, timeout=90):
 def record_demo():
     emulator_path = "/Users/rkamalapuram/Library/Android/sdk/emulator/emulator"
     
-    # 1. Start Emulators
-    print("Launching Television_1080p emulator...")
+    # 1. Start Emulators with GUI window enabled (remove -no-window and swiftshader)
+    print("Launching Television_1080p emulator (visible window)...")
     tv_process = subprocess.Popen([
         emulator_path,
         "-avd", "Television_1080p",
-        "-no-audio",
-        "-no-window",
-        "-gpu", "swiftshader_indirect"
+        "-no-audio"
     ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     
     # Give it a short moment before starting the second to avoid port collision issues
-    time.sleep(5)
+    time.sleep(15)
     
-    print("Launching Pixel_7 emulator...")
+    print("Launching Pixel_7 emulator (visible window)...")
     phone_process = subprocess.Popen([
         emulator_path,
         "-avd", "Pixel_7",
-        "-no-audio",
-        "-no-window",
-        "-gpu", "swiftshader_indirect"
+        "-no-audio"
     ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     # Wait for adb to recognize the devices
     print("Waiting for devices to connect to adb...")
-    time.sleep(15)
+    time.sleep(45)
     
     tv_id, phone_id = detect_devices()
     
     if not tv_id or not phone_id:
         print(f"Error: Could not detect both TV and Phone. Detected: TV={tv_id}, Phone={phone_id}")
-        # Cleanup processes
         tv_process.terminate()
         phone_process.terminate()
         sys.exit(1)
@@ -118,18 +112,27 @@ def record_demo():
     print(f"Installing app on Phone ({phone_id})...")
     run_cmd(["adb", "-s", phone_id, "install", "-r", apk_path])
 
-    # 4. Launch App
+    # 4. Pre-seed Shared Preferences on Phone to bypass Onboarding overlay
+    print("Bypassing onboarding on Phone Remote to land directly on pairing screen...")
+    # run-as runs the command in the app package environment sandbox
+    run_cmd([
+        "adb", "-s", phone_id, "shell",
+        "run-as com.carfry369.teleport sh -c 'mkdir -p shared_prefs && echo \"<?xml version=\\\"1.0\\\" encoding=\\\"utf-8\\\"?><map><boolean name=\\\"has_seen_onboarding\\\" value=\\\"true\\\" /></map>\" > shared_prefs/teleport_prefs.xml'"
+    ])
+    time.sleep(1)
+
+    # 5. Launch App using the fully qualified package class name
     print("Launching app on TV...")
-    run_cmd(["adb", "-s", tv_id, "shell", "am", "start", "-n", "com.carfry369.teleport/.MainActivity"])
+    run_cmd(["adb", "-s", tv_id, "shell", "am", "start", "-n", "com.carfry369.teleport/com.teleport.app.MainActivity"])
     
     print("Launching app on Phone...")
-    run_cmd(["adb", "-s", phone_id, "shell", "am", "start", "-n", "com.carfry369.teleport/.MainActivity"])
+    run_cmd(["adb", "-s", phone_id, "shell", "am", "start", "-n", "com.carfry369.teleport/com.teleport.app.MainActivity"])
 
     # Wait for apps to initialize
     time.sleep(5)
 
-    # 5. Connect Phone to TV via manual IP (10.0.2.2)
-    # Tapping manual IP text field on Pixel 7 (dimensions are typically 1080x2400)
+    # 6. Connect Phone to TV via manual IP (10.0.2.2)
+    # Tapping manual IP text field on Pixel 7
     # The text field is located around X: 400, Y: 2100.
     # The "Go" button is around X: 950, Y: 2100.
     print("Simulating phone manual IP typing...")
@@ -138,7 +141,7 @@ def record_demo():
     run_cmd(["adb", "-s", phone_id, "shell", "input", "text", "10.0.2.2"])
     time.sleep(1)
     
-    # 6. Start Screen Recording on both devices (limit 15 seconds)
+    # 7. Start Screen Recording on both devices (limit 15 seconds)
     print("Starting screen recording on both emulators...")
     tv_record_process = subprocess.Popen([
         "adb", "-s", tv_id, "shell", "screenrecord", "--size", "1280x720", "--time-limit", "15", "/sdcard/tv.mp4"
@@ -177,7 +180,7 @@ def record_demo():
     tv_record_process.wait()
     phone_record_process.wait()
 
-    # 7. Pull recordings
+    # 8. Pull recordings
     print("Pulling video recordings to host...")
     run_cmd(["adb", "-s", tv_id, "pull", "/sdcard/tv.mp4", "docs/tv.mp4"])
     run_cmd(["adb", "-s", phone_id, "pull", "/sdcard/phone.mp4", "docs/phone.mp4"])
@@ -186,22 +189,13 @@ def record_demo():
     run_cmd(["adb", "-s", tv_id, "shell", "rm", "/sdcard/tv.mp4"])
     run_cmd(["adb", "-s", phone_id, "shell", "rm", "/sdcard/phone.mp4"])
 
-    # 8. Kill emulators
-    print("Stopping emulators...")
-    run_cmd(["adb", "-s", tv_id, "emu", "kill"])
-    run_cmd(["adb", "-s", phone_id, "emu", "kill"])
-    
-    # Force kill processes just in case
-    tv_process.terminate()
-    phone_process.terminate()
+    # 9. Keep emulators running for manual review (Do not kill them)
+    print("Emulators will remain open on your desktop for manual review.")
 
-    # 9. Stitch side-by-side using ffmpeg
+    # 10. Stitch side-by-side using ffmpeg
     print("Stitching TV and Phone videos side-by-side...")
     output_video_path = "docs/demo_video.mp4"
     
-    # Scale TV to height 720 (1280x720) and Phone to height 720 (324x720)
-    # Combine them using hstack (total width 1604x720)
-    # Pad to standard 1920x1080 canvas with dark background
     cmd = [
         "/opt/homebrew/bin/ffmpeg",
         "-y",
@@ -218,7 +212,6 @@ def record_demo():
     ret, stdout, stderr = run_cmd(cmd)
     if ret == 0:
         print("Success! Generated side-by-side video from real emulators at docs/demo_video.mp4")
-        # Clean up separate tv and phone files
         os.remove("docs/tv.mp4")
         os.remove("docs/phone.mp4")
     else:

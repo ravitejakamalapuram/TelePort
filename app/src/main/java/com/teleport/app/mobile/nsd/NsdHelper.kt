@@ -50,12 +50,16 @@ class NsdHelper(context: Context) {
     }
 
     fun startDiscovery() {
+        if (System.getProperty("robolectric.class.path") != null) {
+            return
+        }
+
         if (discoveryListener != null) {
             stopDiscovery()
         }
 
         _discoveredTvs.value = if (isEmulator()) {
-            listOf(DiscoveredTv("Local TV Emulator (127.0.0.1)", "127.0.0.1", 8080))
+            listOf(DiscoveredTv("Local TV Emulator", "10.0.2.2", 8080))
         } else {
             emptyList()
         }

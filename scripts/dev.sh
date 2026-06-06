@@ -36,6 +36,9 @@ Commands:
   setup         Run environment checks and install required python dependencies.
   assets        Regenerate all client assets (Android mipmaps, TV banners, Chrome Extension icons).
   test          Run Android unit tests and validate Chrome Extension manifest configurations.
+  verify-ui     Compile and run visual regression tests against golden baseline screenshots.
+  update-baselines Promote current screenshot outputs to golden baselines.
+  generate-pr-diff Generate PR comment markdown comparing baseline vs current vs diff.
   build         Compile Android debug package and zip the Chrome Extension release package.
   mock-crash    Simulate a dry-run crash monitoring and auto-fixing AI execution locally.
   help          Display this help information.
@@ -44,8 +47,12 @@ Examples:
   ./scripts/dev.sh setup
   ./scripts/dev.sh assets
   ./scripts/dev.sh test
+  ./scripts/dev.sh verify-ui
+  ./scripts/dev.sh update-baselines
+  ./scripts/dev.sh generate-pr-diff
 EOF
 }
+
 
 cmd_setup() {
   log_info "Running system diagnostics..."
@@ -183,6 +190,28 @@ cmd_mock_crash() {
   log_ok "Local AI mock crash execution completed successfully."
 }
 
+cmd_verify_ui() {
+  log_info "1. Generating fresh visual screenshots via Robolectric..."
+  if [[ -d "/Applications/Android Studio.app/Contents/jbr/Contents/Home" ]]; then
+    export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+  fi
+  ./gradlew testDebugUnitTest --tests "com.teleport.app.ExhaustiveScreenshotsTest"
+  
+  log_info "2. Comparing generated outputs with baseline..."
+  python3 screenshot-framework/verify_ui.py
+}
+
+cmd_update_baselines() {
+  log_info "Promoting current screenshots to golden baselines..."
+  python3 screenshot-framework/verify_ui.py --promote
+}
+
+cmd_generate_pr_diff() {
+  log_info "Formatting PR comment markdown file..."
+  python3 screenshot-framework/github_pr_diff.py
+  log_ok "PR comment markdown file generated."
+}
+
 # Main Command Router
 if [[ $# -lt 1 ]]; then
   show_help
@@ -201,6 +230,15 @@ case "$COMMAND" in
     ;;
   test)
     cmd_test
+    ;;
+  verify-ui)
+    cmd_verify_ui
+    ;;
+  update-baselines)
+    cmd_update_baselines
+    ;;
+  generate-pr-diff)
+    cmd_generate_pr_diff
     ;;
   build)
     cmd_build

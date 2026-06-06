@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.toggleable
@@ -51,6 +52,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -87,6 +89,14 @@ import com.teleport.app.ads.BannerAd
 import com.teleport.app.ads.AdManager
 import com.teleport.app.billing.BillingManager
 import com.teleport.app.billing.PremiumState
+import com.teleport.app.config.FeatureFlags
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.platform.LocalUriHandler
+
+private val isProUnlocked: Boolean
+    get() = PremiumState.isPremium || AdManager.isTemporaryProActive || !FeatureFlags.ENABLE_ADVERTISEMENTS
 
 @Composable
 fun MobileRemoteScreen(
@@ -99,15 +109,41 @@ fun MobileRemoteScreen(
     billingManager: BillingManager
 ) {
     val connState by connectionManager.connectionState.collectAsState()
+    val context = LocalContext.current
+    val sharedPrefs = remember { context.getSharedPreferences("teleport_prefs", Context.MODE_PRIVATE) }
+    var showOnboarding by remember {
+        mutableStateOf(!sharedPrefs.getBoolean("has_seen_onboarding", false))
+    }
+
+    if (showOnboarding) {
+        OnboardingModal(
+            onDismiss = {
+                sharedPrefs.edit().putBoolean("has_seen_onboarding", true).apply()
+                showOnboarding = false
+            }
+        )
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = ThemeTokens.Background
     ) {
         if (connState == ConnectionState.Connected) {
-            ControllerScreen(connectionManager, gyroTracker, startMirroring, stopMirroring, billingManager)
+            ControllerScreen(
+                connectionManager = connectionManager,
+                gyroTracker = gyroTracker,
+                startMirroring = startMirroring,
+                stopMirroring = stopMirroring,
+                billingManager = billingManager,
+                onShowHelp = { showOnboarding = true }
+            )
         } else {
-            PairingScreen(connectionManager, nsdHelper, scanQr)
+            PairingScreen(
+                connectionManager = connectionManager,
+                nsdHelper = nsdHelper,
+                scanQr = scanQr,
+                onShowHelp = { showOnboarding = true }
+            )
         }
     }
 }
@@ -117,7 +153,8 @@ fun MobileRemoteScreen(
 fun PairingScreen(
     connectionManager: TvConnectionManager,
     nsdHelper: NsdHelper,
-    scanQr: () -> Unit
+    scanQr: () -> Unit,
+    onShowHelp: () -> Unit
 ) {
     val discoveredTvs by nsdHelper.discoveredTvs.collectAsState()
     val connState by connectionManager.connectionState.collectAsState()
@@ -133,22 +170,38 @@ fun PairingScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .padding(24.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(32.dp))
-        Text(
-            text = "${ThemeTokens.APP_NAME} Remote",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = ThemeTokens.TextMain
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "${ThemeTokens.APP_NAME} Remote",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = ThemeTokens.TextMain
+            )
+            IconButton(
+                onClick = onShowHelp,
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(ThemeTokens.CardBg, CircleShape)
+            ) {
+                Text("❔", fontSize = 20.sp)
+            }
+        }
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Connect to your TV client to start controlling",
             fontSize = 14.sp,
-            color = ThemeTokens.TextSub
+            color = ThemeTokens.TextSub,
+            modifier = Modifier.align(Alignment.Start)
         )
 
         Spacer(modifier = Modifier.height(48.dp))
@@ -292,6 +345,18 @@ fun PairingScreen(
             Text("Error: ${(connState as ConnectionState.Error).message}", color = ThemeTokens.Error, fontSize = 12.sp)
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+        val uriHandler = LocalUriHandler.current
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .clickable { uriHandler.openUri("https://chromewebstore.google.com") }
+                .padding(8.dp)
+        ) {
+            Text("🌐 Get Chrome Extension for Computer", color = ThemeTokens.Accent, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        }
+
         // Monetization: Banner ad at bottom of pairing screen
         Spacer(modifier = Modifier.height(8.dp))
         BannerAd()
@@ -304,13 +369,47 @@ fun ControllerScreen(
     gyroTracker: GyroSensorTracker,
     startMirroring: () -> Unit,
     stopMirroring: () -> Unit,
-    billingManager: BillingManager
+    billingManager: BillingManager,
+    onShowHelp: () -> Unit
 ) {
     val tvState by connectionManager.tvState.collectAsState()
     val isResolvingHeadlessly = tvState?.isResolvingHeadlessly ?: false
     val isNativePlaying = tvState?.isNativePlaying ?: false
     var showPaywall by remember { mutableStateOf(false) }
     var showTipJar by remember { mutableStateOf(false) }
+    var showAdUnlockPrompt by remember { mutableStateOf(false) }
+
+    // Ad unlock dialog
+    if (showAdUnlockPrompt) {
+        val context = LocalContext.current
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showAdUnlockPrompt = false },
+            title = { Text("Unlock Pro Features", fontWeight = FontWeight.Bold) },
+            text = { Text("To cast more than 3 tabs or use screen mirroring, you can temporarily unlock all Pro features for 1 hour by watching a quick video ad.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showAdUnlockPrompt = false
+                        AdManager.showRewarded(context as android.app.Activity) {
+                            AdManager.grantTemporaryAdFree()
+                            startMirroring()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent)
+                ) {
+                    Text("Watch Ad 🎬", color = ThemeTokens.Background, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAdUnlockPrompt = false }) {
+                    Text("Cancel", color = ThemeTokens.TextSub)
+                }
+            },
+            containerColor = ThemeTokens.CardBg,
+            titleContentColor = ThemeTokens.TextMain,
+            textContentColor = ThemeTokens.TextSub
+        )
+    }
 
     // Paywall overlay
     if (showPaywall) {
@@ -340,68 +439,102 @@ fun ControllerScreen(
 
         Column(modifier = Modifier.fillMaxSize()) {
             // Header Bar
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(ThemeTokens.CardBg)
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        text = "${ThemeTokens.APP_NAME} Remote",
-                        color = ThemeTokens.TextMain,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-                    var isDarkModeEnabled by remember { mutableStateOf(false) }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .padding(top = 4.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .toggleable(
-                                value = isDarkModeEnabled,
-                                role = Role.Switch,
-                                onValueChange = {
-                                    isDarkModeEnabled = it
-                                    connectionManager.sendCommand(Command.ToggleDarkMode(it))
-                                }
-                            )
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Text("Dark Mode", color = ThemeTokens.TextSub, fontSize = 12.sp)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Switch(
-                            checked = isDarkModeEnabled,
-                            onCheckedChange = null,
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = ThemeTokens.Accent,
-                                checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
-                            ),
-                            modifier = Modifier.scale(0.7f)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "${ThemeTokens.APP_NAME} Remote",
+                            color = ThemeTokens.TextMain,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
                         )
-                    }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Tip jar button
-                    IconButton(onClick = { showTipJar = true }) {
-                        Text("☕", fontSize = 20.sp)
-                    }
-                    if (!PremiumState.isPremium) {
-                        Button(
-                            onClick = { showPaywall = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary)
+                        var isDarkModeEnabled by remember { mutableStateOf(false) }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .toggleable(
+                                    value = isDarkModeEnabled,
+                                    role = Role.Switch,
+                                    onValueChange = {
+                                        isDarkModeEnabled = it
+                                        connectionManager.sendCommand(Command.ToggleDarkMode(it))
+                                    }
+                                )
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
                         ) {
-                            Text("⭐ Pro", color = ThemeTokens.TextMain, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Dark Mode", color = ThemeTokens.TextSub, fontSize = 12.sp)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Switch(
+                                checked = isDarkModeEnabled,
+                                onCheckedChange = null,
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = ThemeTokens.Accent,
+                                    checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
+                                ),
+                                modifier = Modifier.scale(0.7f)
+                            )
                         }
                     }
-                    Button(
-                        onClick = { connectionManager.disconnect() },
-                        colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error.copy(alpha = 0.8f))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Disconnect", color = ThemeTokens.TextMain, fontSize = 12.sp)
+                        // Help button
+                        IconButton(
+                            onClick = onShowHelp,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Text("❔", fontSize = 18.sp)
+                        }
+                        // Tip jar button
+                        IconButton(
+                            onClick = { showTipJar = true },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Text("☕", fontSize = 18.sp)
+                        }
+                        if (!isProUnlocked && FeatureFlags.ENABLE_PAID_SUBSCRIPTIONS) {
+                            Button(
+                                onClick = { showPaywall = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = "⭐ Pro",
+                                    color = ThemeTokens.TextMain,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
+                            }
+                        }
+                        Button(
+                            onClick = { connectionManager.disconnect() },
+                            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error.copy(alpha = 0.8f)),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "Disconnect",
+                                color = ThemeTokens.TextMain,
+                                fontSize = 11.sp,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
                     }
                 }
             }
@@ -415,7 +548,7 @@ fun ControllerScreen(
                         .padding(8.dp)
                         .clickable(role = Role.Button) {
                             // Monetization: Show interstitial before launching native player (free tier)
-                            if (!PremiumState.isPremium) {
+                            if (!isProUnlocked) {
                                 AdManager.showInterstitial(context as android.app.Activity) {
                                     connectionManager.sendCommand(Command.PlayStreamNatively(streamUrl))
                                 }
@@ -471,9 +604,21 @@ fun ControllerScreen(
                     .background(ThemeTokens.Background)
             ) {
                 when (selectedTabIndex) {
-                    0 -> TrackpadTab(connectionManager, gyroTracker, startMirroring, stopMirroring, onShowPaywall = { showPaywall = true })
+                    0 -> TrackpadTab(connectionManager, gyroTracker, startMirroring, stopMirroring, onShowPaywall = {
+                        if (FeatureFlags.ENABLE_PAID_SUBSCRIPTIONS) {
+                            showPaywall = true
+                        } else {
+                            showAdUnlockPrompt = true
+                        }
+                    })
                     1 -> DpadTab(connectionManager)
-                    2 -> TabsManagerTab(connectionManager, tvState, onShowPaywall = { showPaywall = true })
+                    2 -> TabsManagerTab(connectionManager, tvState, onShowPaywall = {
+                        if (FeatureFlags.ENABLE_PAID_SUBSCRIPTIONS) {
+                            showPaywall = true
+                        } else {
+                            showAdUnlockPrompt = true
+                        }
+                    })
                 }
             }
 
@@ -545,7 +690,7 @@ fun TrackpadTab(
                     value = isCasting,
                     role = Role.Switch,
                     onValueChange = { checked ->
-                        if (!PremiumState.isPremium) {
+                        if (!isProUnlocked) {
                             onShowPaywall()
                         } else {
                             if (checked) startMirroring() else stopMirroring()
@@ -559,7 +704,7 @@ fun TrackpadTab(
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Mirror Phone Screen", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
-                    if (!PremiumState.isPremium) {
+                    if (!isProUnlocked) {
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("PRO", color = ThemeTokens.Background, fontSize = 10.sp, fontWeight = FontWeight.Bold,
                             modifier = Modifier.background(ThemeTokens.Primary, RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp))
@@ -589,9 +734,10 @@ fun TrackpadTab(
                     value = isAirMouseOn,
                     role = Role.Switch,
                     onValueChange = { wantsOn ->
-                        if (wantsOn && !PremiumState.isPremium) {
+                        if (wantsOn && !isProUnlocked) {
                             // Free users: watch rewarded ad to unlock for this session
                             AdManager.showRewarded(context as android.app.Activity) {
+                                AdManager.grantTemporaryAdFree()
                                 isAirMouseOn = true
                             }
                         } else {
@@ -606,14 +752,14 @@ fun TrackpadTab(
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Air Mouse Mode", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
-                    if (!PremiumState.isPremium) {
+                    if (!isProUnlocked) {
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("🎬 AD", color = ThemeTokens.Background, fontSize = 10.sp, fontWeight = FontWeight.Bold,
                             modifier = Modifier.background(ThemeTokens.Accent, RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp))
                     }
                 }
                 Text(
-                    if (!PremiumState.isPremium) "Watch ad to unlock for this session" else "Point phone to move TV cursor",
+                    if (!isProUnlocked) "Watch ad to unlock for this session" else "Point phone to move TV cursor",
                     color = ThemeTokens.TextSub, fontSize = 12.sp
                 )
             }
@@ -885,7 +1031,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                     if (newUrl.isNotBlank()) {
                         // Free tier: limit to 3 tabs
                         val tabCount = tvState?.tabs?.size ?: 0
-                        if (!PremiumState.isPremium && tabCount >= 3) {
+                        if (!isProUnlocked && tabCount >= 3) {
                             onShowPaywall()
                             return@Button
                         }
@@ -915,7 +1061,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                     if (newUrl.isNotBlank()) {
                         // Free tier: limit to 3 tabs
                         val tabCount = tvState?.tabs?.size ?: 0
-                        if (!PremiumState.isPremium && tabCount >= 3) {
+                        if (!isProUnlocked && tabCount >= 3) {
                             onShowPaywall()
                             return@Button
                         }
@@ -1123,6 +1269,7 @@ fun MobileCastingScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -1174,6 +1321,7 @@ fun MobileMediaRemoteScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .padding(24.dp),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -1286,3 +1434,223 @@ fun MobileMediaRemoteScreen(
         }
     }
 }
+
+data class OnboardingStep(
+    val emoji: String,
+    val title: String,
+    val description: String
+)
+
+@Composable
+fun OnboardingContent(
+    currentSlide: Int,
+    onCurrentSlideChange: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val steps = remember {
+        listOf(
+            OnboardingStep(
+                emoji = "📺📱",
+                title = "Welcome to TelePort",
+                description = "TelePort connects your Phone Remote directly to your Android TV browser. Navigate, scroll, cast video streams, and mirror screens with zero cloud dependencies."
+            ),
+            OnboardingStep(
+                emoji = "🔗",
+                title = "Pairing with TV",
+                description = "First, install and open the TelePort TV app on your Android TV device. Ensure both TV and Phone are on the same Wi-Fi, then scan the TV's QR Code."
+            ),
+            OnboardingStep(
+                emoji = "🖱️",
+                title = "Trackpad & Gestures",
+                description = "Move your finger on the Trackpad area to move the virtual cursor. Single-tap to Click. Swipe up or down with TWO fingers to Scroll page content smoothly."
+            ),
+            OnboardingStep(
+                emoji = "🪄",
+                title = "Air Mouse Control",
+                description = "Turn on Air Mouse mode to point your phone like a laser pointer! Wave your phone around to move the cursor on the TV screen."
+            ),
+            OnboardingStep(
+                emoji = "🍿",
+                title = "Beam & Cast Videos",
+                description = "Open any webpage to automatically detect video streams (like mp4 or m3u8) and cast them to the native ExoPlayer. You can also share links from other apps using the Android Share menu!"
+            ),
+            OnboardingStep(
+                emoji = "🌐",
+                title = "Chrome Extension",
+                description = "Mirror Chrome browser tabs or beam links directly from your computer using the TelePort Cast & Remote extension."
+            )
+        )
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.85f))
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(16.dp),
+            colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
+            shape = RoundedCornerShape(24.dp),
+            border = androidx.compose.foundation.BorderStroke(1.5.dp, ThemeTokens.Primary)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Header with Skip button
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = "Skip",
+                        color = ThemeTokens.TextSub,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clickable { onDismiss() }
+                            .padding(8.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Large Emoji
+                Text(
+                    text = steps[currentSlide].emoji,
+                    fontSize = 72.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Title
+                Text(
+                    text = steps[currentSlide].title,
+                    color = ThemeTokens.TextMain,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Description or custom content
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp), // Slightly taller to accommodate button
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = steps[currentSlide].description,
+                        color = ThemeTokens.TextSub,
+                        fontSize = 15.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        lineHeight = 22.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                    )
+                    if (currentSlide == 5) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        val uriHandler = LocalUriHandler.current
+                        Button(
+                            onClick = { uriHandler.openUri("https://chromewebstore.google.com") },
+                            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.height(36.dp),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                        ) {
+                            Text("Open Chrome Web Store 🌐", color = ThemeTokens.TextMain, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Indicator Dots
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    steps.forEachIndexed { index, _ ->
+                        Box(
+                            modifier = Modifier
+                                .size(if (index == currentSlide) 10.dp else 8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (index == currentSlide) ThemeTokens.Accent else ThemeTokens.Border
+                                )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Bottom Navigation Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (currentSlide > 0) {
+                        Button(
+                            onClick = { onCurrentSlideChange(currentSlide - 1) },
+                            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Border),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.height(48.dp)
+                        ) {
+                            Text("Back", color = ThemeTokens.TextMain)
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.width(80.dp)) // Maintain alignment
+                    }
+
+                    Button(
+                        onClick = {
+                            if (currentSlide < steps.size - 1) {
+                                onCurrentSlideChange(currentSlide + 1)
+                            } else {
+                                onDismiss()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.height(48.dp)
+                    ) {
+                        Text(
+                            text = if (currentSlide == steps.size - 1) "Get Started 🚀" else "Next",
+                            color = ThemeTokens.Background,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun OnboardingModal(onDismiss: () -> Unit, initialSlide: Int = 0) {
+    var currentSlide by remember { mutableStateOf(initialSlide) }
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        OnboardingContent(
+            currentSlide = currentSlide,
+            onCurrentSlideChange = { currentSlide = it },
+            onDismiss = onDismiss
+        )
+    }
+}
+

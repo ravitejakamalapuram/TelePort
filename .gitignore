@@ -60,3 +60,9 @@ externalNativeBuild/
 
 # Built zip archives
 *.zip
+
+# Visual Regression Test Outputs
+docs/screenshots/current/
+docs/screenshots/diff/
+docs/screenshots/pr_comment.md
+

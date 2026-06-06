@@ -20,6 +20,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -184,75 +188,224 @@ fun CastingScreen(url: String) {
 fun PairingScreen(connectionUrl: String, localIp: String) {
     val qrBitmap = remember(connectionUrl) { generateQrCodeBitmap(connectionUrl) }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 48.dp, vertical = 24.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "${ThemeTokens.APP_NAME} TV",
-            fontSize = 42.sp,
-            fontWeight = FontWeight.Bold,
-            color = ThemeTokens.TextMain
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Connect your mobile remote to start browsing",
-            fontSize = 18.sp,
-            color = ThemeTokens.TextSub
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+        // Left Column: Pairing Connection Panel (40% width)
+        Column(
+            modifier = Modifier
+                .weight(1.2f)
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            if (qrBitmap != null) {
-                Image(
-                    bitmap = qrBitmap.asImageBitmap(),
-                    contentDescription = "Pairing QR Code",
-                    modifier = Modifier
-                        .size(200.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(ThemeTokens.TextMain)
-                        .padding(8.dp)
-                )
-            } else {
-                Box(
-                    modifier = Modifier.size(200.dp),
-                    contentAlignment = Alignment.Center
+            Text(
+                text = "${ThemeTokens.APP_NAME} TV",
+                fontSize = 36.sp,
+                fontWeight = FontWeight.Bold,
+                color = ThemeTokens.TextMain
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Scan QR or enter IP to connect your remote",
+                fontSize = 14.sp,
+                color = ThemeTokens.TextSub,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .background(ThemeTokens.CardBg, RoundedCornerShape(20.dp))
+                    .padding(16.dp)
+                    .fillMaxWidth()
+            ) {
+                if (qrBitmap != null) {
+                    Image(
+                        bitmap = qrBitmap.asImageBitmap(),
+                        contentDescription = "Pairing QR Code",
+                        modifier = Modifier
+                            .size(130.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(ThemeTokens.TextMain)
+                            .padding(6.dp)
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.size(130.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = ThemeTokens.Accent)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    CircularProgressIndicator(color = ThemeTokens.Accent)
+                    Text(
+                        text = "1. Install & open TelePort Remote on phone",
+                        fontSize = 13.sp,
+                        color = ThemeTokens.TextSub,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "2. Connect phone to same Wi-Fi",
+                        fontSize = 13.sp,
+                        color = ThemeTokens.TextSub,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "3. Scan QR or connect to IP:",
+                        fontSize = 13.sp,
+                        color = ThemeTokens.TextSub,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val isDisconnected = localIp == "127.0.0.1" || localIp.isBlank()
+                    val displayIp = if (isDisconnected) "No Wi-Fi Connection" else localIp
+                    val ipColor = if (isDisconnected) ThemeTokens.Error else ThemeTokens.TextMain
+                    val borderColor = if (isDisconnected) ThemeTokens.Error else ThemeTokens.Accent
+                    val emoji = if (isDisconnected) "⚠️" else "🌐"
+
+                    Surface(
+                        color = ThemeTokens.Background,
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.5.dp, borderColor)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = emoji,
+                                fontSize = 16.sp,
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            Text(
+                                text = displayIp,
+                                fontSize = if (isDisconnected) 15.sp else 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = ipColor
+                            )
+                        }
+                    }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.width(32.dp))
+        Spacer(modifier = Modifier.width(48.dp))
 
-            Column {
+        // Right Column: Feature Showcase Panel (60% width)
+        Column(
+            modifier = Modifier
+                .weight(1.8f)
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Key Features",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = ThemeTokens.TextMain
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // 2x2 Grid of Feature Cards
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    FeatureCard(
+                        emoji = "🖱️",
+                        title = "Touchpad & Gestures",
+                        desc = "Navigate naturally using relative trackpad drag, single-tap to click, and two-finger scroll.",
+                        modifier = Modifier.weight(1f)
+                    )
+                    FeatureCard(
+                        emoji = "🪄",
+                        title = "Air Mouse Control",
+                        desc = "Wave your phone around like a real laser remote. Uses phone gyroscope sensors.",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    FeatureCard(
+                        emoji = "🍿",
+                        title = "Native Media Player",
+                        desc = "Bypasses web video ads completely. Streams automatically to full-screen ExoPlayer.",
+                        modifier = Modifier.weight(1f)
+                    )
+                    FeatureCard(
+                        emoji = "📱",
+                        title = "Screen Mirroring",
+                        desc = "Share your phone screen or computer browser tabs onto the TV natively and latency-free.",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FeatureCard(
+    emoji: String,
+    title: String,
+    desc: String,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .background(ThemeTokens.CardBg, RoundedCornerShape(16.dp))
+            .border(
+                width = 1.dp,
+                color = ThemeTokens.Border,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Column {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
-                    text = "1. Connect your phone to the same Wi-Fi network",
-                    fontSize = 16.sp,
-                    color = ThemeTokens.TextSub
+                    text = emoji,
+                    fontSize = 28.sp
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "2. Open the ${ThemeTokens.APP_NAME} Mobile App",
+                    text = title,
                     fontSize = 16.sp,
-                    color = ThemeTokens.TextSub
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "3. Scan the QR code or connect to IP:",
-                    fontSize = 16.sp,
-                    color = ThemeTokens.TextSub
-                )
-                Text(
-                    text = localIp,
-                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ThemeTokens.Success
+                    color = ThemeTokens.TextMain
                 )
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = desc,
+                fontSize = 12.sp,
+                color = ThemeTokens.TextSub,
+                lineHeight = 18.sp
+            )
         }
     }
 }

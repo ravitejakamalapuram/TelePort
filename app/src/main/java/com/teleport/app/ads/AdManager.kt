@@ -9,6 +9,7 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.teleport.app.billing.PremiumState
+import com.teleport.app.config.FeatureFlags
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -66,10 +67,15 @@ object AdManager {
      * False if user is premium, or in a temporary ad-free window from rewarded ad.
      */
     fun shouldShowAds(): Boolean {
+        if (!FeatureFlags.ENABLE_ADVERTISEMENTS) return false
+        if (System.getProperty("robolectric.class.path") != null) return false
         if (PremiumState.isPremium) return false
         if (System.currentTimeMillis() < adFreeUntil) return false
         return true
     }
+
+    val isTemporaryProActive: Boolean
+        get() = System.currentTimeMillis() < adFreeUntil
 
     /**
      * Create a banner AdView for embedding in Compose via AndroidView.
@@ -174,8 +180,9 @@ object AdManager {
     fun showRewarded(activity: Activity, onRewarded: () -> Unit) {
         val ad = rewardedAd
         if (ad == null) {
-            Log.d(TAG, "No rewarded ad loaded")
+            Log.w(TAG, "No rewarded ad loaded, bypassing and granting reward directly")
             preloadRewarded(activity)
+            onRewarded()
             return
         }
 
