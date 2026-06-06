@@ -170,7 +170,7 @@ class LocalServerService : Service() {
                             try {
                                 for (frame in incoming) {
                                     if (frame is Frame.Binary) {
-                                        val data = frame.readBytes()
+                                        val data = frame.data // Bolt: Use frame.data to avoid allocating a new ByteArray copy
                                         TvEventBus.postMirrorFrame(data)
                                     }
                                 }
