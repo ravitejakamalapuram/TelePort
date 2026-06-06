@@ -463,6 +463,34 @@ fun ControllerScreen(
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
                         )
+                        var isDarkModeEnabled by remember { mutableStateOf(false) }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(top = 4.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .toggleable(
+                                    value = isDarkModeEnabled,
+                                    role = Role.Switch,
+                                    onValueChange = {
+                                        isDarkModeEnabled = it
+                                        connectionManager.sendCommand(Command.ToggleDarkMode(it))
+                                    }
+                                )
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text("Dark Mode", color = ThemeTokens.TextSub, fontSize = 12.sp)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Switch(
+                                checked = isDarkModeEnabled,
+                                onCheckedChange = null,
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = ThemeTokens.Accent,
+                                    checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
+                                ),
+                                modifier = Modifier.scale(0.7f)
+                            )
+                        }
                     }
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
