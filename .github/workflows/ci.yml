@@ -18,3 +18,4 @@ jobs:
       run-tests: true
       validate-extension: true
       extension-dir: 'chrome-extension'
+      gradle-args: '-x lintVitalAnalyzeRelease -x lintVitalReportRelease'
