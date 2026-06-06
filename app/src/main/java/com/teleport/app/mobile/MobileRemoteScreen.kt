@@ -196,6 +196,7 @@ fun PairingScreen(
                 modifier = Modifier
                     .size(44.dp)
                     .background(ThemeTokens.CardBg, CircleShape)
+                    .semantics { contentDescription = "Help" }
             ) {
                 Text("❔", fontSize = 20.sp)
             }
@@ -499,7 +500,9 @@ fun ControllerScreen(
                         // Help button
                         IconButton(
                             onClick = onShowHelp,
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier
+                                .size(36.dp)
+                                .semantics { contentDescription = "Help" }
                         ) {
                             Text("❔", fontSize = 18.sp)
                         }
