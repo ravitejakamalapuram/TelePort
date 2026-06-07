@@ -28,7 +28,6 @@ import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
-import io.ktor.websocket.readBytes
 import io.ktor.websocket.send
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -170,7 +169,8 @@ class LocalServerService : Service() {
                             try {
                                 for (frame in incoming) {
                                     if (frame is Frame.Binary) {
-                                        val data = frame.readBytes()
+                                        // Bolt: Use frame.data instead of frame.readBytes() to prevent redundant ByteArray allocations per frame, reducing GC pressure during mirroring.
+                                        val data = frame.data
                                         TvEventBus.postMirrorFrame(data)
                                     }
                                 }
