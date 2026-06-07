@@ -23,3 +23,6 @@
 ## 2024-06-05 - Missing ARIA Labels on Emoji-Only Buttons
 **Learning:** In Jetpack Compose, an `IconButton` that uses text consisting only of an emoji (e.g., `Text("☕")`) does not automatically provide a meaningful semantic label to screen readers. This leaves visually impaired users without context for the button's action.
 **Action:** Always apply `modifier = Modifier.semantics { contentDescription = "[Action Name]" }` to `IconButton`s or similar interactive elements that rely solely on emojis or decorative glyphs, ensuring they are properly announced.
+## 2024-06-06 - Explicit Button Role for Clickable Text Elements
+**Learning:** Text elements made interactive using the `.clickable { ... }` modifier are not inherently recognized as interactive buttons by screen readers unless given explicit context.
+**Action:** Always include `role = Role.Button` within the `.clickable` modifier (e.g., `.clickable(role = Role.Button) { ... }`) when applying it to Text elements, ensuring proper semantic identification for accessibility services.

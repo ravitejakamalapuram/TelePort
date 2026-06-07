@@ -196,6 +196,7 @@ fun PairingScreen(
                 modifier = Modifier
                     .size(44.dp)
                     .background(ThemeTokens.CardBg, CircleShape)
+                    .semantics { contentDescription = "Help" }
             ) {
                 Text("❔", fontSize = 20.sp)
             }
@@ -355,7 +356,7 @@ fun PairingScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier
-                .clickable { uriHandler.openUri("https://chromewebstore.google.com") }
+                .clickable(role = Role.Button) { uriHandler.openUri("https://chromewebstore.google.com") }
                 .padding(8.dp)
         ) {
             Text("🌐 Get Chrome Extension for Computer", color = ThemeTokens.Accent, fontSize = 13.sp, fontWeight = FontWeight.Bold)
@@ -499,7 +500,9 @@ fun ControllerScreen(
                         // Help button
                         IconButton(
                             onClick = onShowHelp,
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier
+                                .size(36.dp)
+                                .semantics { contentDescription = "Help" }
                         ) {
                             Text("❔", fontSize = 18.sp)
                         }
@@ -1527,7 +1530,7 @@ fun OnboardingContent(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
-                            .clickable { onDismiss() }
+                            .clickable(role = Role.Button) { onDismiss() }
                             .padding(8.dp)
                     )
                 }
