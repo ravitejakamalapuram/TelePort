@@ -141,3 +141,9 @@ dependencies {
     implementation("com.google.firebase:firebase-crashlytics-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
 }
+
+dependencies {
+    implementation("com.google.android.gms:play-services-ads:23.0.0")
+    implementation("com.google.android.ump:user-messaging-platform:2.2.0")
+    implementation("com.android.billingclient:billing-ktx:7.0.0")
+}
