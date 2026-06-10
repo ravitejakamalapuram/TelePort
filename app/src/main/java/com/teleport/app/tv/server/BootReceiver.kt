@@ -25,6 +25,17 @@ class BootReceiver : BroadcastReceiver() {
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to start LocalServerService on boot", e)
                 }
+
+                // Also automatically launch the main TV app UI on boot
+                val activityIntent = Intent(context, com.teleport.app.MainActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                try {
+                    context.startActivity(activityIntent)
+                    Log.d(TAG, "Successfully started MainActivity on boot")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to start MainActivity on boot", e)
+                }
             } else {
                 Log.d(TAG, "Not a TV device, skipping boot startup")
             }

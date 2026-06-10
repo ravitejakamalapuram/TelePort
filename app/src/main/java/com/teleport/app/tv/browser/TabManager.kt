@@ -243,12 +243,14 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
     // --- Commands execution ---
 
     fun scrollActive(dx: Float, dy: Float) {
+        if (com.teleport.app.tv.server.TelePortAccessibilityService.isRunning) return
         coroutineScope.launch(Dispatchers.Main) {
             getActiveWebView()?.scrollBy(dx.toInt(), dy.toInt())
         }
     }
 
     fun moveCursor(clientId: String, dx: Float, dy: Float) {
+        if (com.teleport.app.tv.server.TelePortAccessibilityService.isRunning) return
         val current = _cursors.value.toMutableMap()
         val cursor = current[clientId]
         if (cursor != null) {
@@ -267,6 +269,7 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
     }
 
     fun clickActive(clientId: String) {
+        if (com.teleport.app.tv.server.TelePortAccessibilityService.isRunning) return
         coroutineScope.launch(Dispatchers.Main) {
             val webView = getActiveWebView() ?: return@launch
             val cursor = _cursors.value[clientId] ?: return@launch
@@ -310,6 +313,7 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
     }
 
     fun sendTextActive(text: String) {
+        if (com.teleport.app.tv.server.TelePortAccessibilityService.isRunning) return
         coroutineScope.launch(Dispatchers.Main) {
             val jsonText = org.json.JSONObject.quote(text)
             val js = "(function() { " +
@@ -338,6 +342,7 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
     }
 
     fun goBackActive() {
+        if (com.teleport.app.tv.server.TelePortAccessibilityService.isRunning) return
         coroutineScope.launch(Dispatchers.Main) {
             val webView = getActiveWebView()
             if (webView?.canGoBack() == true) {

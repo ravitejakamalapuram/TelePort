@@ -35,6 +35,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -110,7 +112,9 @@ class LocalServerService : Service() {
 
                             val clientId = UUID.randomUUID().toString()
                             Log.d(TAG, "Client connected via WebSocket: $clientId")
-                            TvEventBus.registerClient(clientId)
+
+                            val deviceName = call.request.queryParameters["device"] ?: "Mobile Remote"
+                            TvEventBus.postPendingConnection(clientId, deviceName)
 
                             // Bring MainActivity to the foreground automatically on client connection
                             try {
@@ -121,6 +125,35 @@ class LocalServerService : Service() {
                             } catch (e: Exception) {
                                 Log.e(TAG, "Failed to start MainActivity on connection", e)
                             }
+
+                            // Wait for TV user confirmation (approval or denial)
+                            var isApproved = false
+                            try {
+                                combine(
+                                    TvEventBus.approvedClientIds,
+                                    TvEventBus.pendingRequests
+                                ) { approvedIds, pendingReqs ->
+                                    if (clientId in approvedIds) {
+                                        isApproved = true
+                                        true
+                                    } else if (pendingReqs.none { it.clientId == clientId }) {
+                                        isApproved = false
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                }.first { it }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error waiting for connection confirmation", e)
+                            }
+
+                            if (!isApproved) {
+                                Log.w(TAG, "Client connection denied by TV user: $clientId")
+                                close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Connection Denied"))
+                                return@webSocket
+                            }
+
+                            TvEventBus.registerClient(clientId)
 
                             // Launch a separate coroutine to push state updates to this connection
                             val stateJob = launch {
@@ -145,6 +178,22 @@ class LocalServerService : Service() {
                                             TvEventBus.postCommand(clientId, command)
                                         } catch (e: Exception) {
                                             Log.e(TAG, "Error parsing command: $text", e)
+                                        }
+                                    } else if (frame is Frame.Binary) {
+                                        val data = frame.readBytes()
+                                        if (data.size >= 9) {
+                                            val type = data[0].toInt()
+                                            val buffer = java.nio.ByteBuffer.wrap(data, 1, 8)
+                                            val dx = buffer.float
+                                            val dy = buffer.float
+                                            val command = when (type) {
+                                                0x01 -> Command.MoveCursor(dx, dy)
+                                                0x02 -> Command.Scroll(dx, dy)
+                                                else -> null
+                                            }
+                                            if (command != null) {
+                                                TvEventBus.postCommand(clientId, command)
+                                            }
                                         }
                                     }
                                 }
