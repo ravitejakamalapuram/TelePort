@@ -81,6 +81,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.teleport.app.mobile.connection.ConnectionState
@@ -196,6 +197,7 @@ fun PairingScreen(
                 modifier = Modifier
                     .size(44.dp)
                     .background(ThemeTokens.CardBg, CircleShape)
+                    .clearAndSetSemantics { contentDescription = "Help" }
             ) {
                 Text("❔", fontSize = 20.sp)
             }
@@ -499,7 +501,9 @@ fun ControllerScreen(
                         // Help button
                         IconButton(
                             onClick = onShowHelp,
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clearAndSetSemantics { contentDescription = "Help" }
                         ) {
                             Text("❔", fontSize = 18.sp)
                         }
@@ -508,7 +512,7 @@ fun ControllerScreen(
                             onClick = { showTipJar = true },
                             modifier = Modifier
                                 .size(36.dp)
-                                .semantics { contentDescription = "Tip Jar" }
+                                .clearAndSetSemantics { contentDescription = "Tip Jar" }
                         ) {
                             Text("☕", fontSize = 18.sp)
                         }

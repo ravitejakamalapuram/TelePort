@@ -23,3 +23,6 @@
 ## 2024-06-05 - Missing ARIA Labels on Emoji-Only Buttons
 **Learning:** In Jetpack Compose, an `IconButton` that uses text consisting only of an emoji (e.g., `Text("☕")`) does not automatically provide a meaningful semantic label to screen readers. This leaves visually impaired users without context for the button's action.
 **Action:** Always apply `modifier = Modifier.semantics { contentDescription = "[Action Name]" }` to `IconButton`s or similar interactive elements that rely solely on emojis or decorative glyphs, ensuring they are properly announced.
+## 2024-06-05 - Missing ARIA Labels on Emoji-Only Buttons
+**Learning:** In Jetpack Compose, an `IconButton` that uses text consisting only of an emoji (e.g., `Text("☕")`) does not automatically provide a meaningful semantic label to screen readers. Furthermore, using `Modifier.semantics` adds a new label but keeps the default one, causing screen readers to read both. This leaves visually impaired users confused or overwhelmed with verbose/inaccurate context for the button's action.
+**Action:** Always apply `modifier = Modifier.clearAndSetSemantics { contentDescription = "[Action Name]" }` to `IconButton`s or similar interactive elements that rely solely on emojis or decorative glyphs. This ensures the default semantics of the text are cleared, and they are cleanly announced with the provided description.
