@@ -1,0 +1,31 @@
+<<<<<<< SEARCH
+    <application
+        android:name="com.teleport.app.TelePortApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.NoActionBar"
+        android:usesCleartextTraffic="true"> <!-- Cleartext allowed for local network connections -->
+
+        <!-- Unified Entry MainActivity -->
+=======
+    <application
+        android:name="com.teleport.app.TelePortApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.NoActionBar"
+        android:usesCleartextTraffic="true"> <!-- Cleartext allowed for local network connections -->
+
+        <!-- Resolve AdServices manifest merger conflict between Firebase Analytics and AdMob -->
+        <property
+            android:name="android.adservices.AD_SERVICES_CONFIG"
+            android:resource="@xml/gma_ad_services_config"
+            tools:replace="android:resource" />
+
+        <!-- Unified Entry MainActivity -->
+>>>>>>> REPLACE
