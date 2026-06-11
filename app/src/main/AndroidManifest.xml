@@ -32,6 +32,11 @@
         android:theme="@style/Theme.AppCompat.NoActionBar"
         android:usesCleartextTraffic="true"> <!-- Cleartext allowed for local network connections -->
 
+        <property
+            android:name="android.adservices.AD_SERVICES_CONFIG"
+            android:resource="@xml/gma_ad_services_config"
+            tools:replace="android:resource" />
+
         <!-- Unified Entry MainActivity -->
         <activity
             android:name="com.teleport.app.MainActivity"
