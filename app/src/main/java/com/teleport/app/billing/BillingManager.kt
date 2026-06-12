@@ -45,12 +45,7 @@ class BillingManager(
 
     private val billingClient = BillingClient.newBuilder(context)
         .setListener(this)
-        .enablePendingPurchases(
-            PendingPurchasesParams.newBuilder()
-                .enableOneTimeProducts()
-                .enablePrepaidPlans()
-                .build()
-        )
+        .enablePendingPurchases()
         .build()
 
     /** Connect to Google Play Billing service. Call in Application.onCreate() or MainActivity. */
