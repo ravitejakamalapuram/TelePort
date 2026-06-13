@@ -6,70 +6,26 @@ import android.content.Context
 import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
-import androidx.compose.material3.TabRowDefaults
-import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -94,10 +50,12 @@ import com.teleport.app.ads.AdManager
 import com.teleport.app.billing.BillingManager
 import com.teleport.app.billing.PremiumState
 import com.teleport.app.config.FeatureFlags
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import kotlinx.coroutines.delay
 
 private val isProUnlocked: Boolean
     get() = PremiumState.isPremium || AdManager.isTemporaryProActive || !FeatureFlags.ENABLE_ADVERTISEMENTS
@@ -132,21 +90,61 @@ fun MobileRemoteScreen(
         modifier = Modifier.fillMaxSize(),
         color = ThemeTokens.Background
     ) {
-        if (connState == ConnectionState.Connected) {
-            ControllerScreen(
-                connectionManager = connectionManager,
-                gyroTracker = gyroTracker,
-                startMirroring = startMirroring,
-                stopMirroring = stopMirroring,
-                billingManager = billingManager,
-                onShowHelp = { showOnboarding = true }
-            )
-        } else {
-            PairingScreen(
-                connectionManager = connectionManager,
-                nsdHelper = nsdHelper,
-                scanQr = scanQr,
-                onShowHelp = { showOnboarding = true }
+        when (connState) {
+            is ConnectionState.Disconnected -> {
+                NoConnectionScreen(
+                    connectionManager = connectionManager,
+                    nsdHelper = nsdHelper,
+                    scanQr = scanQr,
+                    onShowHelp = { showOnboarding = true }
+                )
+            }
+            is ConnectionState.Connecting -> {
+                ConnectingScreen(connectionManager)
+            }
+            is ConnectionState.Error -> {
+                ConnectionFailedScreen(
+                    connectionManager = connectionManager,
+                    errorState = connState as ConnectionState.Error,
+                    onShowHelp = { showOnboarding = true }
+                )
+            }
+            is ConnectionState.Connected -> {
+                ControllerScreen(
+                    connectionManager = connectionManager,
+                    gyroTracker = gyroTracker,
+                    startMirroring = startMirroring,
+                    stopMirroring = stopMirroring,
+                    billingManager = billingManager,
+                    onShowHelp = { showOnboarding = true }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun NoConnectionBottomNavBar(activeItem: String = "Devices") {
+    NavigationBar(
+        containerColor = ThemeTokens.CardBg,
+        tonalElevation = 8.dp
+    ) {
+        val items = listOf(
+            Triple("Remote", Icons.Filled.Gamepad, "Remote"),
+            Triple("Media", Icons.Filled.Movie, "Media"),
+            Triple("Devices", Icons.Filled.Tv, "Devices"),
+            Triple("Settings", Icons.Filled.Settings, "Settings")
+        )
+        items.forEach { (label, icon, value) ->
+            val isActive = value == activeItem
+            NavigationBarItem(
+                selected = isActive,
+                onClick = { /* Disabled when disconnected */ },
+                icon = { Icon(icon, contentDescription = label, tint = if (isActive) ThemeTokens.Primary else ThemeTokens.TextSub.copy(alpha = 0.4f)) },
+                label = { Text(label, color = if (isActive) ThemeTokens.Primary else ThemeTokens.TextSub.copy(alpha = 0.4f), fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                colors = NavigationBarItemDefaults.colors(
+                    indicatorColor = ThemeTokens.Primary.copy(alpha = 0.15f)
+                )
             )
         }
     }
@@ -154,216 +152,773 @@ fun MobileRemoteScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PairingScreen(
+fun NoConnectionScreen(
     connectionManager: TvConnectionManager,
     nsdHelper: NsdHelper,
     scanQr: () -> Unit,
     onShowHelp: () -> Unit
 ) {
+    var showDiscovery by remember { mutableStateOf(false) }
     val discoveredTvs by nsdHelper.discoveredTvs.collectAsState()
-    val connState by connectionManager.connectionState.collectAsState()
     var manualIp by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
-    DisposableEffect(Unit) {
-        nsdHelper.startDiscovery()
+    DisposableEffect(showDiscovery) {
+        if (showDiscovery) {
+            nsdHelper.startDiscovery()
+        } else {
+            nsdHelper.stopDiscovery()
+        }
         onDispose {
             nsdHelper.stopDiscovery()
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(32.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "${ThemeTokens.APP_NAME} Remote",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = ThemeTokens.TextMain
-            )
-            IconButton(
-                onClick = onShowHelp,
+    Scaffold(
+        topBar = {
+            Row(
                 modifier = Modifier
-                    .size(44.dp)
-                    .background(ThemeTokens.CardBg, CircleShape)
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .height(64.dp)
+                    .background(ThemeTokens.Background)
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("❔", fontSize = 20.sp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.SettingsRemote,
+                        contentDescription = "Remote",
+                        tint = ThemeTokens.Primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Text(
+                        text = "TelePort",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ThemeTokens.Primary
+                    )
+                }
+                IconButton(onClick = onShowHelp) {
+                    Icon(
+                        Icons.Filled.CastConnected,
+                        contentDescription = "Cast Connected",
+                        tint = ThemeTokens.TextSub
+                    )
+                }
             }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Connect to your TV client to start controlling",
-            fontSize = 14.sp,
-            color = ThemeTokens.TextSub,
-            modifier = Modifier.align(Alignment.Start)
-        )
-
-        Spacer(modifier = Modifier.height(48.dp))
-
-        // QR Code Scanner Button
-        Button(
-            onClick = scanQr,
+        },
+        bottomBar = {
+            NoConnectionBottomNavBar(activeItem = "Devices")
+        },
+        containerColor = ThemeTokens.Background
+    ) { innerPadding ->
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary)
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
-            Text("Scan TV QR Code", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-        Text("OR CONNECT VIA DISCOVERY", fontSize = 12.sp, color = ThemeTokens.TextSub, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Discovered TVs List
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg)
-        ) {
-            if (discoveredTvs.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .padding(bottom = 40.dp)
+                        .size(160.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(
-                            color = ThemeTokens.Accent,
-                            modifier = Modifier.size(36.dp)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .border(2.dp, ThemeTokens.TextSub.copy(alpha = 0.2f), CircleShape)
+                    )
+                    Icon(
+                        Icons.Filled.TvOff,
+                        contentDescription = "TV Off",
+                        tint = ThemeTokens.TextSub.copy(alpha = 0.4f),
+                        modifier = Modifier.size(84.dp)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset(x = 8.dp, y = 8.dp)
+                            .background(ThemeTokens.CardBg, RoundedCornerShape(16.dp))
+                            .border(1.dp, ThemeTokens.TextSub.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+                            .padding(12.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.LinkOff,
+                            contentDescription = "Disconnected",
+                            tint = ThemeTokens.Error,
+                            modifier = Modifier.size(24.dp)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("Searching for TVs on Wi-Fi...", color = ThemeTokens.TextSub, fontSize = 14.sp)
                     }
                 }
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    itemsIndexed(discoveredTvs) { _, tv ->
-                        Row(
+
+                Text(
+                    text = "No Device Connected",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ThemeTokens.TextMain,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                Text(
+                    text = "Pair a device to start controlling your media. Connect to the same Wi-Fi network to discover TVs and consoles.",
+                    fontSize = 15.sp,
+                    color = ThemeTokens.TextSub,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    lineHeight = 22.sp,
+                    modifier = Modifier.padding(bottom = 40.dp)
+                )
+
+                Button(
+                    onClick = { showDiscovery = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary),
+                    contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp),
+                    shape = RoundedCornerShape(9999.dp),
+                    modifier = Modifier.height(56.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(Icons.Filled.Search, contentDescription = "Search", tint = ThemeTokens.Background)
+                        Text(
+                            text = "Find Devices",
+                            color = ThemeTokens.Background,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(48.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(ThemeTokens.CardBg.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                        .border(1.dp, ThemeTokens.Border, RoundedCornerShape(16.dp))
+                        .clickable { onShowHelp() }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Info,
+                        contentDescription = "Info",
+                        tint = ThemeTokens.Accent,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Text(
+                        text = "Make sure your TV's Remote Desktop or Cast settings are enabled.",
+                        fontSize = 12.sp,
+                        color = ThemeTokens.TextSub,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+
+            if (showDiscovery) {
+                ModalBottomSheet(
+                    onDismissRequest = { showDiscovery = false },
+                    containerColor = ThemeTokens.Background,
+                    dragHandle = { BottomSheetDefaults.DragHandle(color = ThemeTokens.TextSub.copy(alpha = 0.4f)) }
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp)
+                            .navigationBarsPadding(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Pair New Device",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ThemeTokens.TextMain,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+
+                        Button(
+                            onClick = {
+                                showDiscovery = false
+                                scanQr()
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable(role = Role.Button) { connectionManager.connect(tv.ipAddress, tv.port) }
-                                .padding(16.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                                .height(56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary)
+                        ) {
+                            Text("Scan TV QR Code", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = ThemeTokens.Background)
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text(
+                            "DISCOVERED DEVICES",
+                            fontSize = 12.sp,
+                            color = ThemeTokens.TextSub,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.Start)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(160.dp),
+                            colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg)
+                        ) {
+                            if (discoveredTvs.isEmpty()) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        CircularProgressIndicator(
+                                            color = ThemeTokens.Accent,
+                                            modifier = Modifier.size(32.dp)
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        Text("Searching on Wi-Fi...", color = ThemeTokens.TextSub, fontSize = 13.sp)
+                                    }
+                                }
+                            } else {
+                                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                                    itemsIndexed(discoveredTvs) { _, tv ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable(role = Role.Button) {
+                                                    showDiscovery = false
+                                                    connectionManager.connect(tv.ipAddress, tv.port)
+                                                }
+                                                .padding(16.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column {
+                                                Text(tv.name, color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                                Text("${tv.ipAddress}:${tv.port}", color = ThemeTokens.TextSub, fontSize = 12.sp)
+                                            }
+                                            Text("Connect", color = ThemeTokens.Accent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
-                                Text(tv.name, color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
-                                Text("${tv.ipAddress}:${tv.port}", color = ThemeTokens.TextSub, fontSize = 12.sp)
+                            OutlinedTextField(
+                                value = manualIp,
+                                onValueChange = { manualIp = it },
+                                label = { Text("Manual TV IP") },
+                                placeholder = { Text("192.168.1.X") },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Uri,
+                                    imeAction = ImeAction.Go
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onGo = {
+                                        if (manualIp.isNotBlank()) {
+                                            showDiscovery = false
+                                            connectionManager.connect(manualIp.trim(), ThemeTokens.PORT)
+                                        }
+                                    }
+                                ),
+                                trailingIcon = {
+                                    if (manualIp.isNotEmpty()) {
+                                        IconButton(onClick = { manualIp = "" }) {
+                                            Icon(Icons.Filled.Clear, contentDescription = "Clear IP", tint = ThemeTokens.TextSub)
+                                        }
+                                    }
+                                },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = ThemeTokens.Accent,
+                                    focusedLabelColor = ThemeTokens.Accent,
+                                    unfocusedBorderColor = ThemeTokens.Border,
+                                    focusedTextColor = ThemeTokens.TextMain,
+                                    unfocusedTextColor = ThemeTokens.TextMain
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Button(
+                                onClick = {
+                                    if (manualIp.isNotBlank()) {
+                                        showDiscovery = false
+                                        connectionManager.connect(manualIp.trim(), ThemeTokens.PORT)
+                                    }
+                                },
+                                modifier = Modifier.height(56.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                enabled = manualIp.isNotBlank(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = ThemeTokens.Accent,
+                                    contentColor = ThemeTokens.Background,
+                                    disabledContainerColor = ThemeTokens.Accent.copy(alpha = 0.5f),
+                                    disabledContentColor = ThemeTokens.Background.copy(alpha = 0.5f)
+                                )
+                            ) {
+                                Text("Go", fontWeight = FontWeight.Bold)
                             }
-                            Text("Connect", color = ThemeTokens.Accent, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
         }
+    }
+}
 
-        Spacer(modifier = Modifier.height(24.dp))
+@Composable
+fun ConnectingScreen(connectionManager: TvConnectionManager) {
+    val infiniteTransition = rememberInfiniteTransition(label = "radar")
 
-        // Manual IP Fallback
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = manualIp,
-                onValueChange = { manualIp = it },
-                label = { Text("Manual TV IP Address") },
-                placeholder = { Text("192.168.1.X") },
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Uri,
-                    imeAction = ImeAction.Go
-                ),
-                keyboardActions = KeyboardActions(
-                    onGo = {
-                        if (manualIp.isNotBlank()) {
-                            connectionManager.connect(manualIp.trim(), ThemeTokens.PORT)
-                        }
-                    }
-                ),
-                trailingIcon = {
-                    if (manualIp.isNotEmpty()) {
-                        IconButton(onClick = { manualIp = "" }) {
-                            Icon(Icons.Filled.Clear, contentDescription = "Clear IP", tint = ThemeTokens.TextSub)
-                        }
-                    }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ThemeTokens.Accent,
-                    focusedLabelColor = ThemeTokens.Accent,
-                    unfocusedBorderColor = ThemeTokens.Border,
-                    focusedTextColor = ThemeTokens.TextMain,
-                    unfocusedTextColor = ThemeTokens.TextMain
-                )
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Button(
-                onClick = {
-                    if (manualIp.isNotBlank()) {
-                        connectionManager.connect(manualIp.trim(), ThemeTokens.PORT)
-                    }
-                },
-                modifier = Modifier.height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                enabled = manualIp.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = ThemeTokens.Accent,
-                    contentColor = ThemeTokens.Background,
-                    disabledContainerColor = ThemeTokens.Accent.copy(alpha = 0.5f),
-                    disabledContentColor = ThemeTokens.Background.copy(alpha = 0.5f)
-                )
-            ) {
-                Text("Go", fontWeight = FontWeight.Bold)
+    val radarScale1 by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "scale1"
+    )
+    val radarOpacity1 by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "opacity1"
+    )
+
+    val radarScale2 by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "scale2"
+    )
+    val radarOpacity2 by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "opacity2"
+    )
+
+    val spinnerRotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "rotation"
+    )
+
+    val tvBounce by infiniteTransition.animateFloat(
+        initialValue = -5f,
+        targetValue = 5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bounce"
+    )
+
+    var ellipsis by remember { mutableStateOf(".") }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(500)
+            ellipsis = when (ellipsis) {
+                "." -> ".."
+                ".." -> "..."
+                else -> "."
             }
         }
+    }
 
-        if (connState is ConnectionState.Connecting) {
-            Spacer(modifier = Modifier.height(16.dp))
+    Scaffold(
+        topBar = {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .height(64.dp)
+                    .background(ThemeTokens.Background)
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                CircularProgressIndicator(
-                    color = ThemeTokens.Accent,
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Connecting to TV...", color = ThemeTokens.Accent)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.SettingsRemote,
+                        contentDescription = "Remote",
+                        tint = ThemeTokens.Primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Text(
+                        text = "TelePort",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ThemeTokens.Primary
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier
+                        .background(ThemeTokens.Primary.copy(alpha = 0.15f), RoundedCornerShape(9999.dp))
+                        .border(1.dp, ThemeTokens.Primary.copy(alpha = 0.3f), RoundedCornerShape(9999.dp))
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(ThemeTokens.Primary, CircleShape)
+                    )
+                    Text(
+                        text = "Connecting...",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ThemeTokens.Primary
+                    )
+                }
+                IconButton(onClick = {}) {
+                    Icon(
+                        Icons.Filled.CastConnected,
+                        contentDescription = "Cast Connected",
+                        tint = ThemeTokens.TextSub
+                    )
+                }
             }
-        } else if (connState is ConnectionState.Error) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Error: ${(connState as ConnectionState.Error).message}", color = ThemeTokens.Error, fontSize = 12.sp)
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-        val uriHandler = LocalUriHandler.current
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
+        },
+        bottomBar = {
+            NoConnectionBottomNavBar(activeItem = "Remote")
+        },
+        containerColor = ThemeTokens.Background
+    ) { innerPadding ->
+        Box(
             modifier = Modifier
-                .clickable { uriHandler.openUri("https://chromewebstore.google.com") }
-                .padding(8.dp)
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentAlignment = Alignment.Center
         ) {
-            Text("🌐 Get Chrome Extension for Computer", color = ThemeTokens.Accent, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-        }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(ThemeTokens.Primary.copy(alpha = 0.08f), Color.Transparent),
+                            radius = 600f
+                        )
+                    )
+            )
 
-        // Monetization: Banner ad at bottom of pairing screen
-        Spacer(modifier = Modifier.height(8.dp))
-        BannerAd()
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Box(
+                    modifier = Modifier.size(260.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(160.dp)
+                            .scale(radarScale1)
+                            .border(1.5.dp, ThemeTokens.Primary.copy(alpha = radarOpacity1), CircleShape)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(160.dp)
+                            .scale(radarScale2)
+                            .border(1.5.dp, ThemeTokens.Primary.copy(alpha = radarOpacity2), CircleShape)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .background(ThemeTokens.CardBg, CircleShape)
+                            .border(1.dp, ThemeTokens.Border, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = ThemeTokens.Primary,
+                            strokeWidth = 3.dp,
+                            modifier = Modifier
+                                .size(96.dp)
+                                .scale(spinnerRotation / 360f)
+                        )
+                        Icon(
+                            Icons.Filled.Tv,
+                            contentDescription = "TV",
+                            tint = ThemeTokens.Primary,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .offset(y = tvBounce.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(48.dp))
+
+                Text(
+                    text = "Connecting to TV$ellipsis",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ThemeTokens.TextMain,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                Text(
+                    text = "Establishing a low-latency secure tunnel via your local network...",
+                    fontSize = 14.sp,
+                    color = ThemeTokens.TextSub,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    lineHeight = 20.sp,
+                    modifier = Modifier
+                        .width(260.dp)
+                        .padding(bottom = 32.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ConnectionFailedScreen(
+    connectionManager: TvConnectionManager,
+    errorState: ConnectionState.Error,
+    onShowHelp: () -> Unit
+) {
+    val activeIp = connectionManager.activeIp
+
+    Scaffold(
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .height(64.dp)
+                    .background(ThemeTokens.Background)
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.SettingsRemote,
+                        contentDescription = "Remote",
+                        tint = ThemeTokens.Primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Text(
+                        text = "TelePort",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = ThemeTokens.Primary
+                    )
+                }
+                IconButton(onClick = {}) {
+                    Icon(
+                        Icons.Filled.CastConnected,
+                        contentDescription = "Cast Connected",
+                        tint = ThemeTokens.Primary
+                    )
+                }
+            }
+        },
+        bottomBar = {
+            NoConnectionBottomNavBar(activeItem = "Devices")
+        },
+        containerColor = ThemeTokens.Background
+    ) { innerPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, ThemeTokens.Border, RoundedCornerShape(24.dp)),
+                    colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
+                    shape = RoundedCornerShape(24.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .padding(bottom = 24.dp)
+                                .size(96.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(ThemeTokens.Error.copy(alpha = 0.15f), CircleShape)
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .background(ThemeTokens.CardBg, CircleShape)
+                                    .border(2.dp, ThemeTokens.Error.copy(alpha = 0.4f), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Filled.WifiOff,
+                                    contentDescription = "Wifi Off",
+                                    tint = ThemeTokens.Error,
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .size(32.dp)
+                                    .background(ThemeTokens.CardBg, CircleShape)
+                                    .border(1.dp, ThemeTokens.Border, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Filled.LinkOff,
+                                    contentDescription = "Disconnected",
+                                    tint = ThemeTokens.Error,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = "Connection Failed",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ThemeTokens.TextMain,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                        Text(
+                            text = "We couldn't reach the Living Room TV. Make sure it's turned on and connected to the same Wi-Fi.",
+                            fontSize = 14.sp,
+                            color = ThemeTokens.TextSub,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            lineHeight = 20.sp,
+                            modifier = Modifier
+                                .width(280.dp)
+                                .padding(bottom = 32.dp)
+                        )
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    if (activeIp != null) {
+                                        connectionManager.connect(activeIp, ThemeTokens.PORT)
+                                    } else {
+                                        connectionManager.disconnect()
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(Icons.Filled.Refresh, contentDescription = "Retry", tint = ThemeTokens.Background)
+                                    Text("Try Again", color = ThemeTokens.Background, fontWeight = FontWeight.Bold)
+                                }
+                            }
+
+                            Button(
+                                onClick = onShowHelp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp)
+                                    .border(1.dp, ThemeTokens.Border, RoundedCornerShape(16.dp)),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.CardBg)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(Icons.Filled.Info, contentDescription = "Help", tint = ThemeTokens.TextSub)
+                                    Text("Troubleshoot", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(ThemeTokens.CardBg.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                        .border(1.dp, ThemeTokens.Border, RoundedCornerShape(16.dp))
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Icon(
+                        Icons.Filled.Info,
+                        contentDescription = "Pro Tip",
+                        tint = ThemeTokens.Primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text(
+                        text = "Pro tip: Try restarting your router if problems persist across multiple devices.",
+                        fontSize = 12.sp,
+                        color = ThemeTokens.TextSub,
+                        lineHeight = 18.sp
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -383,10 +938,9 @@ fun ControllerScreen(
     var showTipJar by remember { mutableStateOf(false) }
     var showAdUnlockPrompt by remember { mutableStateOf(false) }
 
-    // Ad unlock dialog
     if (showAdUnlockPrompt) {
         val context = LocalContext.current
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
             onDismissRequest = { showAdUnlockPrompt = false },
             title = { Text("Unlock Pro Features", fontWeight = FontWeight.Bold) },
             text = { Text("To cast more than 3 tabs or use screen mirroring, you can temporarily unlock all Pro features for 1 hour by watching a quick video ad.") },
@@ -415,7 +969,6 @@ fun ControllerScreen(
         )
     }
 
-    // Paywall overlay
     if (showPaywall) {
         PaywallScreen(
             billingManager = billingManager,
@@ -424,7 +977,6 @@ fun ControllerScreen(
         return
     }
 
-    // Tip jar overlay
     if (showTipJar) {
         TipJarSheet(
             billingManager = billingManager,
@@ -438,219 +990,531 @@ fun ControllerScreen(
     } else if (isNativePlaying) {
         MobileMediaRemoteScreen(connectionManager, tvState)
     } else {
-        var selectedTabIndex by remember { mutableIntStateOf(0) }
-        val tabTitles = remember { listOf("Trackpad", "D-Pad", "Tabs") }
+        var selectedBottomTab by remember { mutableStateOf("Remote") }
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            // Header Bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(ThemeTokens.CardBg)
-            ) {
-                Row(
+        Scaffold(
+            topBar = {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "${ThemeTokens.APP_NAME} Remote",
-                            color = ThemeTokens.TextMain,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        )
-                        var isDarkModeEnabled by remember { mutableStateOf(false) }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .padding(top = 4.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .toggleable(
-                                    value = isDarkModeEnabled,
-                                    role = Role.Switch,
-                                    onValueChange = {
-                                        isDarkModeEnabled = it
-                                        connectionManager.sendCommand(Command.ToggleDarkMode(it))
-                                    }
-                                )
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text("Dark Mode", color = ThemeTokens.TextSub, fontSize = 12.sp)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Switch(
-                                checked = isDarkModeEnabled,
-                                onCheckedChange = null,
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = ThemeTokens.Accent,
-                                    checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
-                                ),
-                                modifier = Modifier.scale(0.7f)
-                            )
-                        }
-                    }
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Help button
-                        IconButton(
-                            onClick = onShowHelp,
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Text("❔", fontSize = 18.sp)
-                        }
-                        // Tip jar button
-                        IconButton(
-                            onClick = { showTipJar = true },
-                            modifier = Modifier
-                                .size(36.dp)
-                                .semantics { contentDescription = "Tip Jar" }
-                        ) {
-                            Text("☕", fontSize = 18.sp)
-                        }
-                        if (!isProUnlocked && FeatureFlags.ENABLE_PAID_SUBSCRIPTIONS) {
-                            Button(
-                                onClick = { showPaywall = true },
-                                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary),
-                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 6.dp)
-                            ) {
-                                Text(
-                                    text = "⭐ Pro",
-                                    color = ThemeTokens.TextMain,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    softWrap = false
-                                )
-                            }
-                        }
-                        Button(
-                            onClick = { connectionManager.disconnect() },
-                            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error.copy(alpha = 0.8f)),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 6.dp)
-                        ) {
-                            Text(
-                                text = "Disconnect",
-                                color = ThemeTokens.TextMain,
-                                fontSize = 11.sp,
-                                maxLines = 1,
-                                softWrap = false
-                            )
-                        }
-                    }
-                }
-            }
-
-            // GLOWING NATIVE STREAM DETECTED BANNER
-            tvState?.detectedStreamUrl?.let { streamUrl ->
-                val context = LocalContext.current
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                        .clickable(role = Role.Button) {
-                            // Monetization: Show interstitial before launching native player (free tier)
-                            if (!isProUnlocked) {
-                                AdManager.showInterstitial(context as android.app.Activity) {
-                                    connectionManager.sendCommand(Command.PlayStreamNatively(streamUrl))
-                                }
-                            } else {
-                                connectionManager.sendCommand(Command.PlayStreamNatively(streamUrl))
-                            }
-                        },
-                    colors = CardDefaults.cardColors(containerColor = ThemeTokens.Primary),
-                    shape = RoundedCornerShape(12.dp)
+                        .background(ThemeTokens.CardBg)
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
+                            .statusBarsPadding()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text("📺 Media stream detected!", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                            Text("Tap to play cleanly in Native Player", color = ThemeTokens.TextSub, fontSize = 11.sp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                Icons.Filled.SettingsRemote,
+                                contentDescription = "Remote icon",
+                                tint = ThemeTokens.Primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Column {
+                                Text(
+                                    text = "Connected to TV",
+                                    color = ThemeTokens.TextMain,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+                                Text(
+                                    text = connectionManager.activeIp ?: "Local Network",
+                                    color = ThemeTokens.TextSub,
+                                    fontSize = 11.sp
+                                )
+                            }
                         }
-                        Text("PLAY", color = ThemeTokens.Accent, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (!isProUnlocked && FeatureFlags.ENABLE_PAID_SUBSCRIPTIONS) {
+                                Button(
+                                    onClick = { showPaywall = true },
+                                    colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = "⭐ Pro",
+                                        color = ThemeTokens.Background,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
+                                }
+                            }
+                            IconButton(
+                                onClick = { connectionManager.disconnect() }
+                            ) {
+                                Icon(Icons.Filled.LinkOff, contentDescription = "Disconnect", tint = ThemeTokens.Error)
+                            }
+                        }
+                    }
+                }
+            },
+            bottomBar = {
+                NavigationBar(
+                    containerColor = ThemeTokens.CardBg,
+                    tonalElevation = 8.dp
+                ) {
+                    val tabs = listOf(
+                        Triple("Remote", Icons.Filled.Gamepad, "Remote"),
+                        Triple("Trackpad", Icons.Filled.TouchApp, "Trackpad"),
+                        Triple("Tabs", Icons.Filled.Apps, "Tabs"),
+                        Triple("Settings", Icons.Filled.Settings, "Settings")
+                    )
+                    tabs.forEach { (label, icon, value) ->
+                        val isActive = selectedBottomTab == value
+                        NavigationBarItem(
+                            selected = isActive,
+                            onClick = { selectedBottomTab = value },
+                            icon = { Icon(icon, contentDescription = label, tint = if (isActive) ThemeTokens.Primary else ThemeTokens.TextSub.copy(alpha = 0.6f)) },
+                            label = { Text(label, color = if (isActive) ThemeTokens.Primary else ThemeTokens.TextSub.copy(alpha = 0.6f), fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                            colors = NavigationBarItemDefaults.colors(
+                                indicatorColor = ThemeTokens.Primary.copy(alpha = 0.15f)
+                            )
+                        )
+                    }
+                }
+            },
+            containerColor = ThemeTokens.Background
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                tvState?.detectedStreamUrl?.let { streamUrl ->
+                    val context = LocalContext.current
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .clickable(role = Role.Button) {
+                                if (!isProUnlocked) {
+                                    AdManager.showInterstitial(context as android.app.Activity) {
+                                        connectionManager.sendCommand(Command.PlayStreamNatively(streamUrl))
+                                    }
+                                } else {
+                                    connectionManager.sendCommand(Command.PlayStreamNatively(streamUrl))
+                                }
+                            },
+                        colors = CardDefaults.cardColors(containerColor = ThemeTokens.Primary),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("📺 Media stream detected!", color = ThemeTokens.Background, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                                Text("Tap to play cleanly in Native Player", color = ThemeTokens.Background.copy(alpha = 0.8f), fontSize = 11.sp)
+                            }
+                            Text("PLAY", color = ThemeTokens.Background, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        }
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) {
+                    when (selectedBottomTab) {
+                        "Remote" -> RemoteTab(connectionManager)
+                        "Trackpad" -> TrackpadTab(
+                            connectionManager = connectionManager,
+                            gyroTracker = gyroTracker,
+                            startMirroring = startMirroring,
+                            stopMirroring = stopMirroring,
+                            onShowPaywall = {
+                                if (FeatureFlags.ENABLE_PAID_SUBSCRIPTIONS) {
+                                    showPaywall = true
+                                } else {
+                                    showAdUnlockPrompt = true
+                                }
+                            }
+                        )
+                        "Tabs" -> TabsManagerTab(
+                            connectionManager = connectionManager,
+                            tvState = tvState,
+                            onShowPaywall = {
+                                if (FeatureFlags.ENABLE_PAID_SUBSCRIPTIONS) {
+                                    showPaywall = true
+                                } else {
+                                    showAdUnlockPrompt = true
+                                }
+                            }
+                        )
+                        "Settings" -> SettingsTab(
+                            connectionManager = connectionManager,
+                            billingManager = billingManager,
+                            onShowHelp = onShowHelp,
+                            onShowTipJar = { showTipJar = true },
+                            onShowPaywall = { showPaywall = true }
+                        )
+                    }
+                }
+
+                if (selectedBottomTab != "Settings") {
+                    QuickInputBar(connectionManager)
+                }
+
+                if (AdManager.shouldShowAds()) {
+                    val context = LocalContext.current
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(role = Role.Button) {
+                                AdManager.showRewarded(context as android.app.Activity) {
+                                    AdManager.grantTemporaryAdFree()
+                                }
+                            }
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text("🎬 Watch ad to remove ads for 1 hour", color = ThemeTokens.Primary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                BannerAd()
+            }
+        }
+    }
+}
+
+@Composable
+fun RemoteTab(connectionManager: TvConnectionManager) {
+    val haptic = LocalHapticFeedback.current
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.SpaceBetween,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(240.dp)
+                .padding(8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .border(1.dp, ThemeTokens.Primary.copy(alpha = 0.2f), CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(ThemeTokens.Primary.copy(alpha = 0.05f), Color.Transparent),
+                            radius = 350f
+                        )
+                    )
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(200.dp)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(Color(0xFF252B2D), Color(0xFF171D1E)),
+                            radius = 300f
+                        ),
+                        CircleShape
+                    )
+                    .border(1.dp, ThemeTokens.Border, CircleShape)
+                    .padding(8.dp)
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Box(modifier = Modifier.align(Alignment.TopCenter).width(1.dp).height(20.dp).background(ThemeTokens.Primary.copy(alpha = 0.3f)))
+                    Box(modifier = Modifier.align(Alignment.BottomCenter).width(1.dp).height(20.dp).background(ThemeTokens.Primary.copy(alpha = 0.3f)))
+                    Box(modifier = Modifier.align(Alignment.CenterStart).width(20.dp).height(1.dp).background(ThemeTokens.Primary.copy(alpha = 0.3f)))
+                    Box(modifier = Modifier.align(Alignment.CenterEnd).width(20.dp).height(1.dp).background(ThemeTokens.Primary.copy(alpha = 0.3f)))
+                }
+
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    IconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            connectionManager.sendCommand(Command.Scroll(0f, -150f))
+                        },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Up", tint = ThemeTokens.TextMain, modifier = Modifier.size(32.dp))
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                connectionManager.sendCommand(Command.Scroll(-150f, 0f))
+                            },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Left", tint = ThemeTokens.TextMain, modifier = Modifier.size(32.dp))
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .background(ThemeTokens.CardBg, CircleShape)
+                                .border(2.dp, ThemeTokens.Primary.copy(alpha = 0.5f), CircleShape)
+                                .clickable(role = Role.Button) {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    connectionManager.sendCommand(Command.Click)
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                    modifier = Modifier
+                                        .size(14.dp)
+                                        .background(ThemeTokens.Primary, CircleShape)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                connectionManager.sendCommand(Command.Scroll(150f, 0f))
+                            },
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Right", tint = ThemeTokens.TextMain, modifier = Modifier.size(32.dp))
+                        }
+                    }
+
+                    IconButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            connectionManager.sendCommand(Command.Scroll(0f, 150f))
+                        },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Down", tint = ThemeTokens.TextMain, modifier = Modifier.size(32.dp))
+                    }
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    connectionManager.sendCommand(Command.Scroll(-100f, 0f))
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(ThemeTokens.CardBg, CircleShape)
+                    .border(1.dp, ThemeTokens.Border, CircleShape)
+            ) {
+                Icon(Icons.Filled.FastRewind, contentDescription = "Rewind", tint = ThemeTokens.TextMain, modifier = Modifier.size(24.dp))
+            }
+
+            Spacer(modifier = Modifier.width(24.dp))
+
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .background(ThemeTokens.Primary, CircleShape)
+                    .clickable(role = Role.Button) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        connectionManager.sendCommand(Command.PlayPause)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Filled.PlayArrow,
+                    contentDescription = "Play Pause",
+                    tint = ThemeTokens.Background,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(24.dp))
+
+            IconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    connectionManager.sendCommand(Command.Scroll(100f, 0f))
+                },
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(ThemeTokens.CardBg, CircleShape)
+                    .border(1.dp, ThemeTokens.Border, CircleShape)
+            ) {
+                Icon(Icons.Filled.FastForward, contentDescription = "Forward", tint = ThemeTokens.TextMain, modifier = Modifier.size(24.dp))
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Card(
+                modifier = Modifier
+                    .weight(1f)
+                    .border(1.dp, ThemeTokens.Border, RoundedCornerShape(16.dp)),
+                colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.VolumeMute, contentDescription = "Volume Down", tint = ThemeTokens.TextSub, modifier = Modifier.size(14.dp))
+                        Text(
+                            text = "VOLUME",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ThemeTokens.Primary,
+                            letterSpacing = 1.sp
+                        )
+                        Icon(Icons.Filled.VolumeUp, contentDescription = "Volume Up", tint = ThemeTokens.TextSub, modifier = Modifier.size(14.dp))
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .background(ThemeTokens.Border, RoundedCornerShape(2.dp))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(0.65f)
+                                .background(ThemeTokens.Primary, RoundedCornerShape(2.dp))
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        IconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                connectionManager.sendCommand(Command.VolumeDown)
+                            },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(ThemeTokens.Border, RoundedCornerShape(8.dp))
+                        ) {
+                            Icon(Icons.Filled.Remove, contentDescription = "Decrease", tint = ThemeTokens.TextMain)
+                        }
+                        IconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                connectionManager.sendCommand(Command.VolumeUp)
+                            },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(ThemeTokens.Border, RoundedCornerShape(8.dp))
+                        ) {
+                            Icon(Icons.Filled.Add, contentDescription = "Increase", tint = ThemeTokens.TextMain)
+                        }
                     }
                 }
             }
 
-            // Tab Selection
-            TabRow(
-                selectedTabIndex = selectedTabIndex,
-                containerColor = ThemeTokens.CardBg,
-                contentColor = ThemeTokens.TextMain,
-                indicator = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(
-                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                        color = ThemeTokens.Accent
-                    )
-                }
-            ) {
-                tabTitles.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = { Text(title, fontWeight = FontWeight.Bold) }
-                    )
-                }
-            }
-
-            // Active Tab Content
-            Box(
+            Card(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
-                    .background(ThemeTokens.Background)
+                    .border(1.dp, ThemeTokens.Border, RoundedCornerShape(16.dp)),
+                colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
+                shape = RoundedCornerShape(16.dp)
             ) {
-                when (selectedTabIndex) {
-                    0 -> TrackpadTab(connectionManager, gyroTracker, startMirroring, stopMirroring, onShowPaywall = {
-                        if (FeatureFlags.ENABLE_PAID_SUBSCRIPTIONS) {
-                            showPaywall = true
-                        } else {
-                            showAdUnlockPrompt = true
-                        }
-                    })
-                    1 -> DpadTab(connectionManager)
-                    2 -> TabsManagerTab(connectionManager, tvState, onShowPaywall = {
-                        if (FeatureFlags.ENABLE_PAID_SUBSCRIPTIONS) {
-                            showPaywall = true
-                        } else {
-                            showAdUnlockPrompt = true
-                        }
-                    })
-                }
-            }
-
-            // Keyboard/Input Bar (Sticky at bottom)
-            QuickInputBar(connectionManager)
-
-            // Monetization: "Remove Ads" rewarded ad option
-            if (AdManager.shouldShowAds()) {
-                val context = LocalContext.current
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(role = Role.Button) {
-                            AdManager.showRewarded(context as android.app.Activity) {
-                                AdManager.grantTemporaryAdFree()
-                            }
-                        }
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.Center
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("🎬 Watch ad to remove ads for 1 hour", color = ThemeTokens.Accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Channel Down", tint = ThemeTokens.TextSub, modifier = Modifier.size(14.dp))
+                        Text(
+                            text = "CHANNEL",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ThemeTokens.Primary,
+                            letterSpacing = 1.sp
+                        )
+                        Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Channel Up", tint = ThemeTokens.TextSub, modifier = Modifier.size(14.dp))
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .background(ThemeTokens.Border, RoundedCornerShape(2.dp))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(0.3f)
+                                .background(ThemeTokens.Primary, RoundedCornerShape(2.dp))
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        IconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                connectionManager.sendCommand(Command.ChannelDown)
+                            },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(ThemeTokens.Border, RoundedCornerShape(8.dp))
+                        ) {
+                            Icon(Icons.Filled.ExpandMore, contentDescription = "Decrease", tint = ThemeTokens.TextMain)
+                        }
+                        IconButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                connectionManager.sendCommand(Command.ChannelUp)
+                            },
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(ThemeTokens.Border, RoundedCornerShape(8.dp))
+                        ) {
+                            Icon(Icons.Filled.ExpandLess, contentDescription = "Increase", tint = ThemeTokens.TextMain)
+                        }
+                    }
                 }
             }
-
-            // Monetization: Banner ad at bottom of controller screen
-            BannerAd()
         }
     }
 }
@@ -686,7 +1550,6 @@ fun TrackpadTab(
             .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Mirror Screen Switch Header — PRO ONLY
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -722,15 +1585,14 @@ fun TrackpadTab(
                 checked = isCasting,
                 onCheckedChange = null,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = ThemeTokens.Accent,
-                    checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
+                    checkedThumbColor = ThemeTokens.Primary,
+                    checkedTrackColor = ThemeTokens.Primary.copy(alpha = 0.5f)
                 )
             )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Air Mouse Switch Header — Rewarded Ad unlock or PRO
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -741,7 +1603,6 @@ fun TrackpadTab(
                     role = Role.Switch,
                     onValueChange = { wantsOn ->
                         if (wantsOn && !isProUnlocked) {
-                            // Free users: watch rewarded ad to unlock for this session
                             AdManager.showRewarded(context as android.app.Activity) {
                                 AdManager.grantTemporaryAdFree()
                                 isAirMouseOn = true
@@ -761,7 +1622,7 @@ fun TrackpadTab(
                     if (!isProUnlocked) {
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("🎬 AD", color = ThemeTokens.Background, fontSize = 10.sp, fontWeight = FontWeight.Bold,
-                            modifier = Modifier.background(ThemeTokens.Accent, RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp))
+                            modifier = Modifier.background(ThemeTokens.Primary, RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp))
                     }
                 }
                 Text(
@@ -773,13 +1634,12 @@ fun TrackpadTab(
                 checked = isAirMouseOn,
                 onCheckedChange = null,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = ThemeTokens.Accent,
-                    checkedTrackColor = ThemeTokens.Accent.copy(alpha = 0.5f)
+                    checkedThumbColor = ThemeTokens.Primary,
+                    checkedTrackColor = ThemeTokens.Primary.copy(alpha = 0.5f)
                 )
             )
         }
 
-        // Trackpad Canvas
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -820,7 +1680,6 @@ fun TrackpadTab(
                                         val averageDx = (dx1 + dx2) / 2f
 
                                         if (averageDy != 0f || averageDx != 0f) {
-                                            // Send scroll command (invert dy/dx for natural scrolling)
                                             connectionManager.sendCommand(
                                                 Command.Scroll(-averageDx * 2f, -averageDy * 2f)
                                             )
@@ -848,7 +1707,7 @@ fun TrackpadTab(
             if (isAirMouseOn) {
                 Text(
                     "TAP ANYWHERE TO CLICK\n(Wave phone to move cursor)",
-                    color = ThemeTokens.Accent,
+                    color = ThemeTokens.Primary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -864,7 +1723,6 @@ fun TrackpadTab(
             }
         }
 
-        // Scroll Helper Buttons (For easier page scrolling)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -889,106 +1747,11 @@ fun TrackpadTab(
 }
 
 @Composable
-fun DpadTab(connectionManager: TvConnectionManager) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(
-                onClick = { connectionManager.sendCommand(Command.GoBack) },
-                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Border)
-            ) {
-                Text("Back", color = ThemeTokens.TextMain)
-            }
-
-            Button(
-                onClick = { connectionManager.sendCommand(Command.PlayPause) },
-                colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent)
-            ) {
-                Text("Play / Pause", color = ThemeTokens.Background, fontWeight = FontWeight.Bold)
-            }
-        }
-
-        // The D-pad layout
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.weight(1f)
-        ) {
-            // UP
-            IconButton(
-                onClick = { connectionManager.sendCommand(Command.Scroll(0f, -150f)) },
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(ThemeTokens.CardBg, CircleShape)
-            ) {
-                Icon(Icons.Filled.KeyboardArrowUp, contentDescription = "Scroll Up", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                // LEFT
-                IconButton(
-                    onClick = { connectionManager.sendCommand(Command.Scroll(-150f, 0f)) },
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(ThemeTokens.CardBg, CircleShape)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Scroll Left", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
-                }
-
-                // OK / CLICK
-                Box(
-                    modifier = Modifier
-                        .padding(20.dp)
-                        .size(90.dp)
-                        .clip(CircleShape)
-                        .background(ThemeTokens.Primary, CircleShape)
-                        .clickable(role = Role.Button) { connectionManager.sendCommand(Command.Click) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("OK", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                }
-
-                // RIGHT
-                IconButton(
-                    onClick = { connectionManager.sendCommand(Command.Scroll(150f, 0f)) },
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(ThemeTokens.CardBg, CircleShape)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Scroll Right", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
-                }
-            }
-
-            // DOWN
-            IconButton(
-                onClick = { connectionManager.sendCommand(Command.Scroll(0f, 150f)) },
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape)
-                    .background(ThemeTokens.CardBg, CircleShape)
-            ) {
-                Icon(Icons.Filled.KeyboardArrowDown, contentDescription = "Scroll Down", tint = ThemeTokens.TextMain, modifier = Modifier.size(40.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport.app.protocol.TvState?, onShowPaywall: () -> Unit = {}) {
+fun TabsManagerTab(
+    connectionManager: TvConnectionManager,
+    tvState: com.teleport.app.protocol.TvState?,
+    onShowPaywall: () -> Unit = {}
+) {
     var newUrl by remember { mutableStateOf("") }
 
     Column(
@@ -1039,7 +1802,6 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
             Button(
                 onClick = {
                     if (newUrl.isNotBlank()) {
-                        // Free tier: limit to 3 tabs
                         val tabCount = tvState?.tabs?.size ?: 0
                         if (!isProUnlocked && tabCount >= 3) {
                             onShowPaywall()
@@ -1057,19 +1819,18 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                 shape = RoundedCornerShape(12.dp),
                 enabled = newUrl.isNotBlank(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = ThemeTokens.Accent,
+                    containerColor = ThemeTokens.Primary,
                     contentColor = ThemeTokens.Background,
-                    disabledContainerColor = ThemeTokens.Accent.copy(alpha = 0.5f),
+                    disabledContainerColor = ThemeTokens.Primary.copy(alpha = 0.5f),
                     disabledContentColor = ThemeTokens.Background.copy(alpha = 0.5f)
                 )
             ) {
-                Text("Cast Video 📺", fontWeight = FontWeight.Bold)
+                Text("Cast Video 📺", fontWeight = FontWeight.Bold, color = ThemeTokens.Background)
             }
             Spacer(modifier = Modifier.width(12.dp))
             Button(
                 onClick = {
                     if (newUrl.isNotBlank()) {
-                        // Free tier: limit to 3 tabs
                         val tabCount = tvState?.tabs?.size ?: 0
                         if (!isProUnlocked && tabCount >= 3) {
                             onShowPaywall()
@@ -1126,7 +1887,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                         colors = CardDefaults.cardColors(
                             containerColor = if (isActive) ThemeTokens.Border else ThemeTokens.CardBg
                         ),
-                        border = if (isActive) androidx.compose.foundation.BorderStroke(1.5.dp, ThemeTokens.Accent) else null
+                        border = if (isActive) androidx.compose.foundation.BorderStroke(1.5.dp, ThemeTokens.Primary) else null
                     ) {
                         Row(
                             modifier = Modifier
@@ -1149,7 +1910,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                                         Spacer(modifier = Modifier.width(8.dp))
                                         CircularProgressIndicator(
                                             modifier = Modifier.size(12.dp),
-                                            color = ThemeTokens.Accent,
+                                            color = ThemeTokens.Primary,
                                             strokeWidth = 2.dp
                                         )
                                     }
@@ -1172,6 +1933,151 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun SettingsTab(
+    connectionManager: TvConnectionManager,
+    billingManager: BillingManager,
+    onShowHelp: () -> Unit,
+    onShowTipJar: () -> Unit,
+    onShowPaywall: () -> Unit
+) {
+    var isDarkModeEnabled by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Settings",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = ThemeTokens.TextMain,
+            modifier = Modifier.align(Alignment.Start)
+        )
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, ThemeTokens.Border, RoundedCornerShape(16.dp)),
+            colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text("Connected Device", fontSize = 12.sp, color = ThemeTokens.TextSub, fontWeight = FontWeight.Bold)
+                Text(
+                    text = connectionManager.activeIp?.let { "Living Room TV ($it)" } ?: "Connected TV",
+                    color = ThemeTokens.TextMain,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, ThemeTokens.Border, RoundedCornerShape(16.dp)),
+            colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        isDarkModeEnabled = !isDarkModeEnabled
+                        connectionManager.sendCommand(Command.ToggleDarkMode(isDarkModeEnabled))
+                    }
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text("TV Dark Mode", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+                    Text("Invert page styling on TV client", color = ThemeTokens.TextSub, fontSize = 12.sp)
+                }
+                Switch(
+                    checked = isDarkModeEnabled,
+                    onCheckedChange = {
+                        isDarkModeEnabled = it
+                        connectionManager.sendCommand(Command.ToggleDarkMode(it))
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = ThemeTokens.Primary,
+                        checkedTrackColor = ThemeTokens.Primary.copy(alpha = 0.5f)
+                    )
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, ThemeTokens.Border, RoundedCornerShape(16.dp)),
+            colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onShowHelp() }
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Interactive Help Guide ❔", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Open", tint = ThemeTokens.TextSub)
+                }
+                HorizontalDivider(color = ThemeTokens.Border)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onShowTipJar() }
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Support the Creator ☕", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Open", tint = ThemeTokens.TextSub)
+                }
+                if (FeatureFlags.ENABLE_PAID_SUBSCRIPTIONS) {
+                    HorizontalDivider(color = ThemeTokens.Border)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onShowPaywall() }
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Upgrade to Pro ⭐", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Open", tint = ThemeTokens.TextSub)
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Button(
+            onClick = { connectionManager.disconnect() },
+            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Text("Disconnect Remote", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
     }
 }
@@ -1245,9 +2151,9 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
                 }
             },
             colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)
+            contentPadding = PaddingValues(horizontal = 12.dp)
         ) {
-            Text("Paste", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+            Text("Paste", color = ThemeTokens.Background, fontWeight = FontWeight.Bold)
         }
         Spacer(modifier = Modifier.width(8.dp))
         Button(
@@ -1259,14 +2165,14 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
             },
             enabled = textInput.isNotBlank(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = ThemeTokens.Accent,
+                containerColor = ThemeTokens.Primary,
                 contentColor = ThemeTokens.Background,
-                disabledContainerColor = ThemeTokens.Accent.copy(alpha = 0.5f),
+                disabledContainerColor = ThemeTokens.Primary.copy(alpha = 0.5f),
                 disabledContentColor = ThemeTokens.Background.copy(alpha = 0.5f)
             ),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)
+            contentPadding = PaddingValues(horizontal = 12.dp)
         ) {
-            Text("Send", fontWeight = FontWeight.Bold)
+            Text("Send", fontWeight = FontWeight.Bold, color = ThemeTokens.Background)
         }
     }
 }
@@ -1285,7 +2191,7 @@ fun MobileCastingScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CircularProgressIndicator(
-            color = ThemeTokens.Accent,
+            color = ThemeTokens.Primary,
             modifier = Modifier.size(64.dp),
             strokeWidth = 4.dp
         )
@@ -1314,7 +2220,7 @@ fun MobileCastingScreen(
         Spacer(modifier = Modifier.height(48.dp))
         Button(
             onClick = { connectionManager.sendCommand(Command.GoBack) },
-            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error.copy(alpha = 0.8f)),
+            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
@@ -1342,7 +2248,7 @@ fun MobileMediaRemoteScreen(
         ) {
             Text(
                 text = "Playing on TV 📺",
-                color = ThemeTokens.Accent,
+                color = ThemeTokens.Primary,
                 fontSize = 22.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -1375,7 +2281,6 @@ fun MobileMediaRemoteScreen(
             }
         }
 
-        // Playback Control D-Pad/Row
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -1385,7 +2290,6 @@ fun MobileMediaRemoteScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                // Seek Backward Button (-10s)
                 IconButton(
                     onClick = { connectionManager.sendCommand(Command.Scroll(-100f, 0f)) },
                     modifier = Modifier
@@ -1403,7 +2307,6 @@ fun MobileMediaRemoteScreen(
 
                 Spacer(modifier = Modifier.width(24.dp))
 
-                // Play / Pause Circle
                 Box(
                     modifier = Modifier
                         .size(100.dp)
@@ -1412,12 +2315,11 @@ fun MobileMediaRemoteScreen(
                         .clickable(role = Role.Button) { connectionManager.sendCommand(Command.PlayPause) },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("PLAY\nPAUSE", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold, fontSize = 16.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                    Text("PLAY\nPAUSE", color = ThemeTokens.Background, fontWeight = FontWeight.Bold, fontSize = 16.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                 }
 
                 Spacer(modifier = Modifier.width(24.dp))
 
-                // Seek Forward Button (+10s)
                 IconButton(
                     onClick = { connectionManager.sendCommand(Command.Scroll(100f, 0f)) },
                     modifier = Modifier
@@ -1435,10 +2337,9 @@ fun MobileMediaRemoteScreen(
             }
         }
 
-        // Stop / Go Back button
         Button(
             onClick = { connectionManager.sendCommand(Command.GoBack) },
-            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error.copy(alpha = 0.8f)),
+            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error),
             shape = RoundedCornerShape(12.dp),
             modifier = Modifier.fillMaxWidth().height(56.dp)
         ) {
@@ -1516,7 +2417,6 @@ fun OnboardingContent(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Header with Skip button
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
@@ -1534,7 +2434,6 @@ fun OnboardingContent(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Large Emoji
                 Text(
                     text = steps[currentSlide].emoji,
                     fontSize = 72.sp,
@@ -1543,7 +2442,6 @@ fun OnboardingContent(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Title
                 Text(
                     text = steps[currentSlide].title,
                     color = ThemeTokens.TextMain,
@@ -1554,11 +2452,10 @@ fun OnboardingContent(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Description or custom content
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(150.dp), // Slightly taller to accommodate button
+                        .height(150.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -1580,16 +2477,15 @@ fun OnboardingContent(
                             colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.height(36.dp),
-                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 0.dp)
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                         ) {
-                            Text("Open Chrome Web Store 🌐", color = ThemeTokens.TextMain, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Open Chrome Web Store 🌐", color = ThemeTokens.Background, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Indicator Dots
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -1600,7 +2496,7 @@ fun OnboardingContent(
                                 .size(if (index == currentSlide) 10.dp else 8.dp)
                                 .clip(CircleShape)
                                 .background(
-                                    if (index == currentSlide) ThemeTokens.Accent else ThemeTokens.Border
+                                    if (index == currentSlide) ThemeTokens.Primary else ThemeTokens.Border
                                 )
                         )
                     }
@@ -1608,7 +2504,6 @@ fun OnboardingContent(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Bottom Navigation Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1624,7 +2519,7 @@ fun OnboardingContent(
                             Text("Back", color = ThemeTokens.TextMain)
                         }
                     } else {
-                        Spacer(modifier = Modifier.width(80.dp)) // Maintain alignment
+                        Spacer(modifier = Modifier.width(80.dp))
                     }
 
                     Button(
@@ -1635,7 +2530,7 @@ fun OnboardingContent(
                                 onDismiss()
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Accent),
+                        colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Primary),
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.height(48.dp)
                     ) {
@@ -1665,4 +2560,3 @@ fun OnboardingModal(onDismiss: () -> Unit, initialSlide: Int = 0) {
         )
     }
 }
-

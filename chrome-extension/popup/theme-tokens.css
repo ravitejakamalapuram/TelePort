@@ -1,13 +1,13 @@
 /* Generated automatically from teleport-config.json. Do not edit directly. */
 :root {
-  --bg-color: #0d0d11;
-  --card-bg: rgba(26, 26, 36, 0.55);
-  --border-color: rgba(255, 255, 255, 0.08);
-  --primary-color: #7928ca;
-  --accent-color: #00dfd8;
+  --bg-color: #090d16;
+  --card-bg: rgba(21, 28, 44, 0.6);
+  --border-color: rgba(31, 41, 61, 0.5);
+  --primary-color: #06b6d4;
+  --accent-color: #8b5cf6;
   --success-color: #02c39a;
-  --error-color: #ff3b30;
-  --text-primary: #ffffff;
-  --text-secondary: #9ea2b0;
+  --error-color: #ffb4ab;
+  --text-primary: #dee3e6;
+  --text-secondary: #bcc9cd;
   --support-email: "raviteja369.k@gmail.com";
 }

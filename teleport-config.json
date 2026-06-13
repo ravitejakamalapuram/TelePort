@@ -3,16 +3,16 @@
   "supportEmail": "raviteja369.k@gmail.com",
   "port": 8080,
   "colors": {
-    "background": "#0d0d11",
-    "cardBg": "rgba(26, 26, 36, 0.55)",
-    "cardBgHex": "#1a1a24",
-    "border": "rgba(255, 255, 255, 0.08)",
-    "borderHex": "#1f1f2a",
-    "primary": "#7928ca",
-    "accent": "#00dfd8",
+    "background": "#090d16",
+    "cardBg": "rgba(21, 28, 44, 0.6)",
+    "cardBgHex": "#151c2c",
+    "border": "rgba(31, 41, 61, 0.5)",
+    "borderHex": "#1f293d",
+    "primary": "#06b6d4",
+    "accent": "#8b5cf6",
     "success": "#02c39a",
-    "error": "#ff3b30",
-    "textMain": "#ffffff",
-    "textSub": "#9ea2b0"
+    "error": "#ffb4ab",
+    "textMain": "#dee3e6",
+    "textSub": "#bcc9cd"
   }
 }

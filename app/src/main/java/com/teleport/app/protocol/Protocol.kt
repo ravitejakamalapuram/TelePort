@@ -45,6 +45,18 @@ sealed class Command {
 
     @Serializable
     object StopMirroring : Command()
+
+    @Serializable
+    object VolumeUp : Command()
+
+    @Serializable
+    object VolumeDown : Command()
+
+    @Serializable
+    object ChannelUp : Command()
+
+    @Serializable
+    object ChannelDown : Command()
 }
 
 @Serializable

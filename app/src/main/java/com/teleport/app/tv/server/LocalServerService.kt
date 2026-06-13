@@ -267,11 +267,11 @@ private val REMOTE_HTML = """
     <style>
         /* CSS_THEME_TOKENS_START */
         :root {
-            --bg-color: #0d0d11;
-            --primary-color: #7928ca;
-            --accent-color: #00dfd8;
-            --card-bg: #1a1a24;
-            --border-color: #1f1f2a;
+            --bg-color: #090d16;
+            --primary-color: #06b6d4;
+            --accent-color: #8b5cf6;
+            --card-bg: #151c2c;
+            --border-color: #1f293d;
         }
         /* CSS_THEME_TOKENS_END */
         body {

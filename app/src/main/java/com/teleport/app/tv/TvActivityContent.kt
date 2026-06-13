@@ -56,6 +56,7 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.os.Build
 import android.content.Intent
+import android.content.Context
 import android.provider.Settings
 import android.webkit.WebView
 import androidx.compose.runtime.mutableStateOf
@@ -67,6 +68,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun TvActivityContent(tabManager: TabManager, localIp: String) {
     val TAG = "TvActivityContent"
+    val context = LocalContext.current
     val clientConnected by TvEventBus.clientConnected.collectAsState()
     val isMirroring by tabManager.isMirroring.collectAsState()
     val tabs by tabManager.tabs.collectAsState()
@@ -74,7 +76,7 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
     val resolvingUrl by tabManager.resolvingUrl.collectAsState()
     val headlessWebView by tabManager.headlessWebView.collectAsState()
     val connectionUrl = "http://$localIp:${ThemeTokens.PORT}/remote"
-
+ 
     // Listen for incoming commands in the event bus and route them to tabManager
     LaunchedEffect(Unit) {
         TvEventBus.commands.collectLatest { clientCommand ->
@@ -96,6 +98,28 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
                 is Command.ToggleDarkMode -> tabManager.toggleDarkMode(command.enabled)
                 is Command.StartMirroring -> tabManager.startMirroring()
                 is Command.StopMirroring -> tabManager.stopMirroring()
+                is Command.VolumeUp -> {
+                    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+                    audioManager.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.ADJUST_RAISE, android.media.AudioManager.FLAG_SHOW_UI)
+                }
+                is Command.VolumeDown -> {
+                    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+                    audioManager.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.ADJUST_LOWER, android.media.AudioManager.FLAG_SHOW_UI)
+                }
+                is Command.ChannelUp -> {
+                    val size = tabs.size
+                    if (size > 0) {
+                        val nextIndex = (tabManager.activeTabIndex.value + 1) % size
+                        tabManager.selectTab(nextIndex)
+                    }
+                }
+                is Command.ChannelDown -> {
+                    val size = tabs.size
+                    if (size > 0) {
+                        val prevIndex = (tabManager.activeTabIndex.value - 1 + size) % size
+                        tabManager.selectTab(prevIndex)
+                    }
+                }
             }
         }
     }
