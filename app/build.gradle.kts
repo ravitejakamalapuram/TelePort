@@ -140,4 +140,11 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
     implementation("com.google.firebase:firebase-crashlytics-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
+
+    // AdMob and UMP
+    implementation("com.google.android.gms:play-services-ads:23.1.0")
+    implementation("com.google.android.ump:user-messaging-platform:2.2.0")
+
+    // Google Play Billing
+    implementation("com.android.billingclient:billing-ktx:6.1.0")
 }
