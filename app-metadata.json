@@ -1,0 +1,44 @@
+{
+  "appName": "TelePort Cast & Remote",
+  "appType": "multi-module",
+  "repoName": "TelePort",
+  "description": "Beam tabs, cast screens, and control your TelePort TV directly from Chrome.",
+  "modules": [
+    {
+      "name": "Chrome Extension",
+      "type": "chrome-extension",
+      "path": "chrome-extension",
+      "status": "published",
+      "storeId": "oimdkmacklcheogoakhdgilcedkcbikb",
+      "storeUrl": "https://chromewebstore.google.com/detail/teleport-cast-remote/oimdkmacklcheogoakhdgilcedkcbikb",
+      "developerConsoleUrl": "https://chrome.google.com/webstore/devconsole/oimdkmacklcheogoakhdgilcedkcbikb",
+      "buildScript": "zip -r initial-package.zip chrome-extension",
+      "artifactPath": "initial-package.zip",
+      "cwsListing": {
+        "shortDescription": "Beam tabs, cast screens, and control your TelePort TV directly from Chrome.",
+        "detailedDescription": "Beam tabs, cast screens, and control your TelePort TV directly from Chrome.",
+        "category": "productivity",
+        "singlePurpose": "Beam tabs, cast screens, and control your TelePort TV directly from Ch",
+        "privacyPolicyUrl": "https://ravitejakamalapuram.github.io/TelePort/privacy.html"
+      }
+    },
+    {
+      "name": "Android Application",
+      "type": "android-app",
+      "path": "app",
+      "status": "draft",
+      "storeId": "com.carfry369.teleport",
+      "storeUrl": "https://play.google.com/store/apps/details?id=com.carfry369.teleport",
+      "developerConsoleUrl": "https://play.google.com/console/u/0/developers",
+      "buildScript": "./gradlew :app:assembleRelease",
+      "artifactPath": "app/build/outputs/apk/release/app-release.apk",
+      "playStoreListing": {
+        "title": "TelePort TV & Remote",
+        "shortDescription": "Control your TV and stream/cast local screens seamlessly.",
+        "fullDescription": "TelePort allows you to beam webpage links, cast screens, and control local receiver devices directly.",
+        "category": "utilities",
+        "privacyPolicyUrl": "https://ravitejakamalapuram.github.io/TelePort/privacy.html"
+      }
+    }
+  ]
+}
