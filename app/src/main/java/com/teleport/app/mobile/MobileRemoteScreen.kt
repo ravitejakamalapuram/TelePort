@@ -123,32 +123,6 @@ fun MobileRemoteScreen(
     }
 }
 
-@Composable
-fun NoConnectionBottomNavBar(activeItem: String = "Devices") {
-    NavigationBar(
-        containerColor = ThemeTokens.CardBg,
-        tonalElevation = 8.dp
-    ) {
-        val items = listOf(
-            Triple("Remote", Icons.Filled.Gamepad, "Remote"),
-            Triple("Media", Icons.Filled.Movie, "Media"),
-            Triple("Devices", Icons.Filled.Tv, "Devices"),
-            Triple("Settings", Icons.Filled.Settings, "Settings")
-        )
-        items.forEach { (label, icon, value) ->
-            val isActive = value == activeItem
-            NavigationBarItem(
-                selected = isActive,
-                onClick = { /* Disabled when disconnected */ },
-                icon = { Icon(icon, contentDescription = label, tint = if (isActive) ThemeTokens.Primary else ThemeTokens.TextSub.copy(alpha = 0.4f)) },
-                label = { Text(label, color = if (isActive) ThemeTokens.Primary else ThemeTokens.TextSub.copy(alpha = 0.4f), fontSize = 11.sp, fontWeight = FontWeight.Bold) },
-                colors = NavigationBarItemDefaults.colors(
-                    indicatorColor = ThemeTokens.Primary.copy(alpha = 0.15f)
-                )
-            )
-        }
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -211,9 +185,6 @@ fun NoConnectionScreen(
                     )
                 }
             }
-        },
-        bottomBar = {
-            NoConnectionBottomNavBar(activeItem = "Devices")
         },
         containerColor = ThemeTokens.Background
     ) { innerPadding ->
@@ -617,9 +588,6 @@ fun ConnectingScreen(connectionManager: TvConnectionManager) {
                 }
             }
         },
-        bottomBar = {
-            NoConnectionBottomNavBar(activeItem = "Remote")
-        },
         containerColor = ThemeTokens.Background
     ) { innerPadding ->
         Box(
@@ -754,9 +722,6 @@ fun ConnectionFailedScreen(
                     )
                 }
             }
-        },
-        bottomBar = {
-            NoConnectionBottomNavBar(activeItem = "Devices")
         },
         containerColor = ThemeTokens.Background
     ) { innerPadding ->
@@ -986,11 +951,55 @@ fun ControllerScreen(
     }
 
     if (isResolvingHeadlessly) {
-        MobileCastingScreen(connectionManager, tvState)
-    } else if (isNativePlaying) {
-        MobileMediaRemoteScreen(connectionManager, tvState)
-    } else {
-        var selectedBottomTab by remember { mutableStateOf("Remote") }
+        Dialog(
+            onDismissRequest = { },
+            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+        ) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.padding(16.dp).fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator(
+                        color = ThemeTokens.Primary,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = "Resolving Video Stream...",
+                        color = ThemeTokens.TextMain,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    tvState?.resolvingUrl?.let { url ->
+                        val host = remember(url) {
+                            try { java.net.URI(url).host?.replace("www.", "") ?: url } catch (e: Exception) { url }
+                        }
+                        Text(
+                            text = "Extracting video from $host",
+                            color = ThemeTokens.TextSub,
+                            fontSize = 12.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = { connectionManager.sendCommand(Command.GoBack) },
+                        colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error)
+                    ) {
+                        Text("Cancel Casting", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+
+    var selectedBottomTab by remember { mutableStateOf("Remote") }
 
         Scaffold(
             topBar = {
@@ -1167,6 +1176,10 @@ fun ControllerScreen(
                     }
                 }
 
+                if (isNativePlaying) {
+                    MiniPlayerCard(connectionManager, tvState)
+                }
+
                 if (selectedBottomTab != "Settings") {
                     QuickInputBar(connectionManager)
                 }
@@ -1191,7 +1204,6 @@ fun ControllerScreen(
                 BannerAd()
             }
         }
-    }
 }
 
 @Composable
@@ -2178,172 +2190,76 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
 }
 
 @Composable
-fun MobileCastingScreen(
+fun MiniPlayerCard(
     connectionManager: TvConnectionManager,
     tvState: com.teleport.app.protocol.TvState?
 ) {
-    Column(
+    Card(
         modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .border(1.dp, ThemeTokens.Primary.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
+        colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
+        shape = RoundedCornerShape(16.dp)
     ) {
-        CircularProgressIndicator(
-            color = ThemeTokens.Primary,
-            modifier = Modifier.size(64.dp),
-            strokeWidth = 4.dp
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-        Text(
-            text = "Resolving Video Stream...",
-            color = ThemeTokens.TextMain,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        tvState?.resolvingUrl?.let { url ->
-            val host = remember(url) {
-                try {
-                    java.net.URI(url).host?.replace("www.", "") ?: url
-                } catch (e: Exception) {
-                    url
-                }
-            }
-            Text(
-                text = "Extracting video from $host",
-                color = ThemeTokens.TextSub,
-                fontSize = 14.sp
-            )
-        }
-        Spacer(modifier = Modifier.height(48.dp))
-        Button(
-            onClick = { connectionManager.sendCommand(Command.GoBack) },
-            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Text("Cancel Casting", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun MobileMediaRemoteScreen(
-    connectionManager: TvConnectionManager,
-    tvState: com.teleport.app.protocol.TvState?
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(top = 32.dp)
-        ) {
-            Text(
-                text = "Playing on TV 📺",
-                color = ThemeTokens.Primary,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Card(
-                colors = CardDefaults.cardColors(containerColor = ThemeTokens.CardBg),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Active Video Stream",
-                        color = ThemeTokens.TextSub,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = tvState?.detectedStreamUrl?.substringAfterLast("/")?.substringBefore("?") ?: "Direct Native Player",
-                        color = ThemeTokens.TextMain,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                }
-            }
-        }
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.weight(1f)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                modifier = Modifier.weight(1f)
             ) {
-                IconButton(
-                    onClick = { connectionManager.sendCommand(Command.Scroll(-100f, 0f)) },
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(ThemeTokens.CardBg, CircleShape)
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "Seek Back",
-                        tint = ThemeTokens.TextMain,
-                        modifier = Modifier.size(40.dp)
+                Icon(
+                    Icons.Filled.Movie,
+                    contentDescription = "Playing",
+                    tint = ThemeTokens.Primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "Playing on TV 📺",
+                        color = ThemeTokens.Primary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp
                     )
-                }
-
-                Spacer(modifier = Modifier.width(24.dp))
-
-                Box(
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .background(ThemeTokens.Primary, CircleShape)
-                        .clickable(role = Role.Button) { connectionManager.sendCommand(Command.PlayPause) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("PLAY\nPAUSE", color = ThemeTokens.Background, fontWeight = FontWeight.Bold, fontSize = 16.sp, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-                }
-
-                Spacer(modifier = Modifier.width(24.dp))
-
-                IconButton(
-                    onClick = { connectionManager.sendCommand(Command.Scroll(100f, 0f)) },
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(ThemeTokens.CardBg, CircleShape)
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Seek Forward",
-                        tint = ThemeTokens.TextMain,
-                        modifier = Modifier.size(40.dp)
+                    Text(
+                        text = tvState?.detectedStreamUrl?.substringAfterLast("/")?.substringBefore("?") ?: "Direct Native Player",
+                        color = ThemeTokens.TextMain,
+                        fontSize = 13.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
-        }
-
-        Button(
-            onClick = { connectionManager.sendCommand(Command.GoBack) },
-            colors = ButtonDefaults.buttonColors(containerColor = ThemeTokens.Error),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth().height(56.dp)
-        ) {
-            Text("Stop Playback / Exit", color = ThemeTokens.TextMain, fontWeight = FontWeight.Bold)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                IconButton(onClick = { connectionManager.sendCommand(Command.Scroll(-100f, 0f)) }) {
+                    Icon(Icons.Filled.FastRewind, contentDescription = "Seek Back", tint = ThemeTokens.TextMain, modifier = Modifier.size(20.dp))
+                }
+                IconButton(onClick = { connectionManager.sendCommand(Command.PlayPause) }) {
+                    Icon(
+                        Icons.Filled.PlayArrow,
+                        contentDescription = "Play/Pause",
+                        tint = ThemeTokens.Primary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                IconButton(onClick = { connectionManager.sendCommand(Command.Scroll(100f, 0f)) }) {
+                    Icon(Icons.Filled.FastForward, contentDescription = "Seek Forward", tint = ThemeTokens.TextMain, modifier = Modifier.size(20.dp))
+                }
+                IconButton(
+                    onClick = { connectionManager.sendCommand(Command.GoBack) }
+                ) {
+                    Icon(Icons.Filled.Close, contentDescription = "Stop", tint = ThemeTokens.Error, modifier = Modifier.size(20.dp))
+                }
+            }
         }
     }
 }
