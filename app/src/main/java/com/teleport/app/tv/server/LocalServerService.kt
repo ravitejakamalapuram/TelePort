@@ -170,7 +170,9 @@ class LocalServerService : Service() {
                             try {
                                 for (frame in incoming) {
                                     if (frame is Frame.Binary) {
-                                        val data = frame.readBytes()
+                                        // Bolt: Use frame.data property access directly instead of the frame.readBytes()
+                                        // extension function to avoid minor call overhead in this high-frequency streaming hot path.
+                                        val data = frame.data
                                         TvEventBus.postMirrorFrame(data)
                                     }
                                 }
