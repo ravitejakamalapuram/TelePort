@@ -23,3 +23,6 @@
 ## 2024-05-18 - Avoid IPC calls in high-frequency sensor callbacks
 **Learning:** Calling `Context.getSystemService` or querying device state like `Display.rotation` inside high-frequency sensor callbacks (e.g., `SensorEventListener.onSensorChanged`) introduces severe overhead due to repeated Inter-Process Communication (IPC) calls. This causes main-thread jank and drains battery.
 **Action:** Always cache device states that change infrequently. Use appropriate listeners (like `DisplayManager.DisplayListener` for rotation) to update the cached value asynchronously, and let the high-frequency callback read strictly from local memory.
+## 2024-11-21 - Isolate High-Frequency Compose State
+**Learning:** Reading high-frequency changing state (like cursor coordinates updated at 60Hz from sensors) inside a heavy parent Composable (like `BrowserScreen` containing `AndroidView`) causes the entire view hierarchy, including the heavyweight `WebView`, to recompose on every frame, resulting in severe lag and jank.
+**Action:** Extract high-frequency rendering logic (like drawing the cursor overlay) into its own separate Composable. This confines recomposition strictly to the small UI element that needs to update, bypassing recomposition of complex sibling components.

@@ -414,7 +414,6 @@ fun FeatureCard(
 fun BrowserScreen(tabManager: TabManager) {
     val tabs by tabManager.tabs.collectAsState()
     val activeIndex by tabManager.activeTabIndex.collectAsState()
-    val cursors by tabManager.cursors.collectAsState()
 
     Box(
         modifier = Modifier
@@ -459,23 +458,32 @@ fun BrowserScreen(tabManager: TabManager) {
             }
         }
 
-        // Draw multiple color-coded cursors
-        cursors.values.forEach { cursor ->
-            val color = remember(cursor.colorHex) {
-                try {
-                    Color(AndroidColor.parseColor(cursor.colorHex))
-                } catch (e: Exception) {
-                    Color.Red
-                }
+        // Bolt: Extract cursors to a separate composable to prevent recomposing
+        // the heavy AndroidView (WebView) every time the cursor moves at 60Hz.
+        CursorsOverlay(tabManager)
+    }
+}
+
+@Composable
+fun androidx.compose.foundation.layout.BoxScope.CursorsOverlay(tabManager: TabManager) {
+    val cursors by tabManager.cursors.collectAsState()
+
+    // Draw multiple color-coded cursors
+    cursors.values.forEach { cursor ->
+        val color = remember(cursor.colorHex) {
+            try {
+                Color(AndroidColor.parseColor(cursor.colorHex))
+            } catch (e: Exception) {
+                Color.Red
             }
-            Box(
-                modifier = Modifier
-                    .offset { IntOffset(cursor.x.toInt(), cursor.y.toInt()) }
-                    .size(16.dp)
-                    .background(color.copy(alpha = 0.8f), CircleShape)
-                    .align(Alignment.TopStart)
-            )
         }
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(cursor.x.toInt(), cursor.y.toInt()) }
+                .size(16.dp)
+                .background(color.copy(alpha = 0.8f), CircleShape)
+                .align(Alignment.TopStart)
+        )
     }
 }
 
