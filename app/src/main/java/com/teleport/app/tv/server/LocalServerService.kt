@@ -170,7 +170,10 @@ class LocalServerService : Service() {
                             try {
                                 for (frame in incoming) {
                                     if (frame is Frame.Binary) {
-                                        val data = frame.readBytes()
+                                        // Bolt: Access frame.data directly instead of frame.readBytes()
+                                        // This prevents redundant array allocation via data.copyOf()
+                                        // per frame, significantly reducing GC pressure during streaming.
+                                        val data = frame.data
                                         TvEventBus.postMirrorFrame(data)
                                     }
                                 }
