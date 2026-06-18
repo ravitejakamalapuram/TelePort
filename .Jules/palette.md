@@ -26,3 +26,6 @@
 ## 2024-06-05 - clearAndSetSemantics for Emoji Buttons
 **Learning:** In Jetpack Compose, simply adding `semantics { contentDescription = "..." }` to an `IconButton` that only contains an emoji can cause screen readers to verbosely read both the custom description and the literal emoji name (e.g., "Tip Jar, hot beverage").
 **Action:** Use `Modifier.clearAndSetSemantics { contentDescription = "..." }` directly on the `IconButton` to clear the default text semantics of the child emoji and replace it solely with the intended action description.
+## 2026-06-18 - Bounded Touch Ripples in Jetpack Compose
+**Learning:** Applying `.clickable()` directly to unbounded composables like `Text` or `Row` causes touch ripple effects to bleed into surrounding UI elements. Additionally, custom interactive elements may not be properly identified by screen readers as buttons.
+**Action:** Always apply `.clip(Shape)` before `.clickable()` to contain ripple effects, and explicitly use `.clickable(role = Role.Button) { ... }` for non-standard interactive components so screen readers announce them properly.
