@@ -23,3 +23,6 @@
 ## 2024-05-18 - Avoid IPC calls in high-frequency sensor callbacks
 **Learning:** Calling `Context.getSystemService` or querying device state like `Display.rotation` inside high-frequency sensor callbacks (e.g., `SensorEventListener.onSensorChanged`) introduces severe overhead due to repeated Inter-Process Communication (IPC) calls. This causes main-thread jank and drains battery.
 **Action:** Always cache device states that change infrequently. Use appropriate listeners (like `DisplayManager.DisplayListener` for rotation) to update the cached value asynchronously, and let the high-frequency callback read strictly from local memory.
+## 2024-06-25 - Avoid `readBytes()` array copy overhead in Ktor WebSockets
+**Learning:** In Ktor WebSockets, `Frame.readBytes()` is an extension function that returns `data.copyOf()`, which creates a redundant array copy for every incoming frame.
+**Action:** In high-frequency hot paths like WebSocket streaming frames, use direct property access (`frame.data`) instead of `readBytes()` to eliminate redundant array allocations, significantly reducing memory and GC pressure without altering behavior.
