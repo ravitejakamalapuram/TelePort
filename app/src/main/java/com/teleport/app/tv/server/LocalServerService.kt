@@ -170,7 +170,10 @@ class LocalServerService : Service() {
                             try {
                                 for (frame in incoming) {
                                     if (frame is Frame.Binary) {
-                                        val data = frame.readBytes()
+                                        // Bolt: Avoid redundant allocations and minor function call overhead by directly
+                                        // accessing the ByteArray (frame.data) instead of using the extension
+                                        // function frame.readBytes(), which returns data.copyOf() and causes GC pressure.
+                                        val data = frame.data
                                         TvEventBus.postMirrorFrame(data)
                                     }
                                 }
