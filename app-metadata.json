@@ -20,7 +20,18 @@
         "category": "productivity",
         "singlePurpose": "Beam tabs, cast screens, and control your TelePort TV directly from Ch",
         "privacyPolicyUrl": "https://ravitejakamalapuram.github.io/TelePort/privacy.html",
-        "permissionJustifications": {}
+        "permissionJustifications": {
+          "tabs": "The 'tabs' permission is used to safely navigate the user to settings, help pages, or other extension-related internal pages in a new browser tab.",
+          "contextMenus": "The 'contextMenus' permission allows adding quick access options in the browser's right-click context menu to copy shlokas or shuffle verses.",
+          "storage": "The 'storage' permission is required to save the user's custom preferences, selected themes, and cached Bhagavad Gita verses locally on their device, ensuring settings persist across sessions and function offline.",
+          "tabCapture": "The 'tabCapture' permission is required for core extension functions, specifically to enable the user-facing features related to this capability.",
+          "offscreen": "The 'offscreen' permission is required for core extension functions, specifically to enable the user-facing features related to this capability.",
+          "http://*/*": "This permission is required to communicate with remote API endpoint 'http://*/*' to fetch dynamic shlokas, daily quotes, and perform language translations on the fly.",
+          "https://*/*": "This permission is required to communicate with remote API endpoint 'https://*/*' to fetch dynamic shlokas, daily quotes, and perform language translations on the fly."
+        },
+        "remoteCodeUsed": false,
+        "remoteCodeJustification": "The extension does not use remote code. All files, scripts, and libraries are packaged locally within the extension ZIP file.",
+        "dataUsageCertified": true
       }
     },
     {
