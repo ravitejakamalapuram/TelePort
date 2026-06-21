@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 data class ClientCommand(val clientId: String, val command: Command)
 
+data class ConnectionRequest(val clientId: String, val deviceName: String)
+
 object TvEventBus {
     private val _commands = MutableSharedFlow<ClientCommand>(extraBufferCapacity = 64)
     val commands: SharedFlow<ClientCommand> = _commands.asSharedFlow()
@@ -27,12 +29,22 @@ object TvEventBus {
     private val _isNativePlaying = MutableStateFlow(false)
     val isNativePlaying: StateFlow<Boolean> = _isNativePlaying.asStateFlow()
 
+    // Connection confirmation state
+    private val _pendingRequests = MutableStateFlow<List<ConnectionRequest>>(emptyList())
+    val pendingRequests: StateFlow<List<ConnectionRequest>> = _pendingRequests.asStateFlow()
+
+    private val _approvedClientIds = MutableStateFlow<Set<String>>(emptySet())
+    val approvedClientIds: StateFlow<Set<String>> = _approvedClientIds.asStateFlow()
+
     fun setNativePlaying(playing: Boolean) {
         _isNativePlaying.value = playing
     }
 
     fun postCommand(clientId: String, command: Command) {
-        _commands.tryEmit(ClientCommand(clientId, command))
+        // Only allow commands from approved clients
+        if (clientId in _approvedClientIds.value) {
+            _commands.tryEmit(ClientCommand(clientId, command))
+        }
     }
 
     fun updateTvState(state: TvState) {
@@ -57,6 +69,36 @@ object TvEventBus {
             _activeClientIds.value = current
             _clientConnected.value = current.isNotEmpty()
         }
+        // Also remove from approved list on disconnect
+        val approved = _approvedClientIds.value.toMutableSet()
+        if (approved.remove(clientId)) {
+            _approvedClientIds.value = approved
+        }
+    }
+
+    fun postPendingConnection(clientId: String, deviceName: String) {
+        val current = _pendingRequests.value.toMutableList()
+        if (current.none { it.clientId == clientId }) {
+            current.add(ConnectionRequest(clientId, deviceName))
+            _pendingRequests.value = current
+        }
+    }
+
+    fun approveClient(clientId: String) {
+        val pending = _pendingRequests.value.toMutableList()
+        pending.removeAll { it.clientId == clientId }
+        _pendingRequests.value = pending
+
+        val approved = _approvedClientIds.value.toMutableSet()
+        if (approved.add(clientId)) {
+            _approvedClientIds.value = approved
+        }
+    }
+
+    fun denyClient(clientId: String) {
+        val pending = _pendingRequests.value.toMutableList()
+        pending.removeAll { it.clientId == clientId }
+        _pendingRequests.value = pending
     }
 
     private val _mirrorFrames = MutableSharedFlow<ByteArray>(

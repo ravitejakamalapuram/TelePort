@@ -48,11 +48,8 @@ class GyroSensorTracker(
     }
 
     // Tuning constants
-    private val SENSITIVITY = 45f // Scale factor to turn radians/sec into pixels
-    private val NOISE_THRESHOLD = 0.02f // Filter out tiny wrist shakes but keep fine control responsive
+    private val NOISE_THRESHOLD = 0.008f // Low threshold to capture subtle wrist movement but filter out static noise
 
-    // Exponential smoothing (low-pass filter) to remove sensor jitter/stutter
-    private val SMOOTHING_FACTOR = 0.5f
     private var smoothDx = 0f
     private var smoothDy = 0f
 
@@ -66,12 +63,12 @@ class GyroSensorTracker(
         sensorManager.registerListener(
             this,
             gyroscope,
-            SensorManager.SENSOR_DELAY_GAME // Game latency is smooth and doesn't require high sampling rate permission
+            SensorManager.SENSOR_DELAY_FASTEST // Sample at maximum hardware frequency (100Hz - 200Hz) matching physical air mouses
         )
         displayManager.registerDisplayListener(displayListener, null)
         updateRotation()
         isRunning = true
-        Log.d(TAG, "Gyroscope sensor listener registered")
+        Log.d(TAG, "Gyroscope sensor listener registered (DELAY_FASTEST)")
     }
 
     fun stop() {
@@ -122,13 +119,24 @@ class GyroSensorTracker(
             }
         }
 
-        // Apply noise filter and scaling
-        val targetDx = if (abs(rawDx) > NOISE_THRESHOLD) rawDx * SENSITIVITY else 0f
-        val targetDy = if (abs(rawDy) > NOISE_THRESHOLD) rawDy * SENSITIVITY else 0f
+        val speed = kotlin.math.sqrt(rawDx * rawDx + rawDy * rawDy)
+        // Dynamic sensitivity scaling based on angular speed (Air Mouse Acceleration)
+        val sensitivity = when {
+            speed < 0.05f -> 18f // Highly precise slow movement
+            speed < 0.2f -> 36f  // Standard speed
+            else -> 60f + (speed - 0.2f) * 120f // Fast wrist flick sends cursor far
+        }
 
-        // Apply exponential smoothing only when active to avoid sluggish stops
-        smoothDx = if (targetDx == 0f) 0f else smoothDx + SMOOTHING_FACTOR * (targetDx - smoothDx)
-        smoothDy = if (targetDy == 0f) 0f else smoothDy + SMOOTHING_FACTOR * (targetDy - smoothDy)
+        // Apply noise filter and scaling
+        val targetDx = if (abs(rawDx) > NOISE_THRESHOLD) rawDx * sensitivity else 0f
+        val targetDy = if (abs(rawDy) > NOISE_THRESHOLD) rawDy * sensitivity else 0f
+
+        // Dynamic exponential smoothing:
+        // Use higher smoothing factor (closer to 1.0) for fast movement to avoid lag.
+        // Use lower smoothing factor (closer to 0.0) for slow movement to filter out muscle shakes.
+        val smoothingFactor = if (speed > 0.15f) 0.8f else 0.35f
+        smoothDx = if (targetDx == 0f) 0f else smoothDx + smoothingFactor * (targetDx - smoothDx)
+        smoothDy = if (targetDy == 0f) 0f else smoothDy + smoothingFactor * (targetDy - smoothDy)
 
         if (smoothDx != 0f || smoothDy != 0f) {
             onCursorMove(smoothDx, smoothDy)

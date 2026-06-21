@@ -1,6 +1,7 @@
 package com.teleport.app.mobile.connection
 
 import android.util.Log
+import android.os.Build
 import com.teleport.app.protocol.Command
 import com.teleport.app.protocol.TvState
 import io.ktor.client.HttpClient
@@ -60,7 +61,8 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
         connectionJob = coroutineScope.launch(Dispatchers.IO) {
             var localSession: DefaultClientWebSocketSession? = null
             try {
-                val hostUrl = "ws://$ip:$port/control"
+                val deviceName = java.net.URLEncoder.encode(Build.MODEL, "UTF-8")
+                val hostUrl = "ws://$ip:$port/control?device=$deviceName"
                 Log.d(TAG, "Connecting to TV at $hostUrl")
                 
                 client.webSocket(hostUrl) {
@@ -112,8 +114,29 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
         if (currentSession != null && _connectionState.value == ConnectionState.Connected) {
             coroutineScope.launch(Dispatchers.IO) {
                 try {
-                    val jsonString = json.encodeToString(command)
-                    currentSession.send(Frame.Text(jsonString))
+                    val frame = when (command) {
+                        is Command.MoveCursor -> {
+                            val data = ByteArray(9)
+                            data[0] = 0x01.toByte()
+                            val buffer = java.nio.ByteBuffer.wrap(data, 1, 8)
+                            buffer.putFloat(command.dx)
+                            buffer.putFloat(command.dy)
+                            Frame.Binary(true, data)
+                        }
+                        is Command.Scroll -> {
+                            val data = ByteArray(9)
+                            data[0] = 0x02.toByte()
+                            val buffer = java.nio.ByteBuffer.wrap(data, 1, 8)
+                            buffer.putFloat(command.dx)
+                            buffer.putFloat(command.dy)
+                            Frame.Binary(true, data)
+                        }
+                        else -> {
+                            val jsonString = json.encodeToString(command)
+                            Frame.Text(jsonString)
+                        }
+                    }
+                    currentSession.send(frame)
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to send command: $command", e)
                 }

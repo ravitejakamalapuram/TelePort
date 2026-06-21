@@ -392,7 +392,8 @@ class MainActivity : ComponentActivity() {
             appUpdateManager.unregisterListener(installListener)
         }
         if (checkIsTvDevice()) {
-            stopService(Intent(this, LocalServerService::class.java))
+            // Keep background server service running even if activity is destroyed
+            // so we can use phone as an Air Mouse across other TV apps
         } else {
             if (::connectionManager.isInitialized) {
                 connectionManager.disconnect()

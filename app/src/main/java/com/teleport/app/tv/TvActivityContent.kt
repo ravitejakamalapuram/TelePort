@@ -55,6 +55,8 @@ import android.media.MediaFormat
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.os.Build
+import android.content.Intent
+import android.provider.Settings
 import android.webkit.WebView
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -96,6 +98,51 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
                 is Command.StopMirroring -> tabManager.stopMirroring()
             }
         }
+    }
+
+    val pendingRequests by TvEventBus.pendingRequests.collectAsState()
+    val request = pendingRequests.firstOrNull()
+    if (request != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { /* Do not dismiss on click outside */ },
+            title = {
+                Text(
+                    text = "Connection Request",
+                    color = ThemeTokens.TextMain,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Allow device \"${request.deviceName}\" to connect and control this TV?",
+                    color = ThemeTokens.TextSub
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.Button(
+                    onClick = { TvEventBus.approveClient(request.clientId) },
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = ThemeTokens.Accent,
+                        contentColor = Color.Black
+                    )
+                ) {
+                    Text("Allow")
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.Button(
+                    onClick = { TvEventBus.denyClient(request.clientId) },
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = ThemeTokens.TextSub
+                    )
+                ) {
+                    Text("Deny")
+                }
+            },
+            containerColor = ThemeTokens.CardBg,
+            textContentColor = ThemeTokens.TextSub
+        )
     }
 
     Surface(
@@ -216,7 +263,47 @@ fun PairingScreen(connectionUrl: String, localIp: String) {
                 color = ThemeTokens.TextSub,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Check if Accessibility Service is active
+            val context = LocalContext.current
+            val isAccessRunning = com.teleport.app.tv.server.TelePortAccessibilityService.isRunning
+
+            if (!isAccessRunning) {
+                androidx.compose.material3.Button(
+                    onClick = {
+                        try {
+                            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Log.e("TvActivityContent", "Failed to launch accessibility settings", e)
+                        }
+                    },
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = ThemeTokens.CardBg,
+                        contentColor = ThemeTokens.Accent
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, ThemeTokens.Border),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                ) {
+                    Text(
+                        text = "🪄 Enable Global Air Mouse",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            } else {
+                Text(
+                    text = "✓ Global Air Mouse Active",
+                    fontSize = 12.sp,
+                    color = ThemeTokens.Accent,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             Column(
                 verticalArrangement = Arrangement.Center,

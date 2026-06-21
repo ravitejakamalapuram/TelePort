@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">TelePort</string>
+    <string name="accessibility_description">Enables TelePort Air Mouse to control other apps on this TV using your phone.</string>
 </resources>
