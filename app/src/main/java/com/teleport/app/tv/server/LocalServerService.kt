@@ -215,6 +215,12 @@ class LocalServerService : Service() {
                                 return@webSocket
                             }
 
+                            if (TvEventBus.approvedClientIds.value.isEmpty()) {
+                                Log.w(TAG, "Rejected mirror connection: No approved clients")
+                                close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Unauthorized"))
+                                return@webSocket
+                            }
+
                             Log.d(TAG, "Mirror socket connected")
                             try {
                                 for (frame in incoming) {
