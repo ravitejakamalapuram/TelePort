@@ -28,7 +28,7 @@ import io.ktor.websocket.CloseReason
 import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
-import io.ktor.websocket.readBytes
+
 import io.ktor.websocket.send
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -180,7 +180,7 @@ class LocalServerService : Service() {
                                             Log.e(TAG, "Error parsing command: $text", e)
                                         }
                                     } else if (frame is Frame.Binary) {
-                                        val data = frame.readBytes()
+                                        val data = frame.data
                                         if (data.size >= 9) {
                                             val type = data[0].toInt()
                                             val buffer = java.nio.ByteBuffer.wrap(data, 1, 8)
@@ -219,7 +219,7 @@ class LocalServerService : Service() {
                             try {
                                 for (frame in incoming) {
                                     if (frame is Frame.Binary) {
-                                        val data = frame.readBytes()
+                                        val data = frame.data
                                         TvEventBus.postMirrorFrame(data)
                                     }
                                 }
