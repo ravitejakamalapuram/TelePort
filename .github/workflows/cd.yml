@@ -25,3 +25,47 @@ jobs:
       key-alias: ${{ secrets.RELEASE_KEY_ALIAS }}
       key-password: ${{ secrets.RELEASE_KEY_PASSWORD }}
       play-service-account-key: ${{ secrets.PLAY_SERVICE_ACCOUNT_KEY }}
+
+  # Chrome Web Store Publishing
+  # Currently packages extension and uploads to GitHub Releases only.
+  # To enable Chrome Web Store publishing, add these secrets to your repository:
+  #   - CHROME_EXTENSION_ID: Your extension ID from Chrome Web Store
+  #   - CHROME_CLIENT_ID: Chrome Web Store API OAuth client ID
+  #   - CHROME_CLIENT_SECRET: Chrome Web Store API OAuth client secret
+  #   - CHROME_REFRESH_TOKEN: Chrome Web Store API refresh token
+  # Then uncomment the job below.
+  # See CHROME_WEBSTORE_SETUP.md for detailed setup instructions.
+
+  # publish-chrome:
+  #   name: Publish Chrome Extension
+  #   needs: release
+  #   runs-on: self-hosted
+  #   if: success()
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Get Latest Release
+  #       id: latest-release
+  #       run: |
+  #         TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName')
+  #         echo "tag=$TAG" >> $GITHUB_OUTPUT
+  #       env:
+  #         GH_TOKEN: ${{ github.token }}
+  #
+  #     - name: Download Extension from Release
+  #       run: |
+  #         gh release download ${{ steps.latest-release.outputs.tag }} -p 'extension.zip'
+  #       env:
+  #         GH_TOKEN: ${{ github.token }}
+  #
+  #     - name: Publish to Chrome Web Store
+  #       uses: ravitejakamalapuram/.github-workflows-shared/composite-actions/chrome-extension/publish-cws@main
+  #       with:
+  #         extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
+  #         client-id: ${{ secrets.CHROME_CLIENT_ID }}
+  #         client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
+  #         refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
+  #         zip-path: './extension.zip'
+  #         auto-publish: true
+  #         publish-target: 'default'
