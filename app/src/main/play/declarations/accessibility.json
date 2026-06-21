@@ -1,0 +1,23 @@
+{
+  "declarations": {
+    "accessibility": {
+      "service_name": "TelePort Air Mouse",
+      "purpose": "REMOTE_CONTROL",
+      "features": [
+        {
+          "feature": "PERFORM_GESTURES",
+          "justification": "Injects touch and swipe gestures on TV/Android devices to enable remote control functionality via air mouse from mobile devices"
+        },
+        {
+          "feature": "RETRIEVE_WINDOW_CONTENT",
+          "justification": "Detects active window context to provide accurate cursor overlay positioning and input routing for remote control"
+        }
+      ],
+      "data_handling": {
+        "collects_data": false,
+        "shares_data": false,
+        "description": "This accessibility service operates entirely locally within the device. No user data is collected, transmitted, or shared. The service only processes gesture input and window context in real-time for remote control functionality."
+      }
+    }
+  }
+}
