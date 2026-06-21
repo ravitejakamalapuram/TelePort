@@ -1,0 +1,45 @@
+{
+  "appName": "TelePort",
+  "appType": "multi-module",
+  "repoName": "TelePort",
+  "description": "A premium application.",
+  "modules": [
+    {
+      "name": "TelePort Cast & Remote (Chrome Extension)",
+      "type": "chrome-extension",
+      "path": "chrome-extension",
+      "status": "draft",
+      "storeId": "",
+      "storeUrl": "",
+      "developerConsoleUrl": "https://chrome.google.com/webstore/devconsole",
+      "buildScript": "zip -r initial-package.zip chrome-extension",
+      "artifactPath": "initial-package.zip",
+      "cwsListing": {
+        "shortDescription": "Beam tabs, cast screens, and control your TelePort TV directly from Chrome.",
+        "detailedDescription": "Beam tabs, cast screens, and control your TelePort TV directly from Chrome.",
+        "category": "productivity",
+        "singlePurpose": "Beam tabs, cast screens, and control your TelePort TV directly from Ch",
+        "privacyPolicyUrl": "https://ravitejakamalapuram.github.io/TelePort/privacy.html",
+        "permissionJustifications": {}
+      }
+    },
+    {
+      "name": "TelePort (Android App)",
+      "type": "android-app",
+      "path": "app",
+      "status": "draft",
+      "storeId": "com.ravitejakamalapuram.teleport",
+      "storeUrl": "https://play.google.com/store/apps/details?id=com.ravitejakamalapuram.teleport",
+      "developerConsoleUrl": "https://play.google.com/console/u/0/developers",
+      "buildScript": "./gradlew :app:assembleRelease",
+      "artifactPath": "app/build/outputs/apk/release/app-release.apk",
+      "playStoreListing": {
+        "title": "TelePort",
+        "shortDescription": "Short description here.",
+        "fullDescription": "Full description here.",
+        "category": "utilities",
+        "privacyPolicyUrl": "https://ravitejakamalapuram.github.io/TelePort/privacy.html"
+      }
+    }
+  ]
+}
