@@ -357,7 +357,8 @@ fun PairingScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier
-                .clickable { uriHandler.openUri("https://chromewebstore.google.com") }
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(role = Role.Button) { uriHandler.openUri("https://chromewebstore.google.com") }
                 .padding(8.dp)
         ) {
             Text("🌐 Get Chrome Extension for Computer", color = ThemeTokens.Accent, fontSize = 13.sp, fontWeight = FontWeight.Bold)
@@ -1531,7 +1532,8 @@ fun OnboardingContent(
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
-                            .clickable { onDismiss() }
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable(role = Role.Button) { onDismiss() }
                             .padding(8.dp)
                     )
                 }
