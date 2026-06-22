@@ -72,6 +72,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -164,6 +165,7 @@ fun PairingScreen(
     val discoveredTvs by nsdHelper.discoveredTvs.collectAsState()
     val connState by connectionManager.connectionState.collectAsState()
     var manualIp by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
 
     DisposableEffect(Unit) {
         nsdHelper.startDiscovery()
@@ -291,6 +293,7 @@ fun PairingScreen(
                 ),
                 keyboardActions = KeyboardActions(
                     onGo = {
+                        focusManager.clearFocus()
                         if (manualIp.isNotBlank()) {
                             connectionManager.connect(manualIp.trim(), ThemeTokens.PORT)
                         }
@@ -314,6 +317,7 @@ fun PairingScreen(
             Spacer(modifier = Modifier.width(12.dp))
             Button(
                 onClick = {
+                    focusManager.clearFocus()
                     if (manualIp.isNotBlank()) {
                         connectionManager.connect(manualIp.trim(), ThemeTokens.PORT)
                     }
@@ -995,6 +999,7 @@ fun DpadTab(connectionManager: TvConnectionManager) {
 @Composable
 fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport.app.protocol.TvState?, onShowPaywall: () -> Unit = {}) {
     var newUrl by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = Modifier
@@ -1014,6 +1019,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
             ),
             keyboardActions = KeyboardActions(
                 onGo = {
+                    focusManager.clearFocus()
                     if (newUrl.isNotBlank()) {
                         var formattedUrl = newUrl.trim()
                         if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
@@ -1043,6 +1049,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
         Row(modifier = Modifier.fillMaxWidth()) {
             Button(
                 onClick = {
+                    focusManager.clearFocus()
                     if (newUrl.isNotBlank()) {
                         // Free tier: limit to 3 tabs
                         val tabCount = tvState?.tabs?.size ?: 0
@@ -1073,6 +1080,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
             Spacer(modifier = Modifier.width(12.dp))
             Button(
                 onClick = {
+                    focusManager.clearFocus()
                     if (newUrl.isNotBlank()) {
                         // Free tier: limit to 3 tabs
                         val tabCount = tvState?.tabs?.size ?: 0
@@ -1188,6 +1196,7 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
     val clipboardManager = remember {
         context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     }
+    val focusManager = LocalFocusManager.current
 
     Row(
         modifier = Modifier
@@ -1207,6 +1216,7 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
             ),
             keyboardActions = KeyboardActions(
                 onSend = {
+                    focusManager.clearFocus()
                     if (textInput.isNotBlank()) {
                         connectionManager.sendCommand(Command.SendText(textInput))
                         textInput = ""
@@ -1257,6 +1267,7 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
         Spacer(modifier = Modifier.width(8.dp))
         Button(
             onClick = {
+                focusManager.clearFocus()
                 if (textInput.isNotBlank()) {
                     connectionManager.sendCommand(Command.SendText(textInput))
                     textInput = ""

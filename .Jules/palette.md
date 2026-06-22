@@ -26,3 +26,6 @@
 ## 2024-06-05 - clearAndSetSemantics for Emoji Buttons
 **Learning:** In Jetpack Compose, simply adding `semantics { contentDescription = "..." }` to an `IconButton` that only contains an emoji can cause screen readers to verbosely read both the custom description and the literal emoji name (e.g., "Tip Jar, hot beverage").
 **Action:** Use `Modifier.clearAndSetSemantics { contentDescription = "..." }` directly on the `IconButton` to clear the default text semantics of the child emoji and replace it solely with the intended action description.
+## 2024-06-06 - Auto-Dismiss Software Keyboard on Action
+**Learning:** In Jetpack Compose, text inputs often retain focus after a user triggers a software keyboard action (like 'Go' or 'Send') or clicks an explicit submission button. This leaves the keyboard open, obscuring the UI and degrading the UX.
+**Action:** Retrieve `LocalFocusManager.current` and call `focusManager.clearFocus()` within both the `KeyboardActions` callback and the explicit submit button's `onClick` handler to automatically dismiss the keyboard and improve usability.
