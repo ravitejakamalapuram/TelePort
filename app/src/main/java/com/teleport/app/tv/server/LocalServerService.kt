@@ -215,6 +215,38 @@ class LocalServerService : Service() {
                                 return@webSocket
                             }
 
+                            val clientId = UUID.randomUUID().toString()
+                            TvEventBus.postPendingConnection(clientId, "Screen Mirroring")
+
+                            // Wait for TV user confirmation (approval or denial)
+                            var isApproved = false
+                            try {
+                                combine(
+                                    TvEventBus.approvedClientIds,
+                                    TvEventBus.pendingRequests
+                                ) { approvedIds, pendingReqs ->
+                                    if (clientId in approvedIds) {
+                                        isApproved = true
+                                        true
+                                    } else if (pendingReqs.none { it.clientId == clientId }) {
+                                        isApproved = false
+                                        true
+                                    } else {
+                                        false
+                                    }
+                                }.first { it }
+                            } catch (e: Exception) {
+                                Log.e(TAG, "Error waiting for mirror connection confirmation", e)
+                            }
+
+                            if (!isApproved) {
+                                Log.w(TAG, "Mirror connection denied by TV user: $clientId")
+                                close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Connection Denied"))
+                                return@webSocket
+                            }
+
+                            TvEventBus.registerClient(clientId)
+
                             Log.d(TAG, "Mirror socket connected")
                             try {
                                 for (frame in incoming) {
@@ -226,6 +258,7 @@ class LocalServerService : Service() {
                             } catch (e: Exception) {
                                 Log.e(TAG, "Error in mirror WebSocket session", e)
                             } finally {
+                                TvEventBus.unregisterClient(clientId)
                                 Log.d(TAG, "Mirror socket disconnected")
                             }
                         }
