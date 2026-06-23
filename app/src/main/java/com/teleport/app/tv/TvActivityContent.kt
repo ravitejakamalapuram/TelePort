@@ -501,7 +501,6 @@ fun FeatureCard(
 fun BrowserScreen(tabManager: TabManager) {
     val tabs by tabManager.tabs.collectAsState()
     val activeIndex by tabManager.activeTabIndex.collectAsState()
-    val cursors by tabManager.cursors.collectAsState()
 
     Box(
         modifier = Modifier
@@ -546,6 +545,17 @@ fun BrowserScreen(tabManager: TabManager) {
             }
         }
 
+        CursorsOverlay(tabManager)
+    }
+}
+
+// Bolt: Isolate high-frequency rendering logic by extracting it into its own separate,
+// lightweight Composable to strictly confine recomposition and prevent jank in the heavy parent.
+@Composable
+fun CursorsOverlay(tabManager: TabManager) {
+    val cursors by tabManager.cursors.collectAsState()
+
+    Box(modifier = Modifier.fillMaxSize()) {
         // Draw multiple color-coded cursors
         cursors.values.forEach { cursor ->
             val color = remember(cursor.colorHex) {
