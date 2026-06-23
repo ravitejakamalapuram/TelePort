@@ -1,0 +1,14 @@
+--- .github/workflows/ci.yml
++++ .github/workflows/ci.yml
+@@ -10,9 +10,7 @@
+
+ jobs:
+   build-and-test:
+-    runs-on: self-hosted
+-    env:
+-      ANDROID_HOME: ${{ secrets.ANDROID_HOME || '/Users/rkamalapuram/.android/sdk' }}
+-      ANDROID_SDK_ROOT: ${{ secrets.ANDROID_HOME || '/Users/rkamalapuram/.android/sdk' }}
++    runs-on: ubuntu-latest
+     steps:
+       - name: Checkout code
+         uses: actions/checkout@v4
