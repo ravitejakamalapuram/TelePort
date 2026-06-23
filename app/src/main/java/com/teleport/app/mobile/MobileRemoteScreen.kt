@@ -72,6 +72,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -164,6 +165,7 @@ fun PairingScreen(
     val discoveredTvs by nsdHelper.discoveredTvs.collectAsState()
     val connState by connectionManager.connectionState.collectAsState()
     var manualIp by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
 
     DisposableEffect(Unit) {
         nsdHelper.startDiscovery()
@@ -293,6 +295,7 @@ fun PairingScreen(
                     onGo = {
                         if (manualIp.isNotBlank()) {
                             connectionManager.connect(manualIp.trim(), ThemeTokens.PORT)
+                            focusManager.clearFocus()
                         }
                     }
                 ),
@@ -316,6 +319,7 @@ fun PairingScreen(
                 onClick = {
                     if (manualIp.isNotBlank()) {
                         connectionManager.connect(manualIp.trim(), ThemeTokens.PORT)
+                        focusManager.clearFocus()
                     }
                 },
                 modifier = Modifier.height(56.dp),
@@ -995,6 +999,7 @@ fun DpadTab(connectionManager: TvConnectionManager) {
 @Composable
 fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport.app.protocol.TvState?, onShowPaywall: () -> Unit = {}) {
     var newUrl by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = Modifier
@@ -1021,6 +1026,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                         }
                         connectionManager.sendCommand(Command.OpenUrl(formattedUrl, headless = true))
                         newUrl = ""
+                        focusManager.clearFocus()
                     }
                 }
             ),
@@ -1056,6 +1062,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
                         }
                         connectionManager.sendCommand(Command.OpenUrl(formattedUrl, headless = true))
                         newUrl = ""
+                        focusManager.clearFocus()
                     }
                 },
                 modifier = Modifier.weight(1f).height(48.dp),
@@ -1184,6 +1191,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
 @Composable
 fun QuickInputBar(connectionManager: TvConnectionManager) {
     var textInput by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
     val context = LocalContext.current
     val clipboardManager = remember {
         context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -1210,6 +1218,7 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
                     if (textInput.isNotBlank()) {
                         connectionManager.sendCommand(Command.SendText(textInput))
                         textInput = ""
+                        focusManager.clearFocus()
                     }
                 }
             ),
@@ -1260,6 +1269,7 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
                 if (textInput.isNotBlank()) {
                     connectionManager.sendCommand(Command.SendText(textInput))
                     textInput = ""
+                    focusManager.clearFocus()
                 }
             },
             enabled = textInput.isNotBlank(),
