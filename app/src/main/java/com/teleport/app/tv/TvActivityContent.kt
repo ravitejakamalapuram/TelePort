@@ -501,7 +501,6 @@ fun FeatureCard(
 fun BrowserScreen(tabManager: TabManager) {
     val tabs by tabManager.tabs.collectAsState()
     val activeIndex by tabManager.activeTabIndex.collectAsState()
-    val cursors by tabManager.cursors.collectAsState()
 
     Box(
         modifier = Modifier
@@ -546,23 +545,31 @@ fun BrowserScreen(tabManager: TabManager) {
             }
         }
 
-        // Draw multiple color-coded cursors
-        cursors.values.forEach { cursor ->
-            val color = remember(cursor.colorHex) {
-                try {
-                    Color(AndroidColor.parseColor(cursor.colorHex))
-                } catch (e: Exception) {
-                    Color.Red
-                }
+        // Bolt: Extract high-frequency sensor-driven cursor rendering into its own
+        // lightweight Composable to strictly confine recomposition and prevent jank.
+        CursorOverlay(tabManager)
+    }
+}
+
+@Composable
+fun CursorOverlay(tabManager: TabManager) {
+    val cursors by tabManager.cursors.collectAsState()
+
+    // Draw multiple color-coded cursors
+    cursors.values.forEach { cursor ->
+        val color = remember(cursor.colorHex) {
+            try {
+                Color(AndroidColor.parseColor(cursor.colorHex))
+            } catch (e: Exception) {
+                Color.Red
             }
-            Box(
-                modifier = Modifier
-                    .offset { IntOffset(cursor.x.toInt(), cursor.y.toInt()) }
-                    .size(16.dp)
-                    .background(color.copy(alpha = 0.8f), CircleShape)
-                    .align(Alignment.TopStart)
-            )
         }
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(cursor.x.toInt(), cursor.y.toInt()) }
+                .size(16.dp)
+                .background(color.copy(alpha = 0.8f), CircleShape)
+        )
     }
 }
 
