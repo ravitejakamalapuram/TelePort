@@ -72,6 +72,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -164,6 +165,7 @@ fun PairingScreen(
     val discoveredTvs by nsdHelper.discoveredTvs.collectAsState()
     val connState by connectionManager.connectionState.collectAsState()
     var manualIp by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
 
     DisposableEffect(Unit) {
         nsdHelper.startDiscovery()
@@ -292,6 +294,7 @@ fun PairingScreen(
                 keyboardActions = KeyboardActions(
                     onGo = {
                         if (manualIp.isNotBlank()) {
+                            focusManager.clearFocus()
                             connectionManager.connect(manualIp.trim(), ThemeTokens.PORT)
                         }
                     }
@@ -315,6 +318,7 @@ fun PairingScreen(
             Button(
                 onClick = {
                     if (manualIp.isNotBlank()) {
+                        focusManager.clearFocus()
                         connectionManager.connect(manualIp.trim(), ThemeTokens.PORT)
                     }
                 },
@@ -995,6 +999,7 @@ fun DpadTab(connectionManager: TvConnectionManager) {
 @Composable
 fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport.app.protocol.TvState?, onShowPaywall: () -> Unit = {}) {
     var newUrl by remember { mutableStateOf("") }
+    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = Modifier
@@ -1015,6 +1020,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
             keyboardActions = KeyboardActions(
                 onGo = {
                     if (newUrl.isNotBlank()) {
+                        focusManager.clearFocus()
                         var formattedUrl = newUrl.trim()
                         if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
                             formattedUrl = "https://$formattedUrl"
@@ -1044,6 +1050,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
             Button(
                 onClick = {
                     if (newUrl.isNotBlank()) {
+                        focusManager.clearFocus()
                         // Free tier: limit to 3 tabs
                         val tabCount = tvState?.tabs?.size ?: 0
                         if (!isProUnlocked && tabCount >= 3) {
@@ -1074,6 +1081,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
             Button(
                 onClick = {
                     if (newUrl.isNotBlank()) {
+                        focusManager.clearFocus()
                         // Free tier: limit to 3 tabs
                         val tabCount = tvState?.tabs?.size ?: 0
                         if (!isProUnlocked && tabCount >= 3) {
@@ -1185,6 +1193,7 @@ fun TabsManagerTab(connectionManager: TvConnectionManager, tvState: com.teleport
 fun QuickInputBar(connectionManager: TvConnectionManager) {
     var textInput by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val clipboardManager = remember {
         context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     }
@@ -1208,6 +1217,7 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
             keyboardActions = KeyboardActions(
                 onSend = {
                     if (textInput.isNotBlank()) {
+                        focusManager.clearFocus()
                         connectionManager.sendCommand(Command.SendText(textInput))
                         textInput = ""
                     }
@@ -1258,6 +1268,7 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
         Button(
             onClick = {
                 if (textInput.isNotBlank()) {
+                    focusManager.clearFocus()
                     connectionManager.sendCommand(Command.SendText(textInput))
                     textInput = ""
                 }
