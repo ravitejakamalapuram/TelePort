@@ -501,7 +501,6 @@ fun FeatureCard(
 fun BrowserScreen(tabManager: TabManager) {
     val tabs by tabManager.tabs.collectAsState()
     val activeIndex by tabManager.activeTabIndex.collectAsState()
-    val cursors by tabManager.cursors.collectAsState()
 
     Box(
         modifier = Modifier
@@ -546,23 +545,34 @@ fun BrowserScreen(tabManager: TabManager) {
             }
         }
 
-        // Draw multiple color-coded cursors
-        cursors.values.forEach { cursor ->
-            val color = remember(cursor.colorHex) {
-                try {
-                    Color(AndroidColor.parseColor(cursor.colorHex))
-                } catch (e: Exception) {
-                    Color.Red
-                }
+        CursorsOverlay(tabManager)
+    }
+}
+
+@Composable
+fun CursorsOverlay(tabManager: TabManager) {
+    // Bolt Optimization: Isolating high-frequency state reading.
+    // By extracting the cursors collection to this lightweight Composable,
+    // we prevent the heavy parent BrowserScreen (which contains an AndroidView)
+    // from recomposing on every single trackpad movement (60Hz+).
+    // Expected Impact: Drastically reduces main-thread jank and frame drops during remote control usage.
+    val cursors by tabManager.cursors.collectAsState()
+
+    // Draw multiple color-coded cursors
+    cursors.values.forEach { cursor ->
+        val color = remember(cursor.colorHex) {
+            try {
+                Color(AndroidColor.parseColor(cursor.colorHex))
+            } catch (e: Exception) {
+                Color.Red
             }
-            Box(
-                modifier = Modifier
-                    .offset { IntOffset(cursor.x.toInt(), cursor.y.toInt()) }
-                    .size(16.dp)
-                    .background(color.copy(alpha = 0.8f), CircleShape)
-                    .align(Alignment.TopStart)
-            )
         }
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(cursor.x.toInt(), cursor.y.toInt()) }
+                .size(16.dp)
+                .background(color.copy(alpha = 0.8f), CircleShape)
+        )
     }
 }
 
