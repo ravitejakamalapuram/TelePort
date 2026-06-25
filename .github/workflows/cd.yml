@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   release:
-    uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-cd.yml@v1.1.10
+    uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-cd.yml@main
     with:
       runner-type: 'self-hosted'
       java-version: '17'
