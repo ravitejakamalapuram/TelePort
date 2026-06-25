@@ -163,6 +163,68 @@ The tag was eventually updated to point to the correct commit `b2a457d`, and the
 ---
 
 **Next Steps:**
-1. Run `./scripts/fix-runner.sh` to restart runner
-2. Monitor next workflow run for stability
-3. If issues persist, consider migrating to GitHub-hosted runners for critical workflows
+1. ✅ Ran `./scripts/fix-runner.sh` to restart runner
+2. ⚠️  **CRITICAL NETWORK ISSUE DISCOVERED**
+
+## ⚠️  Network Connectivity Problem
+
+**Root Cause:**
+The runner has persistent DNS resolution failures and cannot reliably connect to GitHub Actions broker servers.
+
+**Evidence from logs:**
+```
+[ERR  BrokerServer] System.Net.Sockets.SocketException (0xFFFDFFFF): nodename nor servname provided, or not known
+[ERR  GitHubActionsService] Attempt 4 of GET request to https://broker.actions.githubusercontent.com/message... failed (Socket Error: HostNotFound)
+```
+
+**Recommendation: Migrate to GitHub-Hosted Runners**
+
+Given the persistent network issues with the self-hosted runner, the recommended solution is to **migrate critical workflows to GitHub-hosted runners** while keeping the self-hosted runner as a backup.
+
+### Migration Steps:
+
+1. **Update CI workflow to use GitHub-hosted runner:**
+   ```yaml
+   # .github/workflows/ci.yml
+   jobs:
+     build-and-test:
+       runs-on: ubuntu-latest  # Change from self-hosted
+   ```
+
+2. **Update CD workflow to use GitHub-hosted runner:**
+   ```yaml
+   # .github/workflows/cd.yml
+   jobs:
+     release:
+       uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-cd.yml@main
+       with:
+         runner-type: 'ubuntu-latest'  # Change from 'self-hosted'
+   ```
+
+3. **Benefits of GitHub-Hosted Runners:**
+   - Reliable network connectivity
+   - No maintenance required
+   - Latest versions of tools and dependencies
+   - Consistent performance
+   - No local machine dependencies
+
+4. **Keep self-hosted runner for:**
+   - Development testing
+   - Workflows requiring local resources
+   - Backup option if GitHub-hosted runners have issues
+
+### Alternative: Fix Network Issues
+
+If you prefer to keep using the self-hosted runner, investigate:
+1. **DNS resolution** - Ensure DNS can resolve `broker.actions.githubusercontent.com`
+2. **Firewall settings** - Allow outbound HTTPS to GitHub Actions domains
+3. **Network stability** - Use wired connection instead of WiFi
+4. **Router/modem** - Restart network equipment
+5. **macOS network settings** - Reset network preferences if needed
+
+Test DNS resolution:
+```bash
+nslookup broker.actions.githubusercontent.com
+ping -c 4 broker.actions.githubusercontent.com
+curl -I https://broker.actions.githubusercontent.com
+```
