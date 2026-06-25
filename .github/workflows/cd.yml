@@ -39,7 +39,7 @@ jobs:
   # publish-chrome:
   #   name: Publish Chrome Extension
   #   needs: release
-  #   runs-on: self-hosted
+  #   runs-on: ubuntu-latest
   #   if: success()
   #   steps:
   #     - name: Checkout

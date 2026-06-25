@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     env:
       ANDROID_HOME: ${{ secrets.ANDROID_HOME || '/Users/rkamalapuram/.android/sdk' }}
       ANDROID_SDK_ROOT: ${{ secrets.ANDROID_HOME || '/Users/rkamalapuram/.android/sdk' }}
