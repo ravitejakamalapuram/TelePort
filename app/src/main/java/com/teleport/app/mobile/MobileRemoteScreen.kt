@@ -83,6 +83,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.teleport.app.mobile.connection.ConnectionState
@@ -796,6 +798,14 @@ fun TrackpadTab(
                 .padding(vertical = 16.dp)
                 .background(ThemeTokens.CardBg, RoundedCornerShape(24.dp))
                 .clip(RoundedCornerShape(24.dp))
+                .clearAndSetSemantics {
+                    contentDescription = if (isAirMouseOn) "Air Mouse Area. Wave phone to move cursor." else "Trackpad Area. Swipe to move cursor."
+                    role = Role.Button
+                    onClick(label = "Click TV") {
+                        connectionManager.sendCommand(Command.Click)
+                        true
+                    }
+                }
                 .pointerInput(isAirMouseOn) {
                     detectTapGestures(
                         onTap = { connectionManager.sendCommand(Command.Click) }
