@@ -25,6 +25,7 @@ jobs:
       key-alias: ${{ secrets.RELEASE_KEY_ALIAS }}
       key-password: ${{ secrets.RELEASE_KEY_PASSWORD }}
       play-service-account-key: ${{ secrets.PLAY_SERVICE_ACCOUNT_KEY }}
+      pat-token: ${{ secrets.PAT_TOKEN }}
 
   # Chrome Web Store Publishing
   # Currently packages extension and uploads to GitHub Releases only.

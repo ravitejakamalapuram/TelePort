@@ -118,9 +118,39 @@ curl -I https://broker.actions.githubusercontent.com
 |-----------|--------|-------|
 | Latest Release (v1.5.15) | ✅ Deployed | All artifacts uploaded successfully |
 | Google Play Deployment | ✅ Live | Alpha track, published successfully |
-| CI Workflow | ⚠️ Unstable | Passes but runner connectivity issues |
-| CD Workflow | ⚠️ Unstable | Deploys successfully but shows failure |
-| Self-Hosted Runner | ⚠️ Offline | Network connectivity issues |
+| CI Workflow | ❌ **FAILING** | **Test run stuck - confirmed network issue** |
+| CD Workflow | ❌ **FAILING** | Deploys successfully but runner disconnects |
+| Self-Hosted Runner | ❌ **OFFLINE** | **Persistent network connectivity failure** |
+| Test Run (28219999250) | ❌ **STUCK** | Hung for 17+ min on cleanup steps |
+
+---
+
+## 🔴 **MONITORING RESULTS - FAILURE CONFIRMED**
+
+**Test Workflow:** CI Run #28219999250
+**Duration:** 17+ minutes (stuck in cleanup)
+**Status:** ❌ **FAILED - Same network issue reproduced**
+
+### Execution Timeline:
+1. ✅ **All work steps completed successfully** (first 7 steps):
+   - Set up job ✓
+   - Checkout code ✓
+   - Set up JDK 17 ✓
+   - Grant execute permission for gradlew ✓
+   - Run tests ✓
+   - Build debug APK ✓
+   - Validate Chrome Extension ✓
+
+2. ❌ **STUCK on post-cleanup steps** (hung for 17+ minutes):
+   - Post Set up JDK 17 - **HANGING**
+   - Post Checkout code - **HANGING**
+
+3. **Never completed** - Runner lost connection before finalizing
+
+### Root Cause Confirmed:
+The runner **completes all actual work** but **cannot communicate with GitHub Actions broker** to finalize the workflow and report success. This is the **exact same failure pattern** as the previous CD failures.
+
+**This proves the network connectivity issue is persistent and reproducible.**
 
 ---
 
@@ -165,5 +195,29 @@ Refer to these documents for more details:
 
 ---
 
-**Bottom Line:**  
-Your deployments are working! The "failures" are just the runner losing connection after successfully completing all work. Migrate to GitHub-hosted runners for a permanent fix.
+## 🎯 **BOTTOM LINE - ACTION REQUIRED**
+
+✅ **Your deployments ARE working** - Release v1.5.15 deployed successfully
+❌ **Your runner is NOT working** - Confirmed persistent network failures
+⚠️ **Monitoring test FAILED** - Reproduced the same issue (stuck 17+ min)
+
+### 🚨 **IMMEDIATE ACTION: Migrate to GitHub-Hosted Runners**
+
+The test run confirmed this is **not a one-time issue**. The self-hosted runner **will continue failing**.
+
+**Make these changes NOW:**
+
+1. **`.github/workflows/ci.yml`** (line ~13):
+   ```diff
+   - runs-on: self-hosted
+   + runs-on: ubuntu-latest
+   ```
+
+2. **`.github/workflows/cd.yml`** (line ~16):
+   ```diff
+     with:
+   -   runner-type: 'self-hosted'
+   +   runner-type: 'ubuntu-latest'
+   ```
+
+**Do this immediately.** Every workflow run will hang until you do.
