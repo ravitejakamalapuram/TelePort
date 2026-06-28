@@ -285,19 +285,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun extractUrl(text: String): String? {
-        val words = text.split("\\s+".toRegex())
-        for (word in words) {
-            try {
-                val uri = URI(word)
-                if (uri.scheme == "http" || uri.scheme == "https") {
-                    return word
-                }
-            } catch (e: Exception) {
-                // Try next
+        val matcher = android.util.Patterns.WEB_URL.matcher(text)
+        if (matcher.find()) {
+            val url = matcher.group()
+            // Ensure the URL has a safe scheme, as WEB_URL might match without one
+            if (url.startsWith("http://") || url.startsWith("https://")) {
+                return url
+            } else if (!url.contains("://")) {
+                return "https://$url"
             }
-        }
-        if (text.startsWith("http://") || text.startsWith("https://")) {
-            return text
         }
         return null
     }

@@ -30,10 +30,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run tests
-        run: ./gradlew testDebugUnitTest -x lintVitalAnalyzeRelease -x lintVitalReportRelease
+        run: ./gradlew testDebugUnitTest -x lintVitalAnalyzeRelease -x lintVitalReportRelease --no-daemon
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug -x lintVitalAnalyzeRelease -x lintVitalReportRelease
+        run: ./gradlew assembleDebug -x lintVitalAnalyzeRelease -x lintVitalReportRelease --no-daemon
 
       - name: Validate Chrome Extension
         run: |
