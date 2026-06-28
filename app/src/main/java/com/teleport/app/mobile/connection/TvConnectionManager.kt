@@ -51,7 +51,8 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
 
     // Bolt: Use a Channel to buffer commands instead of launching a new coroutine per command.
     // This prevents GC thrashing and thread starvation when sending high-frequency cursor commands at 200Hz.
-    private val commandChannel = Channel<Command>(Channel.UNLIMITED)
+    // Using a bounded channel with DROP_OLDEST prevents OOM and node allocation overhead from UNLIMITED.
+    private val commandChannel = Channel<Command>(capacity = 64, onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST)
     private var senderJob: Job? = null
 
     private val json = Json {
@@ -59,7 +60,9 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
         encodeDefaults = true
     }
 
-    init {
+    fun connect(ip: String, port: Int) {
+        disconnect()
+
         // Start the single worker coroutine that consumes from the channel
         senderJob = coroutineScope.launch(Dispatchers.IO) {
             // Pre-allocate a single buffer for binary commands to avoid GC thrashing
@@ -78,9 +81,6 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
                                 byteBuffer.position(1)
                                 byteBuffer.putFloat(command.dx)
                                 byteBuffer.putFloat(command.dy)
-                                // Note: Frame.Binary requires passing a new array, but OkHttp WebSocket internally copies it.
-                                // For true zero-allocation we would send Okio ByteString directly, but reducing allocations
-                                // before wrapping in Frame.Binary still helps reduce some pressure.
                                 Frame.Binary(true, binaryData.copyOf())
                             }
                             is Command.Scroll -> {
@@ -100,15 +100,9 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
                     } catch (e: Exception) {
                         Log.e(TAG, "Failed to send command: $command", e)
                     }
-                } else {
-                    Log.w(TAG, "Cannot send command, not connected.")
                 }
             }
         }
-    }
-
-    fun connect(ip: String, port: Int) {
-        disconnect()
 
         activeIp = ip
         _connectionState.value = ConnectionState.Connecting
@@ -157,6 +151,8 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
     fun disconnect() {
         connectionJob?.cancel()
         connectionJob = null
+        senderJob?.cancel()
+        senderJob = null
         session = null
         _tvState.value = null
         activeIp = null
@@ -164,7 +160,12 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
     }
 
     fun sendCommand(command: Command) {
-        // Bolt: Simply push to the channel without allocating a new Coroutine per command
-        commandChannel.trySend(command)
+        val currentSession = session
+        if (currentSession != null && _connectionState.value == ConnectionState.Connected) {
+            // Bolt: Simply push to the channel without allocating a new Coroutine per command
+            commandChannel.trySend(command)
+        } else {
+            Log.w(TAG, "Cannot send command, not connected. Session is null: ${currentSession == null}")
+        }
     }
 }
