@@ -15,6 +15,7 @@ import io.ktor.websocket.send
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,6 +49,12 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
     private var session: DefaultClientWebSocketSession? = null
     private var connectionJob: Job? = null
 
+    // Bolt: Use a Channel to buffer commands instead of launching a new coroutine per command.
+    // This prevents GC thrashing and thread starvation when sending high-frequency cursor commands at 200Hz.
+    // Using a bounded channel with DROP_OLDEST prevents OOM and node allocation overhead from UNLIMITED.
+    private val commandChannel = Channel<Command>(capacity = 64, onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST)
+    private var senderJob: Job? = null
+
     private val json = Json {
         ignoreUnknownKeys = true
         encodeDefaults = true
@@ -55,6 +62,47 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
 
     fun connect(ip: String, port: Int) {
         disconnect()
+
+        // Start the single worker coroutine that consumes from the channel
+        senderJob = coroutineScope.launch(Dispatchers.IO) {
+            // Pre-allocate a single buffer for binary commands to avoid GC thrashing
+            // since this coroutine processes commands sequentially.
+            val binaryData = ByteArray(9)
+            val byteBuffer = java.nio.ByteBuffer.wrap(binaryData, 1, 8)
+
+            for (command in commandChannel) {
+                val currentSession = session
+                if (currentSession != null && _connectionState.value == ConnectionState.Connected) {
+                    try {
+                        val frame = when (command) {
+                            is Command.MoveCursor -> {
+                                binaryData[0] = 0x01.toByte()
+                                byteBuffer.clear()
+                                byteBuffer.position(1)
+                                byteBuffer.putFloat(command.dx)
+                                byteBuffer.putFloat(command.dy)
+                                Frame.Binary(true, binaryData.copyOf())
+                            }
+                            is Command.Scroll -> {
+                                binaryData[0] = 0x02.toByte()
+                                byteBuffer.clear()
+                                byteBuffer.position(1)
+                                byteBuffer.putFloat(command.dx)
+                                byteBuffer.putFloat(command.dy)
+                                Frame.Binary(true, binaryData.copyOf())
+                            }
+                            else -> {
+                                val jsonString = json.encodeToString(command)
+                                Frame.Text(jsonString)
+                            }
+                        }
+                        currentSession.send(frame)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to send command: $command", e)
+                    }
+                }
+            }
+        }
 
         activeIp = ip
         _connectionState.value = ConnectionState.Connecting
@@ -103,6 +151,8 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
     fun disconnect() {
         connectionJob?.cancel()
         connectionJob = null
+        senderJob?.cancel()
+        senderJob = null
         session = null
         _tvState.value = null
         activeIp = null
@@ -112,35 +162,8 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
     fun sendCommand(command: Command) {
         val currentSession = session
         if (currentSession != null && _connectionState.value == ConnectionState.Connected) {
-            coroutineScope.launch(Dispatchers.IO) {
-                try {
-                    val frame = when (command) {
-                        is Command.MoveCursor -> {
-                            val data = ByteArray(9)
-                            data[0] = 0x01.toByte()
-                            val buffer = java.nio.ByteBuffer.wrap(data, 1, 8)
-                            buffer.putFloat(command.dx)
-                            buffer.putFloat(command.dy)
-                            Frame.Binary(true, data)
-                        }
-                        is Command.Scroll -> {
-                            val data = ByteArray(9)
-                            data[0] = 0x02.toByte()
-                            val buffer = java.nio.ByteBuffer.wrap(data, 1, 8)
-                            buffer.putFloat(command.dx)
-                            buffer.putFloat(command.dy)
-                            Frame.Binary(true, data)
-                        }
-                        else -> {
-                            val jsonString = json.encodeToString(command)
-                            Frame.Text(jsonString)
-                        }
-                    }
-                    currentSession.send(frame)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to send command: $command", e)
-                }
-            }
+            // Bolt: Simply push to the channel without allocating a new Coroutine per command
+            commandChannel.trySend(command)
         } else {
             Log.w(TAG, "Cannot send command, not connected. Session is null: ${currentSession == null}")
         }
