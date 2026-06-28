@@ -796,6 +796,9 @@ fun TrackpadTab(
                 .padding(vertical = 16.dp)
                 .background(ThemeTokens.CardBg, RoundedCornerShape(24.dp))
                 .clip(RoundedCornerShape(24.dp))
+                .clearAndSetSemantics {
+                    contentDescription = "Trackpad. Tap to click, drag to move cursor."
+                }
                 .pointerInput(isAirMouseOn) {
                     detectTapGestures(
                         onTap = { connectionManager.sendCommand(Command.Click) }
@@ -1219,6 +1222,7 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
                     if (textInput.isNotBlank()) {
                         focusManager.clearFocus()
                         connectionManager.sendCommand(Command.SendText(textInput))
+                        Toast.makeText(context, "Sent to TV!", Toast.LENGTH_SHORT).show()
                         textInput = ""
                     }
                 }
@@ -1270,6 +1274,7 @@ fun QuickInputBar(connectionManager: TvConnectionManager) {
                 if (textInput.isNotBlank()) {
                     focusManager.clearFocus()
                     connectionManager.sendCommand(Command.SendText(textInput))
+                    Toast.makeText(context, "Sent to TV!", Toast.LENGTH_SHORT).show()
                     textInput = ""
                 }
             },

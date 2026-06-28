@@ -29,3 +29,7 @@
 ## 2024-06-06 - Clear Focus on Submission to Dismiss Keyboard
 **Learning:** In Jetpack Compose, text inputs often retain focus after a user triggers a software keyboard action (like 'Go' or 'Send') or clicks an explicit "Submit" button nearby. This leaves the software keyboard stubbornly open on the screen, obstructing the view of the resulting action or the main UI.
 **Action:** Retrieve `val focusManager = LocalFocusManager.current` and explicitly call `focusManager.clearFocus()` within both the `KeyboardActions` callback and the corresponding explicit submit button's `onClick` handler. This provides immediate, polished feedback that the submission was registered and gets the keyboard out of the way.
+
+## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
+**Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
+**Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor.").

@@ -13,7 +13,7 @@ jobs:
   release:
     uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-cd.yml@main
     with:
-      runner-type: 'self-hosted'
+      runner-type: 'ubuntu-latest'
       java-version: '17'
       package-name: 'com.carfry369.teleport'
       deploy-to-play: true
@@ -39,7 +39,7 @@ jobs:
   # publish-chrome:
   #   name: Publish Chrome Extension
   #   needs: release
-  #   runs-on: self-hosted
+  #   runs-on: ubuntu-latest
   #   if: success()
   #   steps:
   #     - name: Checkout
