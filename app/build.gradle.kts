@@ -15,8 +15,8 @@ android {
         applicationId = "com.carfry369.teleport"
         minSdk = 26 // Required for Ktor Netty and Media3
         targetSdk = 35
-        versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 6
-        versionName = (project.findProperty("versionName") as? String) ?: "1.0.0"
+        versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 185
+        versionName = (project.findProperty("versionName") as? String) ?: "1.5.18"
     }
 
     lint {
