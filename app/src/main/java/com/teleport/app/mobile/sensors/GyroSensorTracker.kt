@@ -50,8 +50,15 @@ class GyroSensorTracker(
     // Tuning constants
     private val NOISE_THRESHOLD = 0.008f // Low threshold to capture subtle wrist movement but filter out static noise
 
+    // Bolt: Throttling to ~60Hz to reduce GC pressure and WebSocket network flooding
+    private val THROTTLE_INTERVAL_MS = 16L
+
     private var smoothDx = 0f
     private var smoothDy = 0f
+
+    private var accumulatedDx = 0f
+    private var accumulatedDy = 0f
+    private var lastEmitTime = 0L
 
     fun start() {
         if (isRunning) return
@@ -138,8 +145,18 @@ class GyroSensorTracker(
         smoothDx = if (targetDx == 0f) 0f else smoothDx + smoothingFactor * (targetDx - smoothDx)
         smoothDy = if (targetDy == 0f) 0f else smoothDy + smoothingFactor * (targetDy - smoothDy)
 
-        if (smoothDx != 0f || smoothDy != 0f) {
-            onCursorMove(smoothDx, smoothDy)
+        accumulatedDx += smoothDx
+        accumulatedDy += smoothDy
+
+        val currentTime = android.os.SystemClock.uptimeMillis()
+        if (currentTime - lastEmitTime >= THROTTLE_INTERVAL_MS) {
+            if (accumulatedDx != 0f || accumulatedDy != 0f) {
+                // Bolt: Send accumulated movements to decouple high-frequency sensor updates from expensive network dispatches
+                onCursorMove(accumulatedDx, accumulatedDy)
+                accumulatedDx = 0f
+                accumulatedDy = 0f
+            }
+            lastEmitTime = currentTime
         }
     }
 
