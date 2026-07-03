@@ -125,7 +125,9 @@ class TelePortAccessibilityService : AccessibilityService() {
 
     private fun listenForCommands() {
         serviceScope.launch {
-            TvEventBus.commands.collectLatest { clientCommand ->
+            // Bolt: Use collect instead of collectLatest for high-frequency cursor streams
+            // to avoid continuous coroutine cancellation overhead and GC pressure.
+            TvEventBus.commands.collect { clientCommand ->
                 val command = clientCommand.command
                 // When Accessibility Service is active, handle control events globally
                 when (command) {

@@ -77,7 +77,9 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
 
     // Listen for incoming commands in the event bus and route them to tabManager
     LaunchedEffect(Unit) {
-        TvEventBus.commands.collectLatest { clientCommand ->
+        // Bolt: Use collect instead of collectLatest for high-frequency cursor streams
+        // to avoid continuous coroutine cancellation overhead and GC pressure.
+        TvEventBus.commands.collect { clientCommand ->
             val clientId = clientCommand.clientId
             val command = clientCommand.command
             Log.d(TAG, "Executing command from $clientId: $command")

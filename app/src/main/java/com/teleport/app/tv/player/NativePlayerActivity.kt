@@ -176,7 +176,9 @@ class NativePlayerActivity : ComponentActivity() {
 
         // Connect remote controller events to player control
         LaunchedEffect(player) {
-            TvEventBus.commands.collectLatest { clientCommand ->
+            // Bolt: Use collect instead of collectLatest for high-frequency cursor streams
+            // to avoid continuous coroutine cancellation overhead and GC pressure.
+            TvEventBus.commands.collect { clientCommand ->
                 val command = clientCommand.command
                 Log.d(TAG, "Native Player executing remote command: $command")
                 when (command) {
