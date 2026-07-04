@@ -53,6 +53,11 @@ class GyroSensorTracker(
     private var smoothDx = 0f
     private var smoothDy = 0f
 
+    // Bolt: Throttling state to decouple high-frequency hardware interrupts from expensive network pipelines
+    private var lastEmitTimeMs = 0L
+    private var accumulatedDx = 0f
+    private var accumulatedDy = 0f
+
     fun start() {
         if (isRunning) return
         if (gyroscope == null) {
@@ -138,8 +143,19 @@ class GyroSensorTracker(
         smoothDx = if (targetDx == 0f) 0f else smoothDx + smoothingFactor * (targetDx - smoothDx)
         smoothDy = if (targetDy == 0f) 0f else smoothDy + smoothingFactor * (targetDy - smoothDy)
 
-        if (smoothDx != 0f || smoothDy != 0f) {
-            onCursorMove(smoothDx, smoothDy)
+        // Bolt: Decoupling high-frequency hardware interrupts from expensive network/allocation pipelines
+        // Accumulate raw sensor changes and throttle emitting to ~60Hz (16ms)
+        accumulatedDx += smoothDx
+        accumulatedDy += smoothDy
+
+        val currentTimeMs = android.os.SystemClock.uptimeMillis()
+        if (currentTimeMs - lastEmitTimeMs >= 16L) {
+            if (accumulatedDx != 0f || accumulatedDy != 0f) {
+                onCursorMove(accumulatedDx, accumulatedDy)
+                accumulatedDx = 0f
+                accumulatedDy = 0f
+            }
+            lastEmitTimeMs = currentTimeMs
         }
     }
 
