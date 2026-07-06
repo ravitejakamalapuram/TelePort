@@ -1,3 +1,3 @@
-## 2026-06-12 - AdMob/Billing CI Dependencies
-**Learning:** In the TelePort app, the code references AdMob (, ) and Play Billing (), but these were omitted from  causing CI to fail compilation.
-**Action:** Always verify dependencies are present when using external Google services. Additionally, resolving  manifest merger conflicts requires adding a specific property directly to the .
+## 2026-07-06 - Optimize Ktor WebSocket event collection in Flow streams
+**Learning:** In high-frequency Kotlin Flow streams (e.g., streaming sensor, touch, or UI events to a Ktor WebSocket server at 100Hz+), using `collectLatest` is highly inefficient and creates severe GC pressure and thread pool contention. `collectLatest` cancels its internal operation whenever a new emission occurs. If emissions happen faster than the websocket `send()` suspending function completes, the send is cancelled repeatedly, throwing `CancellationException` under the hood, allocating memory, and potentially dropping frames. Using `collect` prevents these cancellations and allows operations to complete correctly.
+**Action:** When handling flow streams connected to suspending sinks like WebSockets, always prefer `collect` over `collectLatest` unless the specific goal is explicitly to abort ongoing processing on a new event.
