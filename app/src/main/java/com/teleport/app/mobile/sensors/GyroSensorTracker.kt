@@ -53,6 +53,12 @@ class GyroSensorTracker(
     private var smoothDx = 0f
     private var smoothDy = 0f
 
+    // Throttling state
+    private var lastEmitTime = 0L
+    private var accumulatedDx = 0f
+    private var accumulatedDy = 0f
+    private val EMIT_INTERVAL_MS = 16L // ~60Hz
+
     fun start() {
         if (isRunning) return
         if (gyroscope == null) {
@@ -138,8 +144,19 @@ class GyroSensorTracker(
         smoothDx = if (targetDx == 0f) 0f else smoothDx + smoothingFactor * (targetDx - smoothDx)
         smoothDy = if (targetDy == 0f) 0f else smoothDy + smoothingFactor * (targetDy - smoothDy)
 
-        if (smoothDx != 0f || smoothDy != 0f) {
-            onCursorMove(smoothDx, smoothDy)
+        // Accumulate deltas
+        accumulatedDx += smoothDx
+        accumulatedDy += smoothDy
+
+        // Throttle emission to ~60Hz to reduce GC pressure and network flooding
+        val currentTime = android.os.SystemClock.uptimeMillis()
+        if (currentTime - lastEmitTime >= EMIT_INTERVAL_MS) {
+            if (accumulatedDx != 0f || accumulatedDy != 0f) {
+                onCursorMove(accumulatedDx, accumulatedDy)
+                accumulatedDx = 0f
+                accumulatedDy = 0f
+            }
+            lastEmitTime = currentTime
         }
     }
 
