@@ -33,3 +33,6 @@
 ## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor.").
+## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
+**Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
+**Action:** Always apply `.clearAndSetSemantics { contentDescription = "..."; role = Role.Button; onClick(...) { ... } }` to custom gesture elements, describing both their purpose and explicitly mapping their click actions, so that they act as interactive buttons for screen readers.
