@@ -53,6 +53,11 @@ class GyroSensorTracker(
     private var smoothDx = 0f
     private var smoothDy = 0f
 
+    // Bolt: Track last emit time to throttle network emissions
+    private var lastEmitTime = 0L
+    private var accumulatedDx = 0f
+    private var accumulatedDy = 0f
+
     fun start() {
         if (isRunning) return
         if (gyroscope == null) {
@@ -135,11 +140,23 @@ class GyroSensorTracker(
         // Use higher smoothing factor (closer to 1.0) for fast movement to avoid lag.
         // Use lower smoothing factor (closer to 0.0) for slow movement to filter out muscle shakes.
         val smoothingFactor = if (speed > 0.15f) 0.8f else 0.35f
+
+        // Bolt: Decouple high-frequency 100Hz+ sensor updates from the network pipeline.
+        // We calculate the EMA for smoothness, then separately accumulate the deltas for throttling.
         smoothDx = if (targetDx == 0f) 0f else smoothDx + smoothingFactor * (targetDx - smoothDx)
         smoothDy = if (targetDy == 0f) 0f else smoothDy + smoothingFactor * (targetDy - smoothDy)
 
-        if (smoothDx != 0f || smoothDy != 0f) {
-            onCursorMove(smoothDx, smoothDy)
+        accumulatedDx += smoothDx
+        accumulatedDy += smoothDy
+
+        val currentTime = android.os.SystemClock.uptimeMillis()
+        if (currentTime - lastEmitTime >= 16L) { // Throttle to ~60Hz
+            if (accumulatedDx != 0f || accumulatedDy != 0f) {
+                onCursorMove(accumulatedDx, accumulatedDy)
+                accumulatedDx = 0f
+                accumulatedDy = 0f
+                lastEmitTime = currentTime
+            }
         }
     }
 
