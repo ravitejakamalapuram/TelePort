@@ -6,6 +6,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
+import android.os.SystemClock
 import android.util.Log
 import android.view.Surface
 import android.view.WindowManager
@@ -52,6 +53,12 @@ class GyroSensorTracker(
 
     private var smoothDx = 0f
     private var smoothDy = 0f
+
+    // Bolt: Throttling to prevent GC pressure and network flooding from 100Hz+ sensor events
+    private val THROTTLE_INTERVAL_MS = 16L // ~60Hz
+    private var lastEmitTime = 0L
+    private var accumDx = 0f
+    private var accumDy = 0f
 
     fun start() {
         if (isRunning) return
@@ -138,8 +145,17 @@ class GyroSensorTracker(
         smoothDx = if (targetDx == 0f) 0f else smoothDx + smoothingFactor * (targetDx - smoothDx)
         smoothDy = if (targetDy == 0f) 0f else smoothDy + smoothingFactor * (targetDy - smoothDy)
 
-        if (smoothDx != 0f || smoothDy != 0f) {
-            onCursorMove(smoothDx, smoothDy)
+        accumDx += smoothDx
+        accumDy += smoothDy
+
+        val now = SystemClock.uptimeMillis()
+        if (now - lastEmitTime >= THROTTLE_INTERVAL_MS) {
+            if (accumDx != 0f || accumDy != 0f) {
+                onCursorMove(accumDx, accumDy)
+                accumDx = 0f
+                accumDy = 0f
+            }
+            lastEmitTime = now
         }
     }
 
