@@ -466,6 +466,14 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                     syncState()
                 }
 
+                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                    val scheme = request?.url?.scheme?.lowercase() ?: return false
+                    if (scheme == "http" || scheme == "https" || scheme == "about" || scheme == "data") {
+                        return false // Allow safe schemes
+                    }
+                    return true // Block unsafe schemes like javascript:, file:, intent:
+                }
+
                 // AD-BLOCKING AND MEDIA STREAM EXTRACTION
                 override fun shouldInterceptRequest(
                     view: WebView?,
