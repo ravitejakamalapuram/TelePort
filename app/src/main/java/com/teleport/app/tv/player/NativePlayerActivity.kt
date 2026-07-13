@@ -175,8 +175,7 @@ class NativePlayerActivity : ComponentActivity() {
 
         // Connect remote controller events to player control
         LaunchedEffect(player) {
-            // Using collect instead of collectLatest to avoid GC overhead and coroutine
-            // cancellation overhead on high-frequency events.
+            // Bolt: Prefer collect over collectLatest to avoid GC pressure and dropped frames in high-frequency event streams.
             TvEventBus.commands.collect { clientCommand ->
                 val command = clientCommand.command
                 Log.d(TAG, "Native Player executing remote command: $command")

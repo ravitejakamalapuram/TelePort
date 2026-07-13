@@ -35,6 +35,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
@@ -156,7 +157,7 @@ class LocalServerService : Service() {
 
                             // Launch a separate coroutine to push state updates to this connection
                             val stateJob = launch {
-                                // Using collect instead of collectLatest to avoid coroutine cancellation overhead
+                                // Bolt: Prefer collect over collectLatest to avoid GC pressure and dropped frames in high-frequency event streams.
                                 TvEventBus.tvState.collect { state ->
                                     if (state != null) {
                                         try {

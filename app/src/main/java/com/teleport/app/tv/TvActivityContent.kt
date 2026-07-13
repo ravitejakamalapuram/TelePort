@@ -76,8 +76,7 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
 
     // Listen for incoming commands in the event bus and route them to tabManager
     LaunchedEffect(Unit) {
-        // Using collect instead of collectLatest to avoid GC overhead and coroutine
-        // cancellation overhead on high-frequency events.
+        // Bolt: Prefer collect over collectLatest to avoid GC pressure and dropped frames in high-frequency event streams.
         TvEventBus.commands.collect { clientCommand ->
             val clientId = clientCommand.clientId
             val command = clientCommand.command
