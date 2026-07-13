@@ -34,6 +34,6 @@
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor.").
 
-## 2024-05-18 - Trackpad Accessibility Enhancement
-**Learning:** Custom touch surfaces implemented entirely with `pointerInput` (like a trackpad) bypass the standard Compose accessibility semantics tree. This prevents screen readers from interacting with or clicking the element.
-**Action:** When creating custom touch components using `pointerInput`, always explicitly set `role = Role.Button` and map the `onClick` action inside a `clearAndSetSemantics` block so that screen readers can correctly identify and trigger clicks.
+## 2024-07-10 - Add ARIA Labels to Extension Popup
+**Learning:** Chrome extension popups often rely on icon-only buttons, raw text inputs, and custom CSS toggle switches which can lack accessibility context for screen readers. Explicit `aria-label` attributes are needed because standard accessible HTML structures (like `<label>` pointing to `<input>` or descriptive inner text) might be omitted for layout brevity.
+**Action:** When working on Chrome extension popups or custom UI widgets, explicitly assign `aria-label` to icon-only buttons, custom toggles (`<input type="checkbox">` styled as switches), and raw input fields that lack a visible `<label>`.

@@ -83,8 +83,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.teleport.app.mobile.connection.ConnectionState
@@ -801,10 +801,10 @@ fun TrackpadTab(
                 .clearAndSetSemantics {
                     contentDescription = "Trackpad. Tap to click, drag to move cursor."
                     role = Role.Button
-                    onClick {
+                    onClick(action = {
                         connectionManager.sendCommand(Command.Click)
                         true
-                    }
+                    })
                 }
                 .pointerInput(isAirMouseOn) {
                     detectTapGestures(
