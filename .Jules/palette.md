@@ -33,6 +33,7 @@
 ## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor.").
-## 2026-07-05 - Added semantics role and onClick to Trackpad Canvas
-**Learning:** In Jetpack Compose, custom touch surfaces implemented exclusively with pointerInput bypass the standard accessibility semantics tree. To ensure screen readers can interact with them, always apply .clearAndSetSemantics { role = Role.Button; onClick(...) { ... } }.
-**Action:** Always apply explicit accessibility clicks for screen readers.
+
+## 2024-07-10 - Add ARIA Labels to Extension Popup
+**Learning:** Chrome extension popups often rely on icon-only buttons, raw text inputs, and custom CSS toggle switches which can lack accessibility context for screen readers. Explicit `aria-label` attributes are needed because standard accessible HTML structures (like `<label>` pointing to `<input>` or descriptive inner text) might be omitted for layout brevity.
+**Action:** When working on Chrome extension popups or custom UI widgets, explicitly assign `aria-label` to icon-only buttons, custom toggles (`<input type="checkbox">` styled as switches), and raw input fields that lack a visible `<label>`.
