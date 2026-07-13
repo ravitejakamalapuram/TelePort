@@ -110,6 +110,7 @@ class TelePortAccessibilityService : AccessibilityService() {
 
     private fun listenForConnectionState() {
         serviceScope.launch {
+            // Bolt: Prefer collect over collectLatest to avoid GC pressure and dropped frames in high-frequency event streams.
             TvEventBus.clientConnected.collect { connected ->
                 updateCursorVisibility(connected)
             }
@@ -124,6 +125,7 @@ class TelePortAccessibilityService : AccessibilityService() {
 
     private fun listenForCommands() {
         serviceScope.launch {
+            // Bolt: Prefer collect over collectLatest to avoid GC pressure and dropped frames in high-frequency event streams.
             TvEventBus.commands.collect { clientCommand ->
                 val command = clientCommand.command
                 // When Accessibility Service is active, handle control events globally
