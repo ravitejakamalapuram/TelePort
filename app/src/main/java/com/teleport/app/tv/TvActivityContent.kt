@@ -49,7 +49,6 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.teleport.app.protocol.Command
 import com.teleport.app.tv.browser.TabManager
 import com.teleport.app.tv.server.TvEventBus
-import kotlinx.coroutines.flow.collectLatest
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.view.SurfaceHolder
@@ -77,8 +76,7 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
 
     // Listen for incoming commands in the event bus and route them to tabManager
     LaunchedEffect(Unit) {
-        // Bolt: Use collect instead of collectLatest for high-frequency streams like MoveCursor
-        // to avoid GC thrashing and dropped commands from constant coroutine cancellation.
+        // Bolt: Prefer collect over collectLatest to avoid GC pressure and dropped frames in high-frequency event streams.
         TvEventBus.commands.collect { clientCommand ->
             val clientId = clientCommand.clientId
             val command = clientCommand.command
