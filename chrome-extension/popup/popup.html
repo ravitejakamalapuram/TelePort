@@ -19,7 +19,7 @@
         <h1><!-- APP_NAME -->TelePort<!-- /APP_NAME --> <span class="accent-text">TV</span></h1>
       </div>
       <div class="header-actions">
-        <button id="helpToggleBtn" class="btn-icon" title="View Help Guide">❓</button>
+        <button id="helpToggleBtn" class="btn-icon" title="View Help Guide" aria-label="View Help Guide">❓</button>
         <div id="connectionBadge" class="status-badge disconnected">Disconnected</div>
       </div>
     </header>
@@ -30,7 +30,7 @@
         <h3>TV Connection</h3>
       </div>
       <div class="input-group">
-        <input type="text" id="tvIpInput" placeholder="TV IP (e.g., 192.168.1.15)" />
+        <input type="text" id="tvIpInput" placeholder="TV IP (e.g., 192.168.1.15)" aria-label="TV IP Address" />
         <button id="saveIpBtn" class="btn-primary">Save</button>
       </div>
     </section>
@@ -43,7 +43,7 @@
           <p>Mirror active tab to TV</p>
         </div>
         <label class="switch">
-          <input type="checkbox" id="castToggle">
+          <input type="checkbox" id="castToggle" aria-label="Toggle Tab Cast">
           <span class="slider"></span>
         </label>
       </div>
@@ -76,7 +76,7 @@
           <p>Invert light page backgrounds</p>
         </div>
         <label class="switch">
-          <input type="checkbox" id="darkModeToggle">
+          <input type="checkbox" id="darkModeToggle" aria-label="Toggle TV Dark Mode">
           <span class="slider"></span>
         </label>
       </div>
@@ -103,21 +103,21 @@
       <div class="tab-content" id="contentDpad">
         <div class="dpad-container">
           <div class="dpad-row">
-            <button class="btn-dpad" id="dpadUpBtn" title="Up">
+            <button class="btn-dpad" id="dpadUpBtn" title="Up" aria-label="Direction Up">
               <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
             </button>
           </div>
           <div class="dpad-row">
-            <button class="btn-dpad" id="dpadLeftBtn" title="Left">
+            <button class="btn-dpad" id="dpadLeftBtn" title="Left" aria-label="Direction Left">
               <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
             </button>
             <button class="btn-ok" id="dpadOkBtn">OK</button>
-            <button class="btn-dpad" id="dpadRightBtn" title="Right">
+            <button class="btn-dpad" id="dpadRightBtn" title="Right" aria-label="Direction Right">
               <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
             </button>
           </div>
           <div class="dpad-row">
-            <button class="btn-dpad" id="dpadDownBtn" title="Down">
+            <button class="btn-dpad" id="dpadDownBtn" title="Down" aria-label="Direction Down">
               <svg viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
             </button>
           </div>
@@ -133,7 +133,7 @@
     <!-- Quick Text Input Bar -->
     <section class="card text-card disabled" id="textCard">
       <div class="text-input-group">
-        <input type="text" id="keyboardInput" placeholder="Type text or paste URL..." />
+        <input type="text" id="keyboardInput" placeholder="Type text or paste URL..." aria-label="Type text or paste URL" />
         <button id="sendTextBtn" class="btn-send">Send</button>
       </div>
     </section>
@@ -144,7 +144,7 @@
     <div class="help-content">
       <div class="help-header">
         <h3>TelePort TV Guide</h3>
-        <button id="closeHelpBtn" class="close-btn">&times;</button>
+        <button id="closeHelpBtn" class="close-btn" aria-label="Close Help Guide">&times;</button>
       </div>
       <div class="help-body">
         <div class="help-section">
