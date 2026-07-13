@@ -157,6 +157,7 @@ class LocalServerService : Service() {
 
                             // Launch a separate coroutine to push state updates to this connection
                             val stateJob = launch {
+                                // Bolt: Prefer collect over collectLatest to avoid GC pressure and dropped frames in high-frequency event streams.
                                 TvEventBus.tvState.collect { state ->
                                     if (state != null) {
                                         try {
