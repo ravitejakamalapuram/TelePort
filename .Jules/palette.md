@@ -33,6 +33,7 @@
 ## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor.").
-## 2024-07-09 - Missing ARIA Labels in Chrome Extension Popups
-**Learning:** Standard HTML `<input>` and `<button>` elements in Chrome extension popups often lack proper labels, especially icon-only buttons (like help toggles or SVG D-pads) and raw inputs without explicit `<label>` tags. This renders the popup completely inaccessible to screen readers, leaving visually impaired users unable to connect or navigate. Custom toggle switches built with CSS also hide their descriptive text from the actual `<input>` element.
-**Action:** Always add `aria-label` to icon-only buttons and raw text inputs. For custom CSS toggle switches, assign an `id` to the surrounding descriptive container (e.g., `<div id="toggleInfo">`) and apply `aria-labelledby="toggleInfo"` to the hidden `<input type="checkbox">` to ensure screen readers correctly associate the visual description with the interactive element.
+
+## 2024-07-10 - Add ARIA Labels to Extension Popup
+**Learning:** Chrome extension popups often rely on icon-only buttons, raw text inputs, and custom CSS toggle switches which can lack accessibility context for screen readers. Explicit `aria-label` attributes are needed because standard accessible HTML structures (like `<label>` pointing to `<input>` or descriptive inner text) might be omitted for layout brevity.
+**Action:** When working on Chrome extension popups or custom UI widgets, explicitly assign `aria-label` to icon-only buttons, custom toggles (`<input type="checkbox">` styled as switches), and raw input fields that lack a visible `<label>`.
