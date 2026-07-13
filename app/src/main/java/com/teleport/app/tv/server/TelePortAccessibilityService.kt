@@ -19,7 +19,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class TelePortAccessibilityService : AccessibilityService() {
@@ -111,6 +110,7 @@ class TelePortAccessibilityService : AccessibilityService() {
 
     private fun listenForConnectionState() {
         serviceScope.launch {
+            // Bolt: Prefer collect over collectLatest to avoid GC pressure and dropped frames in high-frequency event streams.
             TvEventBus.clientConnected.collect { connected ->
                 updateCursorVisibility(connected)
             }
@@ -125,8 +125,7 @@ class TelePortAccessibilityService : AccessibilityService() {
 
     private fun listenForCommands() {
         serviceScope.launch {
-            // Bolt: Replaced collectLatest with collect to prevent excessive coroutine cancellations
-            // and GC pressure during high-frequency sensor streams (e.g., MoveCursor at 100Hz+)
+            // Bolt: Prefer collect over collectLatest to avoid GC pressure and dropped frames in high-frequency event streams.
             TvEventBus.commands.collect { clientCommand ->
                 val command = clientCommand.command
                 // When Accessibility Service is active, handle control events globally
