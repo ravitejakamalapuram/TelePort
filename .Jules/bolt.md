@@ -1,6 +1,6 @@
 ## 2026-06-12 - AdMob/Billing CI Dependencies
 **Learning:** In the TelePort app, the code references AdMob (, ) and Play Billing (), but these were omitted from  causing CI to fail compilation.
 **Action:** Always verify dependencies are present when using external Google services. Additionally, resolving  manifest merger conflicts requires adding a specific property directly to the .
-## 2026-07-04 - High Frequency Flow Collection
-**Learning:** In high-frequency Kotlin Flow streams (like 100Hz+ sensor data or command streams), using `collectLatest` causes severe GC pressure, memory allocation overhead, and potential dropped frames because it continually cancels and restarts a new coroutine on every emission.
-**Action:** Prefer `collect` over `collectLatest` for high-frequency event streams to process emissions sequentially and avoid coroutine allocation/cancellation overhead.
+## 2026-06-29 - Optimize Flow Collection for High-Frequency Events
+**Learning:** In high-frequency Kotlin Flow streams (e.g., sensor data updates or UI commands), using `collectLatest` is an anti-pattern. `collectLatest` launches a new coroutine for every emission and cancels the previous one, leading to severe GC pressure, memory allocation overhead, and potential event dropping when events arrive rapidly (e.g., at 100Hz).
+**Action:** When handling sequential, high-frequency events where processing is fast and non-suspending, always use `collect` instead of `collectLatest` to process events in order without the overhead of continuous coroutine allocation and cancellation.
