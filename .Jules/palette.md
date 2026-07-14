@@ -33,6 +33,7 @@
 ## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor.").
-## 2024-05-24 - Accessibility for Custom Touch Surfaces
-**Learning:** In Jetpack Compose, custom touch surfaces implemented exclusively with `pointerInput` (like the trackpad canvas) bypass the standard accessibility semantics tree. This prevents screen readers from understanding they can interact with the element.
-**Action:** Always apply `.clearAndSetSemantics { role = Role.Button; onClick(...) { ... } }` to explicitly map accessibility clicks for screen readers. Ensure you import `androidx.compose.ui.semantics.onClick` and `androidx.compose.ui.semantics.role`.
+
+## 2026-06-30 - Accessible Clicks on Custom Gesture Areas
+**Learning:** Adding a `contentDescription` inside `clearAndSetSemantics` for a custom gesture area (like a `pointerInput` trackpad) provides context but does not allow screen readers to interact with it as a button, leading to an inability for users to perform a "tap" action via accessibility services.
+**Action:** Always include `role = Role.Button` and implement an `onClick { ... }` handler inside the `clearAndSetSemantics` block for custom gesture areas to explicitly map and handle accessibility clicks.
