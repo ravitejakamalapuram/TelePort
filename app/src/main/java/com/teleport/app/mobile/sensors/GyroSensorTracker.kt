@@ -153,8 +153,10 @@ class GyroSensorTracker(
         accumulatedDx += smoothDx
         accumulatedDy += smoothDy
 
+        // Bolt: Throttle high-frequency sensor updates to prevent GC pressure,
+        // thread pool contention, and WebSocket network flooding.
         val currentTime = android.os.SystemClock.uptimeMillis()
-        if (currentTime - lastEmitTime >= THROTTLE_INTERVAL_MS) {
+        if (currentTime - lastEmitTime >= EMIT_INTERVAL_MS) {
             if (accumulatedDx != 0f || accumulatedDy != 0f) {
                 // Bolt: Send accumulated movements to decouple high-frequency sensor updates from expensive network dispatches
                 onCursorMove(accumulatedDx, accumulatedDy)
