@@ -452,6 +452,17 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
             }
 
             webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(
+                    view: WebView?,
+                    request: WebResourceRequest?
+                ): Boolean {
+                    val scheme = request?.url?.scheme?.lowercase()
+                    if (scheme == "http" || scheme == "https" || scheme == "about" || scheme == "data") {
+                        return false
+                    }
+                    return true
+                }
+
                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                     super.onPageStarted(view, url, favicon)
                     detectedStreamUrl.value = null // Reset stream url on new page
