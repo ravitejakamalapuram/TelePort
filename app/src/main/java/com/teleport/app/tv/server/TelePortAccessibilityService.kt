@@ -19,7 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class TelePortAccessibilityService : AccessibilityService() {
@@ -111,7 +111,7 @@ class TelePortAccessibilityService : AccessibilityService() {
 
     private fun listenForConnectionState() {
         serviceScope.launch {
-            TvEventBus.clientConnected.collect { connected ->
+            TvEventBus.clientConnected.collectLatest { connected ->
                 updateCursorVisibility(connected)
             }
         }
@@ -125,7 +125,7 @@ class TelePortAccessibilityService : AccessibilityService() {
 
     private fun listenForCommands() {
         serviceScope.launch {
-            TvEventBus.commands.collect { clientCommand ->
+            TvEventBus.commands.collectLatest { clientCommand ->
                 val command = clientCommand.command
                 // When Accessibility Service is active, handle control events globally
                 when (command) {
