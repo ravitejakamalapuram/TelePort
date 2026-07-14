@@ -53,9 +53,9 @@ class GyroSensorTracker(
     private var smoothDx = 0f
     private var smoothDy = 0f
 
-    // Throttling state for performance
+    // Bolt: Throttling high-frequency sensor callbacks to ~60Hz to reduce GC pressure and network flooding
+    private val THROTTLE_INTERVAL_MS = 16L
     private var lastEmitTime = 0L
-    private val EMIT_INTERVAL_MS = 16L // ~60Hz to match standard display refresh rate and limit network flooding
     private var accumulatedDx = 0f
     private var accumulatedDy = 0f
 
@@ -144,19 +144,20 @@ class GyroSensorTracker(
         smoothDx = if (targetDx == 0f) 0f else smoothDx + smoothingFactor * (targetDx - smoothDx)
         smoothDy = if (targetDy == 0f) 0f else smoothDy + smoothingFactor * (targetDy - smoothDy)
 
-        if (smoothDx != 0f || smoothDy != 0f) {
-            // Bolt: Accumulate sensor deltas to decouple from network operations
-            accumulatedDx += smoothDx
-            accumulatedDy += smoothDy
+        // Bolt: Accumulate deltas and throttle emitting to ~60Hz (16ms)
+        // to prevent GC pressure, thread pool contention, and WebSocket network flooding
+        // caused by high-frequency hardware callbacks (100Hz+).
+        accumulatedDx += smoothDx
+        accumulatedDy += smoothDy
 
-            // Bolt: Throttle emission to ~60Hz to prevent GC pressure, thread pool contention, and WebSocket network flooding
-            val now = android.os.SystemClock.uptimeMillis()
-            if (now - lastEmitTime >= EMIT_INTERVAL_MS) {
+        val currentTime = android.os.SystemClock.uptimeMillis()
+        if (currentTime - lastEmitTime >= THROTTLE_INTERVAL_MS) {
+            if (accumulatedDx != 0f || accumulatedDy != 0f) {
                 onCursorMove(accumulatedDx, accumulatedDy)
                 accumulatedDx = 0f
                 accumulatedDy = 0f
-                lastEmitTime = now
             }
+            lastEmitTime = currentTime
         }
     }
 
