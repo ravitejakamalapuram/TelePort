@@ -160,8 +160,13 @@ class GyroSensorTracker(
                 onCursorMove(accumulatedDx, accumulatedDy)
                 accumulatedDx = 0f
                 accumulatedDy = 0f
+                lastEmitTime = currentTime
             }
-            lastEmitTime = currentTime
+        } else if (accumulatedDx != 0f || accumulatedDy != 0f) {
+            // Flush any remaining accumulated movement when the user stops
+            onCursorMove(accumulatedDx, accumulatedDy)
+            accumulatedDx = 0f
+            accumulatedDy = 0f
         }
     }
 
