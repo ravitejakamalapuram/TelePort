@@ -142,6 +142,9 @@ class GyroSensorTracker(
         // Use higher smoothing factor (closer to 1.0) for fast movement to avoid lag.
         // Use lower smoothing factor (closer to 0.0) for slow movement to filter out muscle shakes.
         val smoothingFactor = if (speed > 0.15f) 0.8f else 0.35f
+
+        // Bolt: Decouple high-frequency 100Hz+ sensor updates from the network pipeline.
+        // We calculate the EMA for smoothness, then separately accumulate the deltas for throttling.
         smoothDx = if (targetDx == 0f) 0f else smoothDx + smoothingFactor * (targetDx - smoothDx)
         smoothDy = if (targetDy == 0f) 0f else smoothDy + smoothingFactor * (targetDy - smoothDy)
 
