@@ -49,6 +49,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.teleport.app.protocol.Command
 import com.teleport.app.tv.browser.TabManager
 import com.teleport.app.tv.server.TvEventBus
+import kotlinx.coroutines.flow.collect
 import android.media.MediaCodec
 import android.media.MediaFormat
 import android.view.SurfaceHolder

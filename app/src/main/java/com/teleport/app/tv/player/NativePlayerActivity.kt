@@ -34,6 +34,7 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.ui.PlayerView
 import com.teleport.app.protocol.Command
 import com.teleport.app.tv.server.TvEventBus
+import kotlinx.coroutines.flow.collect
 
 class NativePlayerActivity : ComponentActivity() {
     private val TAG = "NativePlayerActivity"
