@@ -452,17 +452,6 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
             }
 
             webViewClient = object : WebViewClient() {
-                override fun shouldOverrideUrlLoading(
-                    view: WebView?,
-                    request: WebResourceRequest?
-                ): Boolean {
-                    val scheme = request?.url?.scheme?.lowercase()
-                    if (scheme == "http" || scheme == "https" || scheme == "about" || scheme == "data") {
-                        return false
-                    }
-                    return true
-                }
-
                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                     super.onPageStarted(view, url, favicon)
                     detectedStreamUrl.value = null // Reset stream url on new page
@@ -477,8 +466,18 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                     syncState()
                 }
 
+                @android.annotation.TargetApi(android.os.Build.VERSION_CODES.LOLLIPOP)
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                     val scheme = request?.url?.scheme?.lowercase() ?: return false
+                    if (scheme == "http" || scheme == "https" || scheme == "about" || scheme == "data") {
+                        return false // Allow safe schemes
+                    }
+                    return true // Block unsafe schemes like javascript:, file:, intent:
+                }
+
+                @Deprecated("Deprecated in Java")
+                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                    val scheme = url?.let { android.net.Uri.parse(it).scheme?.lowercase() } ?: return false
                     if (scheme == "http" || scheme == "https" || scheme == "about" || scheme == "data") {
                         return false // Allow safe schemes
                     }
