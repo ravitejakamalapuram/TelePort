@@ -53,11 +53,11 @@ class GyroSensorTracker(
     private var smoothDx = 0f
     private var smoothDy = 0f
 
-    // Throttling state
+    // Bolt: Throttling high-frequency sensor callbacks to ~60Hz to reduce GC pressure and network flooding
+    private val THROTTLE_INTERVAL_MS = 16L
     private var lastEmitTime = 0L
     private var accumulatedDx = 0f
     private var accumulatedDy = 0f
-    private val THROTTLE_INTERVAL_MS = 16L // Throttle to ~60Hz to reduce GC pressure and network flooding
 
     fun start() {
         if (isRunning) return
