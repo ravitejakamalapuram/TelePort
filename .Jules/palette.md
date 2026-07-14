@@ -33,6 +33,7 @@
 ## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor.").
-## 2026-06-26 - Custom Gesture Areas Require Explicit Semantic Actions
-**Learning:** While `contentDescription` makes a custom gesture area (like a Trackpad) discoverable to screen readers, it does not make it *interactable*. Gestures handled via `pointerInput` bypass the semantics tree, so users relying on Switch Access or TalkBack cannot perform the primary action (like clicking).
-**Action:** When implementing custom touch surfaces with `pointerInput`, always apply `.clearAndSetSemantics` with `role = Role.Button` and an explicit `onClick { ... }` handler to map the primary accessibility action to the internal gesture logic.
+
+## 2026-06-30 - Accessible Clicks on Custom Gesture Areas
+**Learning:** Adding a `contentDescription` inside `clearAndSetSemantics` for a custom gesture area (like a `pointerInput` trackpad) provides context but does not allow screen readers to interact with it as a button, leading to an inability for users to perform a "tap" action via accessibility services.
+**Action:** Always include `role = Role.Button` and implement an `onClick { ... }` handler inside the `clearAndSetSemantics` block for custom gesture areas to explicitly map and handle accessibility clicks.
