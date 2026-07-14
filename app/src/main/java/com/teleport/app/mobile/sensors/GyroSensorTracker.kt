@@ -6,6 +6,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
+import android.os.SystemClock
 import android.util.Log
 import android.view.Surface
 import android.view.WindowManager
@@ -49,9 +50,17 @@ class GyroSensorTracker(
 
     // Tuning constants
     private val NOISE_THRESHOLD = 0.008f // Low threshold to capture subtle wrist movement but filter out static noise
+    private val EMIT_INTERVAL_MS = 16L // ~60Hz
+
+    // Bolt: Throttling to ~60Hz to reduce GC pressure and WebSocket network flooding
+    private val THROTTLE_INTERVAL_MS = 16L
 
     private var smoothDx = 0f
     private var smoothDy = 0f
+
+    private var accumulatedDx = 0f
+    private var accumulatedDy = 0f
+    private var lastEmitTime = 0L
 
     fun start() {
         if (isRunning) return
@@ -135,11 +144,24 @@ class GyroSensorTracker(
         // Use higher smoothing factor (closer to 1.0) for fast movement to avoid lag.
         // Use lower smoothing factor (closer to 0.0) for slow movement to filter out muscle shakes.
         val smoothingFactor = if (speed > 0.15f) 0.8f else 0.35f
+
+        // Bolt: Decouple high-frequency 100Hz+ sensor updates from the network pipeline.
+        // We calculate the EMA for smoothness, then separately accumulate the deltas for throttling.
         smoothDx = if (targetDx == 0f) 0f else smoothDx + smoothingFactor * (targetDx - smoothDx)
         smoothDy = if (targetDy == 0f) 0f else smoothDy + smoothingFactor * (targetDy - smoothDy)
 
-        if (smoothDx != 0f || smoothDy != 0f) {
-            onCursorMove(smoothDx, smoothDy)
+        accumulatedDx += smoothDx
+        accumulatedDy += smoothDy
+
+        val currentTime = android.os.SystemClock.uptimeMillis()
+        if (currentTime - lastEmitTime >= THROTTLE_INTERVAL_MS) {
+            if (accumulatedDx != 0f || accumulatedDy != 0f) {
+                // Bolt: Send accumulated movements to decouple high-frequency sensor updates from expensive network dispatches
+                onCursorMove(accumulatedDx, accumulatedDy)
+                accumulatedDx = 0f
+                accumulatedDy = 0f
+            }
+            lastEmitTime = currentTime
         }
     }
 

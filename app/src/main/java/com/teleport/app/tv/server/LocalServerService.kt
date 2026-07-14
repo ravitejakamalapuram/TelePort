@@ -34,6 +34,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -156,8 +157,7 @@ class LocalServerService : Service() {
 
                             // Launch a separate coroutine to push state updates to this connection
                             val stateJob = launch {
-                                // Bolt: Prefer collect over collectLatest to avoid GC pressure and dropped frames in high-frequency event streams.
-                                TvEventBus.tvState.collect { state ->
+                                TvEventBus.tvState.collectLatest { state ->
                                     if (state != null) {
                                         try {
                                             val jsonString = json.encodeToString(state)
