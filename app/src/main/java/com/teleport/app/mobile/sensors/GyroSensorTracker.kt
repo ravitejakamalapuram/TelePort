@@ -50,6 +50,7 @@ class GyroSensorTracker(
 
     // Tuning constants
     private val NOISE_THRESHOLD = 0.008f // Low threshold to capture subtle wrist movement but filter out static noise
+    private val EMIT_INTERVAL_MS = 16L // ~60Hz
 
     private var smoothDx = 0f
     private var smoothDy = 0f
