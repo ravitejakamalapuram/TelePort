@@ -33,3 +33,6 @@
 ## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor.").
+## 2026-07-14 - Add Keyboard Focus Visibility in Web Extension
+**Learning:** In Chrome Extension popups, custom stylized interactive elements like buttons and switches often lack native keyboard focus indicators, breaking keyboard accessibility for power users and those with motor impairments.
+**Action:** Always add explicit `:focus-visible` CSS rules using `outline` (often paired with `outline-offset`) to interactive elements (buttons, inputs, tabs) to ensure clear, accessible visual feedback during keyboard navigation without affecting mouse users.
