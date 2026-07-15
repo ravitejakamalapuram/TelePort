@@ -158,17 +158,14 @@ class GyroSensorTracker(
         val currentTime = android.os.SystemClock.uptimeMillis()
         if (currentTime - lastEmitTime >= EMIT_INTERVAL_MS) {
             if (accumulatedDx != 0f || accumulatedDy != 0f) {
-                // Bolt: Send accumulated movements to decouple high-frequency sensor updates from expensive network dispatches
+                // ⚡ Bolt: Properly throttle high-frequency sensor updates to ~60Hz
+                // Send accumulated movements to decouple sensor updates from expensive network dispatches.
                 onCursorMove(accumulatedDx, accumulatedDy)
                 accumulatedDx = 0f
                 accumulatedDy = 0f
-                lastEmitTime = currentTime
             }
-        } else if (accumulatedDx != 0f || accumulatedDy != 0f) {
-            // Flush any remaining accumulated movement when the user stops
-            onCursorMove(accumulatedDx, accumulatedDy)
-            accumulatedDx = 0f
-            accumulatedDy = 0f
+            // Ensure lastEmitTime is updated independently to prevent bursting after stationary periods
+            lastEmitTime = currentTime
         }
     }
 
