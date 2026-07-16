@@ -4,6 +4,6 @@
 ## 2026-07-01 - Decouple High-Frequency Hardware Callbacks from Network Pipelines
 **Learning:** High-frequency hardware interrupts (like gyroscope sensor events at 100Hz+) bridged directly to expensive network pipelines (like WebSocket broadcasts) cause severe GC pressure, thread pool contention, and network flooding.
 **Action:** Accumulate raw sensor changes over a small interval and throttle emitting to ~60Hz (16ms) using `android.os.SystemClock.uptimeMillis()` to decouple the hardware frequency from the processing pipeline.
-## 2026-07-02 - Use collect instead of collectLatest in high-frequency Flows
-**Learning:** In high-frequency Kotlin Flow collections (e.g., 100Hz+ event streams like sensor commands or websocket updates), `collectLatest` cancels the ongoing suspending operation (like `send()` or UI updates) when a new emission occurs. This causes severe GC pressure, memory allocation overhead, and drops frames or throws `CancellationException` disrupting connections.
-**Action:** Prefer `collect` over `collectLatest` to safely process each emission and avoid coroutine cancellation overhead.
+## 2026-06-29 - Broken Sensor Throttling Pattern
+**Learning:** In GyroSensorTracker, a time-based throttle (`currentTime - lastEmitTime >= INTERVAL`) was nested alongside an `else if (accumulatedDx != 0f)` catch-all designed to flush remaining movement when the user stops. This caused the throttle to be completely bypassed during normal movement because the time constraint was ignored if any movement had accumulated, resulting in heavy network/GC pressure from rapid WebSocket emission.
+**Action:** When implementing time-based throttling for high-frequency hardware sensors, ensure the time check is the strict outermost condition. If you need to flush state after a stationary period, handle it by updating `lastEmitTime` independently of the emission condition rather than bypassing the time check entirely.
