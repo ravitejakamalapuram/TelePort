@@ -36,3 +36,6 @@
 ## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor."). Ensure click interaction can be mapped via `role = Role.Button` and `onClick`.
+## 2026-06-25 - Interactive Text Links Accessibility and UX
+**Learning:** In Jetpack Compose, text that is styled to look like a link (e.g., using `TextDecoration.Underline`) is often neglected, leaving it as static text without interactivity or accessibility semantics.
+**Action:** When creating text-based links in Jetpack Compose, always ensure they are genuinely interactive and accessible. Apply a contained ripple effect and appropriate touch target size using modifiers sequentially (e.g., `.clip(RoundedCornerShape(...))`, `.clickable(role = Role.Button)`, `.padding(...)`) and utilize `LocalUriHandler.current.openUri(...)` to handle the link routing.
