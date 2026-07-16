@@ -468,7 +468,7 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
 
                 @android.annotation.TargetApi(android.os.Build.VERSION_CODES.LOLLIPOP)
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                    val scheme = request?.url?.scheme?.lowercase() ?: return false
+                    val scheme = request?.url?.scheme?.lowercase() ?: return true // Fail closed if scheme is null
                     if (scheme == "http" || scheme == "https" || scheme == "about" || scheme == "data") {
                         return false // Allow safe schemes
                     }
@@ -477,7 +477,7 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
 
                 @Deprecated("Deprecated in Java")
                 override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                    val scheme = url?.let { android.net.Uri.parse(it).scheme?.lowercase() } ?: return false
+                    val scheme = url?.trim()?.let { android.net.Uri.parse(it).scheme?.lowercase() } ?: return true // Fail closed if scheme is null
                     if (scheme == "http" || scheme == "https" || scheme == "about" || scheme == "data") {
                         return false // Allow safe schemes
                     }
