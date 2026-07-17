@@ -36,3 +36,6 @@
 ## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor."). Ensure click interaction can be mapped via `role = Role.Button` and `onClick`.
+## 2026-06-28 - Make text-based links interactive and accessible
+**Learning:** Text-based links (like "Terms of Service" and "Privacy Policy" styled with `TextDecoration.Underline`) often lack interactivity. They may just be static text, frustrating users who expect to be able to tap them.
+**Action:** Always make text-based links genuinely interactive and accessible. Apply a contained ripple effect and appropriate touch target size using modifiers sequentially (e.g., `.clip(RoundedCornerShape(...))`, `.clickable(role = Role.Button)`, `.padding(...)`) and utilize `LocalUriHandler.current.openUri(...)` to handle the link routing.
