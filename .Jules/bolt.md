@@ -7,3 +7,6 @@
 ## 2026-06-29 - Broken Sensor Throttling Pattern
 **Learning:** In GyroSensorTracker, a time-based throttle (`currentTime - lastEmitTime >= INTERVAL`) was nested alongside an `else if (accumulatedDx != 0f)` catch-all designed to flush remaining movement when the user stops. This caused the throttle to be completely bypassed during normal movement because the time constraint was ignored if any movement had accumulated, resulting in heavy network/GC pressure from rapid WebSocket emission.
 **Action:** When implementing time-based throttling for high-frequency hardware sensors, ensure the time check is the strict outermost condition. If you need to flush state after a stationary period, handle it by updating `lastEmitTime` independently of the emission condition rather than bypassing the time check entirely.
+## $(date +%Y-%m-%d) - Avoid High-Frequency Logging in Network/UI Bridges
+**Learning:** Logging high-frequency events (like cursor or scroll movements at 60Hz+) causes significant String formatting, IPC overhead, and GC pressure, leading to UI jank and logcat spam.
+**Action:** Always filter out high-frequency events from debug logs, or implement a debounced/sampled logging mechanism if debugging these streams is necessary.
