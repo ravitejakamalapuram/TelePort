@@ -36,3 +36,7 @@
 ## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor."). Ensure click interaction can be mapped via `role = Role.Button` and `onClick`.
+
+## 2024-07-20 - Web/HTML Accessibility Insight: Toggles and Fitts's Law
+**Learning:** To improve accessibility and usability (Fitts's Law) for custom toggles or switches in a list, wrap the entire row (including the description and the switch UI) in a single `<label>` element linked to the `<input type="checkbox">` via the `for` attribute, and apply `cursor: pointer`. This expands the touch target and properly groups the text with the input for screen readers. While nesting `div` elements inside a `label` violates strict HTML5 phrasing content rules, it provides a massive usability boost and is handled safely by all modern browsers.
+**Action:** When designing a settings menu or list with custom toggle switches, replace the outer wrapping `div` with a `label` pointing to the switch input to maximize the interactive hit area.
