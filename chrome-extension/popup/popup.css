@@ -580,3 +580,16 @@ input:checked + .slider:before {
 .help-section li strong {
   color: var(--text-primary);
 }
+
+/* Clickable Action Rows */
+.clickable-row {
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 4px;
+  margin: -4px;
+  transition: background-color 0.2s;
+}
+
+.clickable-row:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
