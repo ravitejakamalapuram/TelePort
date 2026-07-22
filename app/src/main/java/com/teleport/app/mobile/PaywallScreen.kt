@@ -400,6 +400,7 @@ fun PaywallScreen(
             }
 
             // Terms + Privacy
+            val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
             Row(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -408,18 +409,27 @@ fun PaywallScreen(
                     "Terms of Service",
                     color = ThemeTokens.TextSub.copy(alpha = 0.7f),
                     fontSize = 11.sp,
-                    textDecoration = TextDecoration.Underline
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable(role = Role.Button) { uriHandler.openUri("https://ravitejakamalapuram.github.io/TelePort/privacy.html") }
+                        .padding(2.dp)
                 )
                 Text(
                     "  •  ",
                     color = ThemeTokens.TextSub.copy(alpha = 0.5f),
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
+                    modifier = Modifier.padding(2.dp)
                 )
                 Text(
                     "Privacy Policy",
                     color = ThemeTokens.TextSub.copy(alpha = 0.7f),
                     fontSize = 11.sp,
-                    textDecoration = TextDecoration.Underline
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable(role = Role.Button) { uriHandler.openUri("https://ravitejakamalapuram.github.io/TelePort/privacy.html") }
+                        .padding(2.dp)
                 )
             }
 

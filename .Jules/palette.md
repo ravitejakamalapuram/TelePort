@@ -36,3 +36,7 @@
 ## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor."). Ensure click interaction can be mapped via `role = Role.Button` and `onClick`.
+
+## 2024-07-22 - Missing Jetpack Compose Imports for UX Modifiers
+**Learning:** When adding UX improvements like clickable text links in Jetpack Compose, the necessary extension functions (`clickable`, `clip`) and shapes (`RoundedCornerShape`) must be explicitly imported, along with their dependencies (e.g. `Role` for accessibility). Omitting these will cause build failures even if the code syntax is correct.
+**Action:** Always verify imports when adding new Compose modifiers to existing files, especially when using `replace_with_git_merge_diff` instead of a full IDE.
