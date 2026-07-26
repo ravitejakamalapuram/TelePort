@@ -188,6 +188,10 @@ button {
 }
 
 /* Action Rows */
+label.action-row {
+  cursor: pointer;
+}
+
 .action-row {
   display: flex;
   justify-content: space-between;
