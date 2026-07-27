@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -400,6 +401,7 @@ fun PaywallScreen(
             }
 
             // Terms + Privacy
+            val uriHandler = LocalUriHandler.current
             Row(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
@@ -408,18 +410,31 @@ fun PaywallScreen(
                     "Terms of Service",
                     color = ThemeTokens.TextSub.copy(alpha = 0.7f),
                     fontSize = 11.sp,
-                    textDecoration = TextDecoration.Underline
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable(role = Role.Button) {
+                            uriHandler.openUri("https://teleport.tv/terms")
+                        }
+                        .padding(4.dp)
                 )
                 Text(
                     "  •  ",
                     color = ThemeTokens.TextSub.copy(alpha = 0.5f),
-                    fontSize = 11.sp
+                    fontSize = 11.sp,
+                    modifier = Modifier.padding(4.dp)
                 )
                 Text(
                     "Privacy Policy",
                     color = ThemeTokens.TextSub.copy(alpha = 0.7f),
                     fontSize = 11.sp,
-                    textDecoration = TextDecoration.Underline
+                    textDecoration = TextDecoration.Underline,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable(role = Role.Button) {
+                            uriHandler.openUri("https://teleport.tv/privacy")
+                        }
+                        .padding(4.dp)
                 )
             }
 
