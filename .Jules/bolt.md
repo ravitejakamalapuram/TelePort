@@ -7,3 +7,6 @@
 ## 2026-06-29 - Broken Sensor Throttling Pattern
 **Learning:** In GyroSensorTracker, a time-based throttle (`currentTime - lastEmitTime >= INTERVAL`) was nested alongside an `else if (accumulatedDx != 0f)` catch-all designed to flush remaining movement when the user stops. This caused the throttle to be completely bypassed during normal movement because the time constraint was ignored if any movement had accumulated, resulting in heavy network/GC pressure from rapid WebSocket emission.
 **Action:** When implementing time-based throttling for high-frequency hardware sensors, ensure the time check is the strict outermost condition. If you need to flush state after a stationary period, handle it by updating `lastEmitTime` independently of the emission condition rather than bypassing the time check entirely.
+## 2026-07-30 - Filter High-Frequency Logs
+**Learning:** String templates (e.g., `"... $var"`) in high-frequency callbacks or flow collectors (like sensor events or cursor updates at 100Hz+) cause continuous string allocation and GC thrashing, even if the logger's output is suppressed.
+**Action:** Always wrap high-frequency logging in conditional checks (e.g., `if (command !is Command.MoveCursor)`) to prevent unnecessary memory allocations and logcat spam.
