@@ -105,6 +105,7 @@ class MainActivity : ComponentActivity() {
                     putExtra("RESULT_CODE", result.resultCode)
                     putExtra("RESULT_DATA", result.data)
                     putExtra("TV_IP", tvIp)
+                    putExtra("CLIENT_ID", connectionManager.clientId)
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(intent)
@@ -224,6 +225,7 @@ class MainActivity : ComponentActivity() {
                             stopMirroring = {
                                 val intent = Intent(this@MainActivity, com.teleport.app.mobile.mirror.ScreenCastService::class.java).apply {
                                     action = "STOP"
+                                    putExtra("CLIENT_ID", connectionManager.clientId)
                                 }
                                 startService(intent)
                                 connectionManager.sendCommand(Command.StopMirroring)

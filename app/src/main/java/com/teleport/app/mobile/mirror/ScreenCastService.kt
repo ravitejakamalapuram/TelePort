@@ -62,6 +62,7 @@ class ScreenCastService : Service() {
         val resultCode = intent.getIntExtra("RESULT_CODE", -1)
         val resultData = intent.getParcelableExtra<Intent>("RESULT_DATA")
         val tvIp = intent.getStringExtra("TV_IP") ?: ""
+        val clientId = intent.getStringExtra("CLIENT_ID") ?: ""
 
         if (resultCode == -1 || resultData == null || tvIp.isBlank()) {
             Log.e(TAG, "Invalid parameters for ScreenCastService")
@@ -77,7 +78,7 @@ class ScreenCastService : Service() {
             startForeground(100, notification)
         }
 
-        startCast(resultCode, resultData, tvIp)
+        startCast(resultCode, resultData, tvIp, clientId)
         return START_NOT_STICKY
     }
 
@@ -91,13 +92,13 @@ class ScreenCastService : Service() {
         stopSelf()
     }
 
-    private fun startCast(resultCode: Int, resultData: Intent, tvIp: String) {
+    private fun startCast(resultCode: Int, resultData: Intent, tvIp: String, clientId: String) {
         if (isRunning) return
         isRunning = true
         isCasting.value = true
 
         // Initialize WebSocket connection
-        val wsUrl = "ws://$tvIp:8080/mirror"
+        val wsUrl = "ws://$tvIp:8080/mirror?clientId=$clientId"
         Log.d(TAG, "Connecting mirror stream to $wsUrl")
         val request = Request.Builder().url(wsUrl).build()
         webSocket = okHttpClient.newWebSocket(request, object : WebSocketListener() {

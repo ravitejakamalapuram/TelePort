@@ -2,6 +2,7 @@ package com.teleport.app.mobile.connection
 
 import android.util.Log
 import android.os.Build
+import java.util.UUID
 import com.teleport.app.protocol.Command
 import com.teleport.app.protocol.TvState
 import io.ktor.client.HttpClient
@@ -42,6 +43,8 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
 
     var activeIp: String? = null
         private set
+
+    val clientId = UUID.randomUUID().toString()
 
     private val _tvState = MutableStateFlow<TvState?>(null)
     val tvState: StateFlow<TvState?> = _tvState.asStateFlow()
@@ -110,7 +113,7 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
             var localSession: DefaultClientWebSocketSession? = null
             try {
                 val deviceName = java.net.URLEncoder.encode(Build.MODEL, "UTF-8")
-                val hostUrl = "ws://$ip:$port/control?device=$deviceName"
+                val hostUrl = "ws://$ip:$port/control?device=$deviceName&clientId=$clientId"
                 Log.d(TAG, "Connecting to TV at $hostUrl")
                 
                 client.webSocket(hostUrl) {
