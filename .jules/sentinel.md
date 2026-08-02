@@ -1,0 +1,4 @@
+## 2024-10-27 - Ktor WebSocket Local Network Authorization Bypass
+**Vulnerability:** The `/mirror` Ktor WebSocket endpoint in `LocalServerService.kt` accepted connections from any client if the `approvedClientIds` list was simply non-empty (`if (TvEventBus.approvedClientIds.value.isEmpty()) { ... }`).
+**Learning:** In local network Ktor applications, standard CSWSH protections (Origin checks) do not sufficiently prevent unauthorized local devices from connecting. A non-empty list check allows any local client to bypass authorization once *any* valid client has been approved.
+**Prevention:** Always implement explicit authorization state checks within WebSocket endpoints by validating the specific connecting client's identifier (e.g., via query parameters) against an approved list before accepting connections.
