@@ -39,3 +39,6 @@
 ## 2026-06-28 - Expand Clickable Area for HTML Form Elements
 **Learning:** Custom UI switches built using nested `div` elements and styled checkboxes force the user to click precisely on the small toggle UI itself, reducing accessibility for users with motor impairments (Fitts's Law violation).
 **Action:** Always structure custom HTML toggles by wrapping the entire descriptive row (text + switch UI) in a single `<label for="inputId" style="cursor: pointer;">`. This turns the entire row into a massive, accessible click target that correctly toggles the associated input.
+## 2025-02-13 - Make Legal Text Links Accessible in Jetpack Compose
+**Learning:** In Jetpack Compose, applying `TextDecoration.Underline` visually implies a link, but without explicit interaction modifiers (`clickable(role = Role.Button)`) and a `LocalUriHandler.current.openUri` call, the text remains inaccessible and unresponsive to screen readers and touch events. Additionally, applying a ripple effect requires `clip(RoundedCornerShape(...))` before `clickable` to ensure the ripple is visually bounded.
+**Action:** When building text-based links, always wrap the `Text` composable with `.clip(...)`, `.clickable(role = Role.Button)`, and `.padding(...)` to provide a bounded ripple, expand the touch target, and expose the interaction to accessibility services.
