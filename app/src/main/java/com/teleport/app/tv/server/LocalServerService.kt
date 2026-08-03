@@ -110,7 +110,8 @@ class LocalServerService : Service() {
                                 return@webSocket
                             }
 
-                            val clientId = UUID.randomUUID().toString()
+                            // Sentinel: Extract clientId from query parameters or generate a new one
+                            val clientId = call.request.queryParameters["clientId"] ?: UUID.randomUUID().toString()
                             Log.d(TAG, "Client connected via WebSocket: $clientId")
 
                             val deviceName = call.request.queryParameters["device"] ?: "Mobile Remote"
@@ -215,8 +216,10 @@ class LocalServerService : Service() {
                                 return@webSocket
                             }
 
-                            if (TvEventBus.approvedClientIds.value.isEmpty()) {
-                                Log.w(TAG, "Rejected mirror connection: No approved clients")
+                            // Sentinel: Extract clientId from query parameters to enforce authorization
+                            val mirrorClientId = call.request.queryParameters["clientId"]
+                            if (mirrorClientId == null || mirrorClientId !in TvEventBus.approvedClientIds.value) {
+                                Log.w(TAG, "Rejected mirror connection: Unauthorized clientId - $mirrorClientId")
                                 close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Unauthorized"))
                                 return@webSocket
                             }

@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.util.UUID
 
 sealed class ConnectionState {
     object Disconnected : ConnectionState()
@@ -59,6 +60,10 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
         ignoreUnknownKeys = true
         encodeDefaults = true
     }
+
+    // Sentinel: Expose clientId to pass to mirror service for auth
+    var clientId: String? = null
+        private set
 
     fun connect(ip: String, port: Int) {
         disconnect()
@@ -106,11 +111,17 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
 
         activeIp = ip
         _connectionState.value = ConnectionState.Connecting
+        // Sentinel: Generate random clientId for the session if we don't have one
+        if (clientId == null) {
+            clientId = UUID.randomUUID().toString()
+        }
+        val currentClientId = clientId!!
+
         connectionJob = coroutineScope.launch(Dispatchers.IO) {
             var localSession: DefaultClientWebSocketSession? = null
             try {
                 val deviceName = java.net.URLEncoder.encode(Build.MODEL, "UTF-8")
-                val hostUrl = "ws://$ip:$port/control?device=$deviceName"
+                val hostUrl = "ws://$ip:$port/control?device=$deviceName&clientId=$currentClientId"
                 Log.d(TAG, "Connecting to TV at $hostUrl")
                 
                 client.webSocket(hostUrl) {

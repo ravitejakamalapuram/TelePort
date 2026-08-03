@@ -100,11 +100,13 @@ class MainActivity : ComponentActivity() {
     ) { result ->
         if (result.resultCode == RESULT_OK && result.data != null) {
             val tvIp = connectionManager.activeIp ?: ""
-            if (tvIp.isNotBlank()) {
+            val clientId = connectionManager.clientId
+            if (tvIp.isNotBlank() && clientId != null) {
                 val intent = Intent(this, com.teleport.app.mobile.mirror.ScreenCastService::class.java).apply {
                     putExtra("RESULT_CODE", result.resultCode)
                     putExtra("RESULT_DATA", result.data)
                     putExtra("TV_IP", tvIp)
+                    putExtra("CLIENT_ID", clientId) // Sentinel: Pass clientId to service for auth
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(intent)
