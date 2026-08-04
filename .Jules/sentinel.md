@@ -6,3 +6,7 @@
 **Vulnerability:** WebView allowlist for safe schemes failed open when the parsed URI scheme was null (e.g. from whitespace-padded URLs like ` javascript:alert()`).
 **Learning:** `android.net.Uri.parse` returns null for the scheme if the URL string has leading whitespace, bypassing simple scheme-based allowlists that return false (allow) when scheme is null.
 **Prevention:** Always trim URL strings before parsing, and ensure `shouldOverrideUrlLoading` fails closed by returning `true` (block) when the scheme is null.
+## 2026-08-20 - Incomplete WebSocket Authorization Bypass
+**Vulnerability:** The `/mirror` WebSocket endpoint checked if `TvEventBus.approvedClientIds.value.isEmpty()` to determine if a connection should be allowed. This allowed any local network client to connect as long as at least one legitimate client was already approved.
+**Learning:** Merely checking if an approved list is non-empty creates an authorization bypass. Authorization must validate the specific connecting client.
+**Prevention:** Always implement explicit authorization state checks within WebSocket endpoints by validating the specific connecting client's identifier (e.g., via query parameters) against an approved list before accepting connections.
