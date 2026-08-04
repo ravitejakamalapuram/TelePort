@@ -80,7 +80,10 @@ fun TvActivityContent(tabManager: TabManager, localIp: String) {
         TvEventBus.commands.collectLatest { clientCommand ->
             val clientId = clientCommand.clientId
             val command = clientCommand.command
-            Log.d(TAG, "Executing command from $clientId: $command")
+            // ⚡ Bolt: Avoid eager string interpolation for high-frequency events to prevent continuous string allocation and GC thrashing
+            if (command !is Command.MoveCursor && command !is Command.Scroll) {
+                Log.d(TAG, "Executing command from $clientId: $command")
+            }
             when (command) {
                 is Command.OpenUrl -> tabManager.openTab(command.url, command.headless)
                 is Command.CloseTab -> tabManager.closeTab(command.index)
