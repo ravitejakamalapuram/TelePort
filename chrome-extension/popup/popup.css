@@ -580,3 +580,4 @@ input:checked + .slider:before {
 .help-section li strong {
   color: var(--text-primary);
 }
+label.action-row { cursor: pointer; }
