@@ -49,6 +49,8 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
     private var session: DefaultClientWebSocketSession? = null
     private var connectionJob: Job? = null
 
+    val clientId: String = java.util.UUID.randomUUID().toString()
+
     // Bolt: Use a Channel to buffer commands instead of launching a new coroutine per command.
     // This prevents GC thrashing and thread starvation when sending high-frequency cursor commands at 200Hz.
     // Using a bounded channel with DROP_OLDEST prevents OOM and node allocation overhead from UNLIMITED.
@@ -110,7 +112,7 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
             var localSession: DefaultClientWebSocketSession? = null
             try {
                 val deviceName = java.net.URLEncoder.encode(Build.MODEL, "UTF-8")
-                val hostUrl = "ws://$ip:$port/control?device=$deviceName"
+                val hostUrl = "ws://$ip:$port/control?device=$deviceName&clientId=$clientId"
                 Log.d(TAG, "Connecting to TV at $hostUrl")
                 
                 client.webSocket(hostUrl) {
