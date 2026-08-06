@@ -43,6 +43,9 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
     var activeIp: String? = null
         private set
 
+    var activeClientId: String? = null
+        private set
+
     private val _tvState = MutableStateFlow<TvState?>(null)
     val tvState: StateFlow<TvState?> = _tvState.asStateFlow()
 
@@ -105,12 +108,13 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
         }
 
         activeIp = ip
+        activeClientId = java.util.UUID.randomUUID().toString()
         _connectionState.value = ConnectionState.Connecting
         connectionJob = coroutineScope.launch(Dispatchers.IO) {
             var localSession: DefaultClientWebSocketSession? = null
             try {
                 val deviceName = java.net.URLEncoder.encode(Build.MODEL, "UTF-8")
-                val hostUrl = "ws://$ip:$port/control?device=$deviceName"
+                val hostUrl = "ws://$ip:$port/control?device=$deviceName&clientId=$activeClientId"
                 Log.d(TAG, "Connecting to TV at $hostUrl")
                 
                 client.webSocket(hostUrl) {

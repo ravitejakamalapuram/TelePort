@@ -105,6 +105,7 @@ class MainActivity : ComponentActivity() {
                     putExtra("RESULT_CODE", result.resultCode)
                     putExtra("RESULT_DATA", result.data)
                     putExtra("TV_IP", tvIp)
+                    putExtra("CLIENT_ID", connectionManager.activeClientId)
                 }
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(intent)
