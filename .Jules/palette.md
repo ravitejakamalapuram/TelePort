@@ -36,3 +36,6 @@
 ## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor."). Ensure click interaction can be mapped via `role = Role.Button` and `onClick`.
+## 2026-06-28 - Expand switch touch targets
+**Learning:** For custom toggles or switches in a list, wrapping the entire row in a `<label>` linked to the checkbox via `for` and adding `cursor: pointer` expands the touch target (Fitts's Law) and groups text for screen readers. Nested interactive elements like inner `<label>` should be converted to `<div>` or `<span>`.
+**Action:** Always wrap toggle rows in a single `<label>` linked to the `<input type="checkbox">` and avoid nested `<label>` tags.
