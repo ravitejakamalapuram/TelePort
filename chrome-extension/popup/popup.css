@@ -194,6 +194,14 @@ button {
   align-items: center;
 }
 
+label.action-row {
+  cursor: pointer;
+}
+label.action-row:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
 .action-info h4 {
   margin: 0;
   font-size: 14px;
@@ -227,7 +235,6 @@ button {
 
 .slider {
   position: absolute;
-  cursor: pointer;
   top: 0;
   left: 0;
   right: 0;

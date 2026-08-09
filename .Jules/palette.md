@@ -36,3 +36,6 @@
 ## 2026-06-25 - Custom Gesture Areas Require Explicit Semantics
 **Learning:** Custom Compose areas handling gestures via `pointerInput` (like a Trackpad or Canvas) are completely invisible to screen readers because they lack implicit semantics, creating frustrating "dead zones" for visually impaired users.
 **Action:** Always apply `.clearAndSetSemantics { contentDescription = "..." }` to custom gesture elements, describing both their purpose and how to interact with them (e.g., "Trackpad. Tap to click, drag to move cursor."). Ensure click interaction can be mapped via `role = Role.Button` and `onClick`.
+## 2024-06-28 - Unified Labels for Custom Toggles
+**Learning:** Custom toggles (e.g., switches built with `div` and `span`) wrapped alongside their descriptive text do not provide a unified, accessible touch target. Motor-impaired users struggle to tap a small toggle switch, and screen readers read the text and toggle as disjointed elements.
+**Action:** Always wrap the entire row (including the description and the switch UI) in a single `<label>` element. Link it to the `<input type="checkbox">` using the `for` attribute, apply `cursor: pointer` via CSS, and ensure any inner `.switch` elements are changed from `<label>` to `<div>` to avoid nested interactive elements.
