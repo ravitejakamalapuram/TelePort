@@ -110,7 +110,13 @@ class LocalServerService : Service() {
                                 return@webSocket
                             }
 
-                            val clientId = UUID.randomUUID().toString()
+                            val reqClientId = call.request.queryParameters["clientId"]
+                            val clientId = if (!reqClientId.isNullOrBlank()) {
+                                reqClientId
+                            } else {
+                                UUID.randomUUID().toString()
+                            }
+
                             Log.d(TAG, "Client connected via WebSocket: $clientId")
 
                             val deviceName = call.request.queryParameters["device"] ?: "Mobile Remote"
@@ -215,7 +221,14 @@ class LocalServerService : Service() {
                                 return@webSocket
                             }
 
-                            if (TvEventBus.approvedClientIds.value.isEmpty()) {
+                            val clientId = call.request.queryParameters["clientId"]
+                            if (clientId == null) {
+                                Log.w(TAG, "Rejected mirror connection: No clientId provided")
+                                close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Unauthorized"))
+                                return@webSocket
+                            }
+
+                            if (!TvEventBus.approvedClientIds.value.contains(clientId)) {
                                 Log.w(TAG, "Rejected mirror connection: No approved clients")
                                 close(CloseReason(CloseReason.Codes.VIOLATED_POLICY, "Unauthorized"))
                                 return@webSocket

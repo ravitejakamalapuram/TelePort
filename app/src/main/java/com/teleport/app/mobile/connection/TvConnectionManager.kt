@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.util.UUID
 
 sealed class ConnectionState {
     object Disconnected : ConnectionState()
@@ -32,6 +33,8 @@ sealed class ConnectionState {
 
 class TvConnectionManager(private val coroutineScope: CoroutineScope) {
     private val TAG = "TvConnectionManager"
+
+    val clientId = UUID.randomUUID().toString()
 
     private val client = HttpClient(OkHttp) {
         install(WebSockets)
@@ -110,7 +113,7 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
             var localSession: DefaultClientWebSocketSession? = null
             try {
                 val deviceName = java.net.URLEncoder.encode(Build.MODEL, "UTF-8")
-                val hostUrl = "ws://$ip:$port/control?device=$deviceName"
+                val hostUrl = "ws://$ip:$port/control?device=$deviceName&clientId=$clientId"
                 Log.d(TAG, "Connecting to TV at $hostUrl")
                 
                 client.webSocket(hostUrl) {
