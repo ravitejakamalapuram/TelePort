@@ -178,7 +178,15 @@ class NativePlayerActivity : ComponentActivity() {
         LaunchedEffect(player) {
             TvEventBus.commands.collectLatest { clientCommand ->
                 val command = clientCommand.command
-                Log.d(TAG, "Native Player executing remote command: $command")
+
+                // Bolt Performance Optimization: Filter out unhandled high-frequency events at the top to prevent GC thrashing
+                if (command is Command.MoveCursor) return@collectLatest
+
+                // Bolt Performance Optimization: Avoid eager string interpolation for high-frequency events that are handled
+                if (command !is Command.Scroll) {
+                    Log.d(TAG, "Native Player executing remote command: $command")
+                }
+
                 when (command) {
                     is Command.PlayPause -> {
                         if (player.isPlaying) player.pause() else player.play()
