@@ -34,7 +34,7 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.ui.PlayerView
 import com.teleport.app.protocol.Command
 import com.teleport.app.tv.server.TvEventBus
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
 
 class NativePlayerActivity : ComponentActivity() {
     private val TAG = "NativePlayerActivity"
@@ -176,7 +176,7 @@ class NativePlayerActivity : ComponentActivity() {
 
         // Connect remote controller events to player control
         LaunchedEffect(player) {
-            TvEventBus.commands.collectLatest { clientCommand ->
+            TvEventBus.commands.collect { clientCommand ->
                 val command = clientCommand.command
 
                 // Performance Optimization: Early return for high-frequency events not handled
