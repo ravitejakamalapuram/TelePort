@@ -181,7 +181,7 @@ class NativePlayerActivity : ComponentActivity() {
 
                 // Performance Optimization: Early return for high-frequency events not handled
                 // by the native player to avoid string allocation and processing overhead.
-                if (command is Command.MoveCursor) return@collectLatest
+                if (command is Command.MoveCursor) return@collect
 
                 if (command !is Command.Scroll) {
                     Log.d(TAG, "Native Player executing remote command: $command")
