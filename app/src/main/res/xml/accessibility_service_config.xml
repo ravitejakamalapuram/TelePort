@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    TelePort Air Mouse: lets the paired phone drive a cursor, taps, scrolls and text entry
+    on the TV. This is a remote-control feature, not a tool built for users with disabilities,
+    so isAccessibilityTool is false (Google Play Accessibility API policy).
+-->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
     android:canPerformGestures="true"
     android:description="@string/accessibility_description"
-    android:summary="Remote control input gestures for TV/device control" />
+    android:isAccessibilityTool="false"
+    android:summary="@string/accessibility_service_summary" />

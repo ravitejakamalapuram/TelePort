@@ -275,9 +275,13 @@ fun PairingScreen(connectionUrl: String, localIp: String) {
             val context = LocalContext.current
             val isAccessRunning = com.teleport.app.tv.server.TelePortAccessibilityService.isRunning
 
-            if (!isAccessRunning) {
-                androidx.compose.material3.Button(
-                    onClick = {
+            // Google Play Accessibility API policy: show a prominent disclosure and require an
+            // explicit "Agree" before sending the user to Accessibility settings.
+            var showAccessibilityDisclosure by remember { mutableStateOf(false) }
+            if (showAccessibilityDisclosure) {
+                AccessibilityDisclosureDialog(
+                    onAgree = {
+                        showAccessibilityDisclosure = false
                         try {
                             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
                             context.startActivity(intent)
@@ -285,6 +289,13 @@ fun PairingScreen(connectionUrl: String, localIp: String) {
                             Log.e("TvActivityContent", "Failed to launch accessibility settings", e)
                         }
                     },
+                    onDecline = { showAccessibilityDisclosure = false }
+                )
+            }
+
+            if (!isAccessRunning) {
+                androidx.compose.material3.Button(
+                    onClick = { showAccessibilityDisclosure = true },
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                         containerColor = ThemeTokens.CardBg,
                         contentColor = ThemeTokens.Accent
