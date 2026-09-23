@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-09-23]
+
+## 🚀 Features
+  _No new features_
+
+## 🐛 Bug Fixes
+- fix(tv): let the Air Mouse service read the focused field so remote typing works (#250) (70ccad7) by raviteja kamalapuram
+
+## 📝 Documentation
+  _No documentation changes_
+
+## 🔧 Other Changes
+  _No other changes_
+
+
 ## [2026-05-29] - Automated Release
 
 - ⚡ Bolt: [performance improvement] Avoid redundant Uri allocations in shouldInterceptRequest (#28) (c0aaa66) by raviteja kamalapuram
