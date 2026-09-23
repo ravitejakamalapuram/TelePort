@@ -1,19 +1,9 @@
 # Changelog
 
-## [2026-09-23]
+## [1.6.18] - 2026-09-23
 
-## 🚀 Features
-  _No new features_
-
-## 🐛 Bug Fixes
-- fix(tv): let the Air Mouse service read the focused field so remote typing works (#250) (70ccad7) by raviteja kamalapuram
-
-## 📝 Documentation
-  _No documentation changes_
-
-## 🔧 Other Changes
-  _No other changes_
-
+- TV: typing with the phone remote now works in the focused text field (Air Mouse service).
+- Targets Android 16 (API 36), updates Google Play Billing, and explains the Accessibility permission before asking for it.
 
 ## [2026-05-29] - Automated Release
 
