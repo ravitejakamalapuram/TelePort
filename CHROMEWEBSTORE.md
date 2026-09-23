@@ -1,64 +1,87 @@
-# Chrome Web Store Listing — TelePort Cast & Remote
+# Chrome Web Store Listing & Publishing Record
 
-> Last Updated: 2026-06-02
+*Last Updated: 2026-09-20*
 
-## Store Listing
+---
 
-**Extension Name**
+## 1. Extension Information
+- **Name**: TelePort Cast & Remote
+- **Extension ID**: `oimdkmacklcheogoakhdgilcedkcbikb`
+- **Publisher ID**: `9637cb78-fa33-49dd-a4cb-91066ff182e3`
+- **Version**: `1.0.0`
+- **Manifest Version**: `MV3`
+- **Language**: `en`
+- **Category**: `Productivity`
+
+---
+
+## 2. Store Listing Copy
+
+### Short Description (max 132 characters)
+> Beam tabs, cast screens, and control your TelePort TV directly from Chrome.
+
+### Detailed Description
+```markdown
 TelePort Cast & Remote
 
-**Short Description**
 Beam tabs, cast screens, and control your TelePort TV directly from Chrome.
 
-**Detailed Description**
-TelePort Cast & Remote enables seamless screen sharing, tab casting, and remote control capabilities for your TelePort TV system. Instantly send your active tab, full screen, or media stream to your local receiver over Wi-Fi without any configuration.
+Key Features:
+- Local-first and private: all data operations run strictly inside your browser and local network.
+- High performance: fast processing for developer workflows.
+- Clean and intuitive interface designed for modern productivity.
 
-**Category**
-Productivity
+How to use:
+1. Open the extension from the Chrome toolbar.
+2. Select your local TelePort TV device.
+3. Cast tabs or screens directly.
+```
 
-**Single Purpose**
-Enables users to stream browser tabs, screens, and media directly to local TelePort TV devices over the local network.
+---
 
-**Primary Language**
-English
+## 3. Permissions Justifications (Required for Review)
 
-## Graphics & Assets
+Google review requires specific plain-English justification for each declared permission:
 
-| Asset | Dimensions | Status | Filename |
-|---|---|---|---|
-| Store Icon | 128×128 PNG | ✅ Ready | chrome-extension/icons/icon-128.png |
+| Permission | Used in Code? | Sample Evidence | Required? | Risk | Plain-English Review Justification |
+| :--- | :---: | :--- | :---: | :---: | :--- |
+| `tabs` | Yes | popup/popup.js:213 | Yes | MEDIUM | Required to inspect tab URLs, monitor tab lifecycle, or coordinate multi-tab workflows. |
+| `contextMenus` | Yes | service-worker.js:157 | Yes | LOW | Adds custom action items to the Chrome right-click context menu. |
+| `storage` | Yes | popup/popup.js:45 | Yes | LOW | Required to locally persist user settings, configurations, and application state across sessions. |
+| `tabCapture` | Yes | service-worker.js:58 | Yes | HIGH | Captures tab visual stream upon explicit user request for media casting or recording. |
+| `offscreen` | Yes | service-worker.js:63 | Yes | MEDIUM | Required to perform DOM, audio, or clipboard processing not supported in service workers. |
 
-## Permissions Justification
+---
 
-Every permission in manifest.json needs a justification. The review team reads these.
+## 4. Privacy & Data Use Disclosure
 
-| Permission | Type | Justification |
-|---|---|---|
-| `tabs` | permissions | Used to query current browser tab details to initialize tab screen-casting. |
-| `contextMenus` | permissions | Used to register cast shortcuts in the browser context menu. |
-| `storage` | permissions | Used to store configurations and paired receiver settings locally. |
-| `tabCapture` | permissions | Used to capture the video and audio stream of the active tab for local network streaming. |
-| `offscreen` | permissions | Used to spawn background audio-processing or screen-capture context helpers. |
-| `http://*/*` | host_permissions | Used to capture and stream web content to the local cast receiver device. |
-| `https://*/*` | host_permissions | Used to capture and stream web content to the local cast receiver device. |
+- **Privacy Policy URL**: `https://ravitejakamalapuram.github.io/teleport.html`
 
-## Privacy & Data Use
+---
 
-### Data Collection
-**Does the extension collect user data?** No
+## 5. Store Assets Checklist
 
-All extension preferences and inputs are stored locally on the device and never sent off-device.
+- [x] Extension Icon (128×128 PNG): `icons/icon-128.png`
+- [ ] Primary Screenshot (1280×800 PNG): `chrome-store/assets/screenshots/01-main-screen.png`
+- [ ] Promotional Tile (440×280 PNG): Optional but recommended for featured placement
+- [ ] Marquee Promo (1400×560 PNG): Optional
 
-### Data Use Certification
-- [x] Data is NOT sold to third parties
-- [x] Data is NOT used for purposes unrelated to the extension's core functionality
-- [x] Data is NOT used for creditworthiness or lending purposes
+---
 
-## Privacy Policy
-Privacy Policy available in `PRIVACY.md` in the project root. Recommended to host via GitHub Pages.
+## 6. Pre-Publish Checklist
 
-## Version History
+- [x] Manifest V3 compliance verified
+- [x] No `eval()` or remotely hosted code
+- [x] No secrets, private keys, or API tokens in package
+- [x] Distributable archive contains `manifest.json` at root
+- [ ] Extension registered in Chrome Web Store Developer Dashboard
+- [ ] CWS API OAuth credentials configured (`.env`)
+- [ ] Final human confirmation obtained before submission
 
-| Version | Date | Changes | Status |
-|---|---|---|---|
-| 1.0.0 | 2026-06-02 | Initial release with tab and screen casting capabilities. | Active |
+---
+
+## 7. Release History
+
+| Version | Date | Status | Package ZIP | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| `1.0.0` | 2026-09-20 | Draft / Ready | `chrome-store/builds/teleport-cast---remote-v1.0.0.zip` | Automated build & verification passed |
