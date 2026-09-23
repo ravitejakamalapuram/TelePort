@@ -1,17 +1,21 @@
 name: CD
 
+# Store releases are on demand only (Actions -> CD -> Run workflow). Publishing on
+# every push re-uploads while an item is in review and burns a version tag each time.
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
+
+# Never cancel a release mid-flight: half-created tags/releases are bad state.
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
 
 jobs:
   release:
-    uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-cd.yml@main
+    uses: ravitejakamalapuram/.github-workflows-shared/.github/workflows/android-cd.yml@v1
     with:
       runner-type: 'ubuntu-latest'
       java-version: '17'
@@ -60,7 +64,7 @@ jobs:
   #         GH_TOKEN: ${{ github.token }}
   #
   #     - name: Publish to Chrome Web Store
-  #       uses: ravitejakamalapuram/.github-workflows-shared/composite-actions/chrome-extension/publish-cws@main
+  #       uses: ravitejakamalapuram/.github-workflows-shared/composite-actions/chrome-extension/publish-cws@v1
   #       with:
   #         extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
   #         client-id: ${{ secrets.CHROME_CLIENT_ID }}
