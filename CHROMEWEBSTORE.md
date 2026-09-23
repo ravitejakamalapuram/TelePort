@@ -1,64 +1,90 @@
-# Chrome Web Store Listing — TelePort Cast & Remote
+# Chrome Web Store Listing & Publishing Record
 
-> Last Updated: 2026-06-02
+*Last Updated: 2026-09-20*
 
-## Store Listing
+---
 
-**Extension Name**
+## 1. Extension Information
+- **Name**: TelePort Cast & Remote
+- **Extension ID**: `oimdkmacklcheogoakhdgilcedkcbikb`
+- **Publisher ID**: `9637cb78-fa33-49dd-a4cb-91066ff182e3`
+- **Version**: `1.0.0`
+- **Manifest Version**: `MV3`
+- **Language**: `en`
+- **Category**: `Productivity`
+
+---
+
+## 2. Store Listing Copy
+
+### Short Description (max 132 characters)
+> Beam tabs, cast screens, and control your TelePort TV directly from Chrome.
+
+### Detailed Description
+```markdown
 TelePort Cast & Remote
 
-**Short Description**
-Beam tabs, cast screens, and control your TelePort TV directly from Chrome.
+TelePort Cast & Remote is the Chrome companion for the TelePort Android TV app. Send the page you are viewing to your TV, or mirror a tab's video to it, over your local Wi-Fi network.
 
-**Detailed Description**
-TelePort Cast & Remote enables seamless screen sharing, tab casting, and remote control capabilities for your TelePort TV system. Instantly send your active tab, full screen, or media stream to your local receiver over Wi-Fi without any configuration.
+Features:
+- Send page to TV: open the current tab's URL in the TelePort browser on your TV.
+- Mirror tab: stream the current tab's video to the TV.
+- Right-click menu shortcuts for sending or mirroring the current page.
+- Remote control: move the TV cursor, click, scroll, go back, play/pause, type text and toggle the TV's dark mode from the popup.
+- Local-only: the extension talks directly to your TV at the IP address you enter; no cloud servers, accounts or analytics.
 
-**Category**
-Productivity
+How to use:
+1. Install the TelePort app on your Android TV and note its IP address.
+2. Open the extension from the Chrome toolbar and enter the TV's IP address.
+3. Send or mirror the current tab to your TV.
+```
 
-**Single Purpose**
-Enables users to stream browser tabs, screens, and media directly to local TelePort TV devices over the local network.
+---
 
-**Primary Language**
-English
+## 3. Permissions Justifications (Required for Review)
 
-## Graphics & Assets
+Google review requires specific plain-English justification for each declared permission:
 
-| Asset | Dimensions | Status | Filename |
-|---|---|---|---|
-| Store Icon | 128×128 PNG | ✅ Ready | chrome-extension/icons/icon-128.png |
+| Permission | Used in Code? | Sample Evidence | Required? | Risk | Plain-English Review Justification |
+| :--- | :---: | :--- | :---: | :---: | :--- |
+| `tabs` | Yes | popup/popup.js:213 | Yes | MEDIUM | Reads the URL of the active tab when the user clicks 'Send to TV' (popup or right-click menu) so that URL can be opened on the user's TelePort TV, and identifies the tab to mirror. |
+| `contextMenus` | Yes | service-worker.js:157 | Yes | LOW | Adds two right-click menu items, 'Send active page to TelePort TV' and 'Mirror active tab to TelePort TV', as shortcuts for the extension's casting actions. |
+| `storage` | Yes | popup/popup.js:45 | Yes | LOW | Stores the TV's local IP address the user enters (chrome.storage.local) and the current casting state (chrome.storage.session). |
+| `tabCapture` | Yes | service-worker.js:58 | Yes | HIGH | Captures the video of the current tab, only after the user starts 'Mirror tab', so it can be streamed to the user's TV on the local network. |
+| `offscreen` | Yes | service-worker.js:63 | Yes | MEDIUM | Hosts the offscreen document that encodes the captured tab video (WebCodecs) and streams it to the TV over a WebSocket, since service workers cannot access media streams. |
+| `host_permissions` (`http://*/*`, `https://*/*`) | Yes | service-worker.js:26 | Yes | HIGH | The extension connects to the TelePort TV app at the local IP address the user enters (e.g. ws://192.168.x.x:8080). That address is user-configured and not known in advance, so a fixed host list is not possible. No page content is read or modified. |
 
-## Permissions Justification
+---
 
-Every permission in manifest.json needs a justification. The review team reads these.
+## 4. Privacy & Data Use Disclosure
 
-| Permission | Type | Justification |
-|---|---|---|
-| `tabs` | permissions | Used to query current browser tab details to initialize tab screen-casting. |
-| `contextMenus` | permissions | Used to register cast shortcuts in the browser context menu. |
-| `storage` | permissions | Used to store configurations and paired receiver settings locally. |
-| `tabCapture` | permissions | Used to capture the video and audio stream of the active tab for local network streaming. |
-| `offscreen` | permissions | Used to spawn background audio-processing or screen-capture context helpers. |
-| `http://*/*` | host_permissions | Used to capture and stream web content to the local cast receiver device. |
-| `https://*/*` | host_permissions | Used to capture and stream web content to the local cast receiver device. |
+- **Privacy Policy URL**: `https://ravitejakamalapuram.github.io/teleport.html`
 
-## Privacy & Data Use
+---
 
-### Data Collection
-**Does the extension collect user data?** No
+## 5. Store Assets Checklist
 
-All extension preferences and inputs are stored locally on the device and never sent off-device.
+- [x] Extension Icon (128×128 PNG): `icons/icon-128.png`
+- [ ] Primary Screenshot (1280×800 PNG): `chrome-store/assets/screenshots/01-main-screen.png`
+- [ ] Promotional Tile (440×280 PNG): Optional but recommended for featured placement
+- [ ] Marquee Promo (1400×560 PNG): Optional
 
-### Data Use Certification
-- [x] Data is NOT sold to third parties
-- [x] Data is NOT used for purposes unrelated to the extension's core functionality
-- [x] Data is NOT used for creditworthiness or lending purposes
+---
 
-## Privacy Policy
-Privacy Policy available in `PRIVACY.md` in the project root. Recommended to host via GitHub Pages.
+## 6. Pre-Publish Checklist
 
-## Version History
+- [x] Manifest V3 compliance verified
+- [x] No `eval()` or remotely hosted code
+- [x] No secrets, private keys, or API tokens in package
+- [x] Distributable archive contains `manifest.json` at root
+- [ ] Extension registered in Chrome Web Store Developer Dashboard
+- [ ] CWS API OAuth credentials configured (`.env`)
+- [ ] Final human confirmation obtained before submission
 
-| Version | Date | Changes | Status |
-|---|---|---|---|
-| 1.0.0 | 2026-06-02 | Initial release with tab and screen casting capabilities. | Active |
+---
+
+## 7. Release History
+
+| Version | Date | Status | Package ZIP | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| `1.0.0` | 2026-09-20 | Draft / Ready | `chrome-store/builds/teleport-cast---remote-v1.0.0.zip` | Automated build & verification passed |

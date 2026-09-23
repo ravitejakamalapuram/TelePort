@@ -2,32 +2,32 @@
   "appName": "TelePort",
   "appType": "multi-module",
   "repoName": "TelePort",
-  "description": "A premium application.",
+  "description": "Local-first Android TV browser with a companion phone remote and a Chrome extension for sending tabs to the TV over your local network.",
   "modules": [
     {
       "name": "TelePort Cast & Remote (Chrome Extension)",
       "type": "chrome-extension",
       "path": "chrome-extension",
       "status": "draft",
-      "storeId": "",
-      "storeUrl": "",
-      "developerConsoleUrl": "https://chrome.google.com/webstore/devconsole",
+      "storeId": "oimdkmacklcheogoakhdgilcedkcbikb",
+      "storeUrl": "https://chromewebstore.google.com/detail/oimdkmacklcheogoakhdgilcedkcbikb",
+      "developerConsoleUrl": "https://chrome.google.com/webstore/devconsole/9637cb78-fa33-49dd-a4cb-91066ff182e3/oimdkmacklcheogoakhdgilcedkcbikb",
       "buildScript": "zip -r initial-package.zip chrome-extension",
       "artifactPath": "initial-package.zip",
       "cwsListing": {
         "shortDescription": "Beam tabs, cast screens, and control your TelePort TV directly from Chrome.",
-        "detailedDescription": "Beam tabs, cast screens, and control your TelePort TV directly from Chrome.",
+        "detailedDescription": "TelePort Cast & Remote is the Chrome companion for the TelePort Android TV app. Send the page you are viewing to your TV, or mirror a tab's video to it, over your local Wi-Fi network.\n\nFeatures:\n- Send page to TV: open the current tab's URL in the TelePort browser on your TV.\n- Mirror tab: stream the current tab's video to the TV.\n- Right-click menu shortcuts for sending or mirroring the current page.\n- Remote control: move the TV cursor, click, scroll, go back, play/pause, type text and toggle the TV's dark mode from the popup.\n- Local-only: the extension talks directly to your TV at the IP address you enter; no cloud servers, accounts or analytics.\n\nHow to use:\n1. Install the TelePort app on your Android TV and note its IP address.\n2. Open the extension from the Chrome toolbar and enter the TV's IP address.\n3. Send or mirror the current tab to your TV.",
         "category": "productivity",
-        "singlePurpose": "Beam tabs, cast screens, and control your TelePort TV directly from Ch",
-        "privacyPolicyUrl": "https://ravitejakamalapuram.github.io/TelePort/privacy.html",
+        "singlePurpose": "Send or mirror the current Chrome tab to the user's TelePort Android TV app over the local network and control it from Chrome.",
+        "privacyPolicyUrl": "https://ravitejakamalapuram.github.io/teleport.html",
         "permissionJustifications": {
-          "tabs": "The 'tabs' permission is used to safely navigate the user to settings, help pages, or other extension-related internal pages in a new browser tab.",
-          "contextMenus": "The 'contextMenus' permission allows adding quick access options in the browser's right-click context menu to copy shlokas or shuffle verses.",
-          "storage": "The 'storage' permission is required to save the user's custom preferences, selected themes, and cached Bhagavad Gita verses locally on their device, ensuring settings persist across sessions and function offline.",
-          "tabCapture": "The 'tabCapture' permission is required for core extension functions, specifically to enable the user-facing features related to this capability.",
-          "offscreen": "The 'offscreen' permission is required for core extension functions, specifically to enable the user-facing features related to this capability.",
-          "http://*/*": "This permission is required to communicate with remote API endpoint 'http://*/*' to fetch dynamic shlokas, daily quotes, and perform language translations on the fly.",
-          "https://*/*": "This permission is required to communicate with remote API endpoint 'https://*/*' to fetch dynamic shlokas, daily quotes, and perform language translations on the fly."
+          "tabs": "Reads the URL of the active tab when the user clicks 'Send to TV' (popup or right-click menu) so that URL can be opened on the user's TelePort TV, and identifies the tab to mirror.",
+          "contextMenus": "Adds two right-click menu items, 'Send active page to TelePort TV' and 'Mirror active tab to TelePort TV', as shortcuts for the extension's casting actions.",
+          "storage": "Stores the TV's local IP address the user enters (chrome.storage.local) and the current casting state (chrome.storage.session).",
+          "tabCapture": "Captures the video of the current tab, only after the user starts 'Mirror tab', so it can be streamed to the user's TV on the local network.",
+          "offscreen": "Hosts the offscreen document that encodes the captured tab video (WebCodecs) and streams it to the TV over a WebSocket, since service workers cannot access media streams.",
+          "http://*/*": "The extension connects to the TelePort TV app at the local IP address the user enters (e.g. ws://192.168.x.x:8080). That address is user-configured and not known in advance, so a fixed host list is not possible. No page content is read or modified.",
+          "https://*/*": "Paired with http://*/* for the same reason: the extension must reach the TelePort TV app at whatever local address the user configures. No page content is read or modified."
         },
         "remoteCodeUsed": false,
         "remoteCodeJustification": "The extension does not use remote code. All files, scripts, and libraries are packaged locally within the extension ZIP file.",
@@ -46,10 +46,10 @@
       "artifactPath": "app/build/outputs/apk/release/app-release.apk",
       "playStoreListing": {
         "title": "TelePort",
-        "shortDescription": "Short description here.",
-        "fullDescription": "Full description here.",
+        "shortDescription": "Browse the web on your Android TV and control it with your phone as a remote.",
+        "fullDescription": "TelePort turns your Android TV into a full web browser that you control from your phone over your local Wi-Fi network. Browse and cast web content you have access to on your TV.\n\n- Multi-tab browsing on the TV\n- Air-mouse pointer using your phone's motion sensors\n- Virtual touchpad, D-pad and keyboard input from your phone\n- Built-in ad and popup blocker\n- Native video player for supported video streams\n- Local-first: no cloud servers, accounts or analytics",
         "category": "utilities",
-        "privacyPolicyUrl": "https://ravitejakamalapuram.github.io/TelePort/privacy.html"
+        "privacyPolicyUrl": "https://ravitejakamalapuram.github.io/teleport.html"
       }
     }
   ]
