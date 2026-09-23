@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.carfry369.teleport"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.carfry369.teleport"
         minSdk = 26 // Required for Ktor Netty and Media3
-        targetSdk = 35
+        targetSdk = 36
         versionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 6
         versionName = (project.findProperty("versionName") as? String) ?: "1.0.0"
     }
@@ -146,5 +146,5 @@ dependencies {
     implementation("com.google.android.ump:user-messaging-platform:2.2.0")
 
     // Google Play Billing
-    implementation("com.android.billingclient:billing-ktx:6.1.0")
+    implementation("com.android.billingclient:billing-ktx:8.3.0")
 }
