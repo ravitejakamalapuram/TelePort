@@ -1,4 +1,19 @@
 <resources>
     <string name="app_name">TelePort</string>
-    <string name="accessibility_description">Enables TelePort Air Mouse to control other apps on this TV using your phone.</string>
+
+    <!-- AccessibilityService description shown in system Settings > Accessibility -->
+    <string name="accessibility_service_summary">Lets your paired phone move a cursor, tap, scroll and type on this TV</string>
+    <string name="accessibility_description">TelePort Air Mouse lets the phone you paired with TelePort act as a remote mouse and keyboard for this TV, including inside other apps. When enabled, it draws a cursor on top of the screen, performs taps, scrolls and the Back action where you point, and finds the currently focused text field so it can type the text you send from your phone. It acts only on commands from your paired phone. TelePort does not collect, store or share any on-screen content, the text you type, or your activity in other apps. You can turn it off here at any time.</string>
+
+    <!-- In-app prominent disclosure shown before opening Accessibility settings (Google Play Accessibility API policy) -->
+    <string name="accessibility_disclosure_title">Allow TelePort Air Mouse to use the Accessibility service?</string>
+    <string name="accessibility_disclosure_intro">TelePort uses the Android AccessibilityService API so the phone you paired with TelePort can act as a remote mouse and keyboard for this TV, including inside other apps. This is the only way Android lets an app control other apps on your behalf.</string>
+    <string name="accessibility_disclosure_access_header">If you turn it on, the TelePort Air Mouse service will:</string>
+    <string name="accessibility_disclosure_access_1">• Draw a mouse cursor on top of whatever is on screen.</string>
+    <string name="accessibility_disclosure_access_2">• Perform taps, scrolls and the Back action at the cursor position in any app, when you send them from your phone.</string>
+    <string name="accessibility_disclosure_access_3">• Find the text field that currently has focus on screen, so it can type the text you send from your phone into it.</string>
+    <string name="accessibility_disclosure_data">The service only acts on commands from your paired phone. TelePort does not collect, store, log, or share any on-screen content, the text you type, or your activity in other apps, and none of it is sent off this TV.</string>
+    <string name="accessibility_disclosure_revoke">Tap Agree to open Accessibility settings, then turn on TelePort Air Mouse. You can turn it off at any time in Settings &gt; Accessibility. If you decline, TelePort still works inside its own browser; only control of other apps is unavailable.</string>
+    <string name="accessibility_disclosure_agree">Agree</string>
+    <string name="accessibility_disclosure_decline">Decline</string>
 </resources>

@@ -45,7 +45,14 @@ class BillingManager(
 
     private val billingClient = BillingClient.newBuilder(context)
         .setListener(this)
-        .enablePendingPurchases()
+        // Billing Library 8+: pending purchases must be enabled explicitly per product type.
+        .enablePendingPurchases(
+            PendingPurchasesParams.newBuilder()
+                .enableOneTimeProducts()
+                .build()
+        )
+        // Billing Library 8+: let the client re-establish the service connection automatically.
+        .enableAutoServiceReconnection()
         .build()
 
     /** Connect to Google Play Billing service. Call in Application.onCreate() or MainActivity. */
@@ -100,8 +107,13 @@ class BillingManager(
             .setProductList(productList)
             .build()
 
-        billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
+        billingClient.queryProductDetailsAsync(params) { billingResult, queryResult ->
             if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
+                // Billing Library 8+: results are wrapped in QueryProductDetailsResult.
+                val productDetailsList = queryResult.productDetailsList
+                if (queryResult.unfetchedProductList.isNotEmpty()) {
+                    Log.w(TAG, "Unfetched products: ${queryResult.unfetchedProductList.map { it.productId }}")
+                }
                 _subscriptionProducts.value = productDetailsList
                 Log.i(TAG, "Found ${productDetailsList.size} subscription products")
             }
