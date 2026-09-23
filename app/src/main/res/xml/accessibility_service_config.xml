@@ -3,11 +3,14 @@
     TelePort Air Mouse: lets the paired phone drive a cursor, taps, scrolls and text entry
     on the TV. This is a remote-control feature, not a tool built for users with disabilities,
     so isAccessibilityTool is false (Google Play Accessibility API policy).
+    canRetrieveWindowContent is required for rootInActiveWindow, which remote text entry uses
+    to find the focused input field; without it rootInActiveWindow is always null.
 -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault|flagRetrieveInteractiveWindows"
     android:canPerformGestures="true"
+    android:canRetrieveWindowContent="true"
     android:description="@string/accessibility_description"
     android:isAccessibilityTool="false"
     android:summary="@string/accessibility_service_summary" />
