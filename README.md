@@ -2,7 +2,7 @@
 
 **TelePort** is a local-first, serverless, and cloud-independent ecosystem that connects an **Android TV** browser with a companion **Android Mobile Remote**. 
 
-It is designed to bypass standard screen-casting and DRM restrictions (like those encountered during traditional screen mirroring) by running a native WebView browser directly on the Android TV and using a local Wi-Fi WebSocket connection to control it from a mobile device.
+It lets you browse and cast web content you have access to on your TV by running a native WebView browser directly on the Android TV and controlling it from a mobile device over a local Wi-Fi WebSocket connection.
 
 ---
 
