@@ -455,7 +455,7 @@ fun PairingScreen(connectionUrl: String, localIp: String) {
                     FeatureCard(
                         emoji = "🍿",
                         title = "Native Media Player",
-                        desc = "Bypasses web video ads completely. Streams automatically to full-screen ExoPlayer.",
+                        desc = "Plays videos from the pages you open in a smooth full-screen TV player.",
                         modifier = Modifier.weight(1f)
                     )
                     FeatureCard(
