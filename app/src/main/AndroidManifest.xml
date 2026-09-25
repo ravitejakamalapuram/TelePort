@@ -33,6 +33,18 @@
         android:theme="@style/Theme.AppCompat.NoActionBar"
         android:usesCleartextTraffic="true"> <!-- Cleartext allowed for local network connections -->
 
+        <!-- play-services-ads auto-initializes MobileAdsInitProvider at process attach, before
+             any app code runs, and it requires a real com.google.android.gms.ads.APPLICATION_ID
+             meta-data entry or the app crashes on every launch (POR-137). No real AdMob App ID
+             exists anywhere in this codebase yet (AdManager still uses Google's public test ad
+             unit IDs), and FeatureFlags.ENABLE_ADVERTISEMENTS is false, so ads are not live.
+             Suppress the eager auto-init until a real App ID is wired in for the monetization
+             launch; re-add the APPLICATION_ID meta-data and drop this removal at that point. -->
+        <provider
+            android:name="com.google.android.gms.ads.MobileAdsInitProvider"
+            android:authorities="${applicationId}.mobileadsinitprovider"
+            tools:node="remove" />
+
         <!-- Unified Entry MainActivity -->
         <activity
             android:name="com.teleport.app.MainActivity"
