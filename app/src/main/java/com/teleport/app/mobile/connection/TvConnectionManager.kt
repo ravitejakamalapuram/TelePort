@@ -48,6 +48,11 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
     private val _tvState = MutableStateFlow<TvState?>(null)
     val tvState: StateFlow<TvState?> = _tvState.asStateFlow()
 
+    // Whether a cast command (OpenUrl / PlayStreamNatively) has been sent during this Connected
+    // session. Reset on every connect() so it only ever reflects the current session.
+    private val _castSentThisSession = MutableStateFlow(false)
+    val castSentThisSession: StateFlow<Boolean> = _castSentThisSession.asStateFlow()
+
     private var session: DefaultClientWebSocketSession? = null
     private var connectionJob: Job? = null
 
@@ -64,6 +69,7 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
 
     fun connect(ip: String, port: Int) {
         disconnect()
+        _castSentThisSession.value = false
 
         // Start the single worker coroutine that consumes from the channel
         senderJob = coroutineScope.launch(Dispatchers.IO) {
@@ -164,6 +170,9 @@ class TvConnectionManager(private val coroutineScope: CoroutineScope) {
     fun sendCommand(command: Command) {
         val currentSession = session
         if (currentSession != null && _connectionState.value == ConnectionState.Connected) {
+            if (command is Command.OpenUrl || command is Command.PlayStreamNatively) {
+                _castSentThisSession.value = true
+            }
             // Bolt: Simply push to the channel without allocating a new Coroutine per command
             commandChannel.trySend(command)
         } else {
