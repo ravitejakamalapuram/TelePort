@@ -46,6 +46,8 @@ import kotlinx.coroutines.launch
 import com.teleport.app.ads.AdManager
 import com.teleport.app.ads.ConsentHelper
 import com.teleport.app.billing.BillingManager
+import com.teleport.app.review.PlayReviewLauncher
+import com.teleport.app.review.ReviewPromptManager
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
@@ -69,6 +71,9 @@ class MainActivity : ComponentActivity() {
     private val updateLauncher = registerForActivityResult(
         ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
+        if (::reviewPromptManager.isInitialized) {
+            reviewPromptManager.isUpdateFlowInProgress = false
+        }
         if (result.resultCode != RESULT_OK) {
             Log.e(TAG, "Update flow failed! Result code: ${result.resultCode}")
         }
@@ -77,6 +82,7 @@ class MainActivity : ComponentActivity() {
     // Mobile specific properties
     private lateinit var nsdHelper: NsdHelper
     private lateinit var connectionManager: TvConnectionManager
+    private lateinit var reviewPromptManager: ReviewPromptManager
     private var gyroTracker: GyroSensorTracker? = null
     private val pendingSharedUrl = mutableStateOf<String?>(null)
 
@@ -141,6 +147,10 @@ class MainActivity : ComponentActivity() {
             // Android Mobile flow
             nsdHelper = NsdHelper(this)
             connectionManager = TvConnectionManager(lifecycleScope)
+            reviewPromptManager = ReviewPromptManager(
+                prefs = getSharedPreferences("teleport_prefs", Context.MODE_PRIVATE),
+                launcher = PlayReviewLauncher(),
+            )
             gyroTracker = GyroSensorTracker(this) { dx, dy ->
                 connectionManager.sendCommand(Command.MoveCursor(dx, dy))
             }
@@ -189,6 +199,32 @@ class MainActivity : ComponentActivity() {
                         LaunchedEffect(connState) {
                             if (connState == ConnectionState.Connected) {
                                 AdManager.showInterstitial(this@MainActivity)
+                            }
+                        }
+
+                        // In-app review: track the session lifecycle so a one-time rating prompt
+                        // can fire when a session that demonstrably worked ends.
+                        LaunchedEffect(connState) {
+                            if (connState == ConnectionState.Connected) {
+                                reviewPromptManager.onSessionStarted()
+                            } else {
+                                reviewPromptManager.onSessionEnded(this@MainActivity)
+                            }
+                        }
+
+                        LaunchedEffect(Unit) {
+                            connectionManager.castSentThisSession.collect { sent ->
+                                if (sent) {
+                                    reviewPromptManager.onCastSent()
+                                }
+                            }
+                        }
+
+                        LaunchedEffect(Unit) {
+                            connectionManager.tvState.collect { state ->
+                                if (state != null) {
+                                    reviewPromptManager.onTvStateReceived()
+                                }
                             }
                         }
 
@@ -408,6 +444,9 @@ class MainActivity : ComponentActivity() {
             appUpdateManager.appUpdateInfo.addOnSuccessListener { appUpdateInfo ->
                 if (appUpdateInfo.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
                     try {
+                        if (::reviewPromptManager.isInitialized) {
+                            reviewPromptManager.isUpdateFlowInProgress = true
+                        }
                         appUpdateManager.startUpdateFlowForResult(
                             appUpdateInfo,
                             updateLauncher,
@@ -415,6 +454,9 @@ class MainActivity : ComponentActivity() {
                         )
                     } catch (e: Exception) {
                         Log.e(TAG, "Error resuming update flow", e)
+                        if (::reviewPromptManager.isInitialized) {
+                            reviewPromptManager.isUpdateFlowInProgress = false
+                        }
                     }
                 }
             }
@@ -434,6 +476,9 @@ class MainActivity : ComponentActivity() {
                 
                 if (appUpdateInfo.isUpdateTypeAllowed(updateType)) {
                     try {
+                        if (::reviewPromptManager.isInitialized) {
+                            reviewPromptManager.isUpdateFlowInProgress = true
+                        }
                         appUpdateManager.startUpdateFlowForResult(
                             appUpdateInfo,
                             updateLauncher,
@@ -441,6 +486,9 @@ class MainActivity : ComponentActivity() {
                         )
                     } catch (e: Exception) {
                         Log.e(TAG, "Error starting update flow", e)
+                        if (::reviewPromptManager.isInitialized) {
+                            reviewPromptManager.isUpdateFlowInProgress = false
+                        }
                     }
                 }
             }

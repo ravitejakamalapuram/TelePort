@@ -100,6 +100,10 @@ dependencies {
     implementation("com.google.android.play:app-update:2.1.0")
     implementation("com.google.android.play:app-update-ktx:2.1.0")
 
+    // Google Play In-App Review SDK
+    implementation("com.google.android.play:review:2.0.2")
+    implementation("com.google.android.play:review-ktx:2.0.2")
+
     // Ktor Server (for TV server) - Updated to latest stable version
     val ktorVersion = "3.0.3"
     implementation("io.ktor:ktor-server-core:$ktorVersion")
