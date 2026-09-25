@@ -151,7 +151,11 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
 
         coroutineScope.launch(Dispatchers.Main) {
             if (headless) {
-                cancelHeadlessExtraction()
+                // Run inline (not via cancelHeadlessExtraction()'s own launch) so the previous
+                // headless resolution is torn down before this one sets up state below. A nested
+                // launch(Dispatchers.Main) here would queue after this block finishes and clobber
+                // the state (and destroy the WebView) we are about to create.
+                cancelHeadlessExtractionInternal()
                 isResolvingHeadlessly.value = true
                 resolvingUrl.value = safeUrl
                 detectedStreamUrl.value = null
@@ -195,16 +199,21 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
 
     fun cancelHeadlessExtraction() {
         coroutineScope.launch(Dispatchers.Main) {
-            headlessTimeoutJob?.cancel()
-            headlessTimeoutJob = null
-            _headlessWebView.value?.apply {
-                stopLoading()
-                destroy()
-            }
-            _headlessWebView.value = null
-            isResolvingHeadlessly.value = false
-            resolvingUrl.value = null
+            cancelHeadlessExtractionInternal()
         }
+    }
+
+    // Must only be called from a coroutine already running on Dispatchers.Main.
+    private fun cancelHeadlessExtractionInternal() {
+        headlessTimeoutJob?.cancel()
+        headlessTimeoutJob = null
+        _headlessWebView.value?.apply {
+            stopLoading()
+            destroy()
+        }
+        _headlessWebView.value = null
+        isResolvingHeadlessly.value = false
+        resolvingUrl.value = null
     }
 
     fun closeTab(index: Int) {
@@ -512,7 +521,7 @@ class TabManager(private val context: Context, private val coroutineScope: Corou
                             if (isResolvingHeadlessly.value) {
                                 coroutineScope.launch(Dispatchers.Main) {
                                     playNatively(reqUrl)
-                                    cancelHeadlessExtraction()
+                                    cancelHeadlessExtractionInternal()
                                 }
                             }
                         }
