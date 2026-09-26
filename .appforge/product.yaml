@@ -1,0 +1,51 @@
+# Backfilled by the AppForge factory (P1-07). Fields marked null are not yet knowable —
+# they depend on infrastructure (appforge-control, appforge-edge, Paperclip) not built yet.
+# Two targets, one product: Android (TV app + phone remote) and a companion Chrome extension.
+product_id: teleport
+name: TelePort
+description: "Turn your Android TV into a wireless display and remote-control hub for your phone and browser, over your local network — no cloud, no accounts."
+platform: [android, chrome]
+state: PRODUCTION # Android is live (internal track); the Chrome extension target is separately RELEASE_CANDIDATE (draft, unpublished)
+portfolio_state: MAINTENANCE
+repository: ravitejakamalapuram/TelePort
+owner: founder
+team: []
+architecture: null
+analytics_project: null
+store_ids:
+  play: com.carfry369.teleport
+  cws: oimdkmacklcheogoakhdgilcedkcbikb # chrome-extension/ target — status: draft, not yet published
+monetization:
+  model: freemium
+  provider: play_billing
+pricing:
+  currency: USD
+  plans:
+    - { id: pro-monthly, price_cents: null, interval: month } # exact price not confirmed from source; see BillingManager.kt product IDs
+    - { id: pro-yearly, price_cents: null, interval: year }
+  ads: admob # currently wired with Google's public TEST ad unit IDs, not production IDs yet
+permissions: .appforge/permissions.yaml
+data_collection:
+  collected: [local_network_remote_control_commands, screen_mirroring_video_audio_frames, camera_qr_scan_only, motion_sensor_input]
+  stored:
+    local: [local_server_state]
+    remote: []
+  transmitted:
+    endpoints: [] # fully local network only: ws://<tv-ip>:8080/... — no cloud/relay server, confirmed by app-metadata.json and store listings on both targets
+  sensitive: [screen_mirroring_frames, remote_input_including_text_entry_into_focused_fields]
+  third_party: [admob, play_billing]
+  retention: { local: session_only_for_control_state, remote: none }
+  deletion: "Uninstall clears all local app state; nothing is stored remotely to delete"
+security_classification: high # BIND_ACCESSIBILITY_SERVICE with canRetrieveWindowContent + synthetic input injection, plus screen mirroring
+release_channel: staged # Android: internal track per release.yaml; Chrome: unpublished draft
+current_version: "1.6.18" # Android (Chrome extension target is separately 1.0.0, unpublished)
+kill_policy: null
+scale_policy: null
+slot: waiting_for_free_cws_slot # chrome-extension/ target only; Android has no CWS slot constraint
+notes: |
+  AdMob is wired with Google's public TEST ad unit IDs (AdManager.kt), not production IDs —
+  flag before any release that's meant to show real ads. Play Console track is `internal`
+  per release.yaml even though app-metadata.json separately says "published" for the Android
+  module; release.yaml is the authoritative/current config. The Play Store Accessibility
+  declaration (docs/PLAY_LISTING_ACCESSIBILITY.md) documents the BIND_ACCESSIBILITY_SERVICE
+  justification for reviewers and should be kept in sync with any change to that service.
