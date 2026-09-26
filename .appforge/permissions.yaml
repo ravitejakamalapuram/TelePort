@@ -1,0 +1,101 @@
+schema: appforge/permissions@1
+# TelePort ships two targets sharing one product: the Android app (TV + phone remote) and a
+# Chrome extension (browser remote/cast companion). Both permission sets are listed here.
+permissions:
+  # --- Android ---
+  - permission: android.permission.INTERNET
+    required: true
+    reason: "The embedded local WebSocket server (Ktor/Netty) and client connections all use sockets"
+    data_access: [local_network_traffic]
+    security_impact: low
+  - permission: android.permission.ACCESS_NETWORK_STATE
+    required: true
+    reason: "Local network service discovery (NSD/mDNS) to find/advertise the TV on the LAN"
+    data_access: [network_state]
+    security_impact: low
+  - permission: android.permission.ACCESS_WIFI_STATE
+    required: true
+    reason: "Local network service discovery (NSD/mDNS)"
+    data_access: [wifi_state]
+    security_impact: low
+  - permission: android.permission.CHANGE_WIFI_MULTICAST_STATE
+    required: true
+    reason: "mDNS multicast packets require multicast lock for reliable local discovery"
+    data_access: [wifi_state]
+    security_impact: low
+  - permission: android.permission.FOREGROUND_SERVICE
+    required: true
+    reason: "Runs the local WebSocket server as a foreground service on the TV so it survives backgrounding"
+    data_access: []
+    security_impact: medium
+  - permission: android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE
+    required: true
+    reason: "Foreground service type for the always-listening local server that a paired phone connects to"
+    data_access: []
+    security_impact: medium
+  - permission: android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION
+    required: true
+    reason: "Foreground service type required for the phone-screen-mirroring capture service"
+    data_access: []
+    security_impact: medium
+  - permission: android.permission.CAMERA
+    required: true
+    reason: "QR-code scanning (ZXing) to pair the phone with a code shown on the TV — no photos/video are captured or stored"
+    data_access: [camera_qr_scan_only]
+    security_impact: medium
+  - permission: android.permission.RECEIVE_BOOT_COMPLETED
+    required: true
+    reason: "Restart the TV's local server automatically after a device reboot"
+    data_access: []
+    security_impact: low
+  - permission: android.permission.HIGH_SAMPLING_RATE_SENSORS
+    required: true
+    reason: "Phone motion-sensor air-mouse input mode for remote control"
+    data_access: [motion_sensors]
+    security_impact: low
+  - permission: android.permission.SYSTEM_ALERT_WINDOW
+    required: true
+    reason: "Declared for the accessibility-service cursor overlay shown on the TV screen"
+    data_access: []
+    security_impact: medium
+  - permission: android.permission.BIND_ACCESSIBILITY_SERVICE
+    required: true
+    reason: "The core remote-control feature: lets the paired phone drive a cursor, taps, scrolls and text entry on the TV via injected gestures and AccessibilityNodeInfo text-set actions. canRetrieveWindowContent is required only to locate the focused input field for text entry, not to read/log screen content generally (onAccessibilityEvent is a no-op). This is Google's highest-scrutiny permission and is documented in docs/PLAY_LISTING_ACCESSIBILITY.md for reviewers."
+    data_access: [screen_focused_input_field_lookup, synthetic_input_injection]
+    security_impact: high
+  # --- Chrome extension (chrome-extension/manifest.json) ---
+  - permission: tabs
+    required: true
+    reason: "Read the active tab's URL to 'beam' it to the paired TV app"
+    data_access: [tab_url]
+    security_impact: medium
+  - permission: contextMenus
+    required: true
+    reason: "Right-click menu entries for cast/remote actions"
+    data_access: []
+    security_impact: low
+  - permission: storage
+    required: true
+    reason: "Persist the paired TV's IP address and extension settings"
+    data_access: [user_settings_local]
+    security_impact: low
+  - permission: tabCapture
+    required: true
+    reason: "Capture the active tab's video/audio to stream ('cast') it to the paired TV over the local WebSocket"
+    data_access: [tab_audio_video_user_triggered]
+    security_impact: high
+  - permission: offscreen
+    required: true
+    reason: "Hosts the WebCodecs pipeline that encodes captured tab audio/video off the main extension pages"
+    data_access: []
+    security_impact: low
+  - permission: "http://*/*"
+    required: true
+    reason: "The TV's IP address is user-configured and not known in advance, so a fixed host list is not possible"
+    data_access: [local_network_only_user_configured_ip]
+    security_impact: high
+  - permission: "https://*/*"
+    required: true
+    reason: "Same as http://*/* — the extension also reads the active tab's URL for the 'beam URL' feature regardless of scheme"
+    data_access: [tab_url]
+    security_impact: high
