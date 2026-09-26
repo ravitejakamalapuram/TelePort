@@ -189,7 +189,14 @@ object ScreenshotEngine {
 
         val textYOffset = if (device.type == DeviceType.TV) 120f else 200f
         canvas.drawText(decoration.title, (canvasWidth / 2).toFloat(), textYOffset, titlePaint)
-        canvas.drawText(decoration.description, (canvasWidth / 2).toFloat(), textYOffset + (if (device.type == DeviceType.TV) 50f else 80f), descPaint)
+
+        // Wrap the description so it never runs off the edge of the canvas.
+        val descMaxWidth = canvasWidth - 160f
+        val descLineHeight = if (device.type == DeviceType.TV) 36f else 50f
+        val descStartY = textYOffset + (if (device.type == DeviceType.TV) 50f else 80f)
+        wrapText(decoration.description, descPaint, descMaxWidth).forEachIndexed { index, line ->
+            canvas.drawText(line, (canvasWidth / 2).toFloat(), descStartY + index * descLineHeight, descPaint)
+        }
 
         // Calculate device boundaries
         val frameRect = if (device.type == DeviceType.TV) {
@@ -228,6 +235,23 @@ object ScreenshotEngine {
         canvas.restore()
 
         return decorated
+    }
+
+    private fun wrapText(text: String, paint: Paint, maxWidth: Float): List<String> {
+        val words = text.split(" ")
+        val lines = mutableListOf<String>()
+        var current = StringBuilder()
+        for (word in words) {
+            val candidate = if (current.isEmpty()) word else "$current $word"
+            if (paint.measureText(candidate) <= maxWidth || current.isEmpty()) {
+                current = StringBuilder(candidate)
+            } else {
+                lines.add(current.toString())
+                current = StringBuilder(word)
+            }
+        }
+        if (current.isNotEmpty()) lines.add(current.toString())
+        return lines
     }
 }
 
