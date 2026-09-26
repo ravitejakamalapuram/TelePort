@@ -223,8 +223,8 @@ class ExhaustiveScreenshotsTest {
             device = ScreenshotEngine.DeviceConfig.Tv,
             isDarkMode = true,
             decoration = ScreenshotEngine.DecorationConfig(
-                title = "Polished TV Pairing Dashboard",
-                description = "Scan the QR code or type the local URL to instantly pair your phone remote."
+                title = "Pair Once, Control Instantly",
+                description = "Scan the QR code or enter your TV's IP address to link your phone in seconds."
             )
         ) {
             TvPairingScreen(
@@ -268,8 +268,8 @@ class ExhaustiveScreenshotsTest {
             device = ScreenshotEngine.DeviceConfig.Phone,
             isDarkMode = true,
             decoration = ScreenshotEngine.DecorationConfig(
-                title = "Seamless Precision Trackpad",
-                description = "Control your Android TV cursor using standard swipe inputs or gyroscopic sensors."
+                title = "Trackpad & Air Mouse Remote",
+                description = "Swipe like a trackpad, or wave your phone like a laser pointer to move the TV cursor."
             )
         ) {
             ControllerScreen(
@@ -329,8 +329,8 @@ class ExhaustiveScreenshotsTest {
             device = ScreenshotEngine.DeviceConfig.Phone,
             isDarkMode = true,
             decoration = ScreenshotEngine.DecorationConfig(
-                title = "Cast Media Direct to TV",
-                description = "Launch search queries or cast detected video links to play in TV's video player."
+                title = "Browse Multiple Tabs on Your TV",
+                description = "Open tabs from your phone, switch between them, and cast videos straight to the big screen."
             )
         ) {
             TabsManagerTab(connectionManager, mockTvState)
