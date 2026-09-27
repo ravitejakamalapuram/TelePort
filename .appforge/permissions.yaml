@@ -68,7 +68,7 @@ permissions:
     required: true
     reason: "Read the active tab's URL to 'beam' it to the paired TV app"
     data_access: [tab_url]
-    security_impact: medium
+    security_impact: high # config/security.yaml: tabs is high-risk when used to read URLs, not just counts/titles
   - permission: contextMenus
     required: true
     reason: "Right-click menu entries for cast/remote actions"
