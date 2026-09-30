@@ -19,3 +19,38 @@ jobs:
       actions: read   # lets app-ci.yml find which release-platform commit it runs at
     uses: ravitejakamalapuram/release-platform/.github/workflows/app-ci.yml@v2
     # Deliberately no `secrets:` and no id-token: PR code never sees credentials.
+
+  # appforge-checks is intentionally not wired here yet: .appforge/permissions.yaml lists both the
+  # Android and Chrome extension permissions, so the manifest permission-diff (which reads only
+  # chrome-extension/manifest.json) flags every Android permission as documented-but-not-requested.
+  # Split the file (or add per-target support in appforge-kit), then add the job with
+  # manifest-path: chrome-extension/manifest.json.
+
+  # Tell the AppForge factory (Paperclip) about the two events an agent should act on:
+  # a PR opened for review, and CI failing on main. Deliberately NOT every push. Needs the
+  # PAPERCLIP_WEBHOOK_URL and PAPERCLIP_WEBHOOK_SECRET Actions secrets.
+  notify-pr-opened:
+    if: github.event_name == 'pull_request' && github.event.action == 'opened' && !github.event.pull_request.draft
+    needs: [ci]
+    uses: ravitejakamalapuram/appforge-kit/.github/workflows/notify-paperclip.yml@main
+    with:
+      event: pr_opened
+      product: teleport
+      idempotency-key: teleport:pr_opened:${{ github.event.pull_request.number }}
+      details-json: '{"pr": ${{ github.event.pull_request.number }}, "ci": "${{ needs.ci.result }}"}'
+    secrets:
+      paperclip-webhook-url: ${{ secrets.PAPERCLIP_WEBHOOK_URL }}
+      paperclip-webhook-secret: ${{ secrets.PAPERCLIP_WEBHOOK_SECRET }}
+
+  notify-main-failed:
+    if: always() && github.event_name == 'push' && (needs.ci.result == 'failure')
+    needs: [ci]
+    uses: ravitejakamalapuram/appforge-kit/.github/workflows/notify-paperclip.yml@main
+    with:
+      event: ci_failed
+      product: teleport
+      idempotency-key: teleport:ci_failed:${{ github.sha }}
+      details-json: '{"ci": "${{ needs.ci.result }}"}'
+    secrets:
+      paperclip-webhook-url: ${{ secrets.PAPERCLIP_WEBHOOK_URL }}
+      paperclip-webhook-secret: ${{ secrets.PAPERCLIP_WEBHOOK_SECRET }}
