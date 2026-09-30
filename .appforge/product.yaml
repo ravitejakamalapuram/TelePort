@@ -7,6 +7,18 @@ description: "Turn your Android TV into a wireless display and remote-control hu
 platform: [android, chrome]
 state: PRODUCTION # Android is live (internal track); the Chrome extension target is separately RELEASE_CANDIDATE (draft, unpublished)
 portfolio_state: MAINTENANCE
+
+# §22.1 day-30/60/90 clock (APP-41). `first_published` is the
+# clock origin; `store_item_status` ∈ [published, draft, unlisted,
+# internal_track, unpublished] gates whether the clock runs at all.
+# Play track is `internal` per release.yaml (authoritative; this repo's
+# notes below record that app-metadata.json's "published" is not).
+# LIMITATION: this product ships on two surfaces and one scalar cannot
+# express both — the chrome-extension/ CWS target is separately an
+# unpublished draft. Either way no day-N clock runs.
+store_item_status: internal_track
+# Correctly null: never promoted to a public production track.
+first_published: null
 repository: ravitejakamalapuram/TelePort
 owner: founder
 team: []
